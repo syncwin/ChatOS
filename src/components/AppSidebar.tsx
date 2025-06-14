@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { User, MessageSquare, Settings, Plus, Search, History, Trash2 } from "lucide-react";
 import {
@@ -64,18 +65,18 @@ const AppSidebar = ({
 
   return (
     <>
-      <Sidebar className={`${isDarkMode ? 'dark' : ''} bg-sidebar border-r border-sidebar-border`}>
+      <Sidebar className={`${isDarkMode ? 'dark bg-black' : 'bg-sidebar'} border-sidebar-border`}>
         <SidebarHeader className="p-4">
           <Button 
             onClick={onNewChat}
-            className="w-full justify-start gap-2"
+            className="w-full justify-start gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
           >
             <Plus className="w-4 h-4" />
             New Chat
           </Button>
         </SidebarHeader>
 
-        <SidebarContent className="px-2">
+        <SidebarContent>
           {/* Search */}
           <SidebarGroup>
             <SidebarGroupContent>
@@ -96,7 +97,7 @@ const AppSidebar = ({
 
           {/* Recent Chats */}
           <SidebarGroup>
-            <SidebarGroupLabel className="text-xs font-medium text-muted-foreground px-2">
+            <SidebarGroupLabel className="text-xs font-medium text-muted-foreground">
               Chat History
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -105,7 +106,7 @@ const AppSidebar = ({
                   <SidebarMenuItem key={chat.id}>
                     <SidebarMenuButton 
                       onClick={() => onSelectChat(chat)}
-                      className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:font-semibold"
+                      className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                       data-active={chat.id === activeChatId}
                     >
                       <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -164,15 +165,15 @@ const AppSidebar = ({
           {/* User Account */}
           <div 
             onClick={() => setIsProfileOpen(true)}
-            className="flex items-center gap-3 p-2 rounded-lg transition-colors cursor-pointer hover:bg-sidebar-accent"
+            className="flex items-center gap-3 p-3 rounded-lg transition-colors cursor-pointer bg-sidebar-accent hover:bg-sidebar-accent/80 text-sidebar-accent-foreground"
           >
             <Avatar className="w-8 h-8">
-              <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+              <AvatarFallback className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm">
                 JD
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-sidebar-foreground">John Doe</div>
+              <div className="text-sm font-medium">John Doe</div>
               <div className="text-xs text-muted-foreground">john@example.com</div>
             </div>
             <User className="w-4 h-4 text-muted-foreground" />

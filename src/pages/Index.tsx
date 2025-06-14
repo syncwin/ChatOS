@@ -30,15 +30,6 @@ const initialChats: Chat[] = [
   { id: 4, title: "Data Science Projects", date: "1 week ago", messages: [] },
 ];
 
-const mockStreamingResponse = async (updateFn: (chunk: string) => void) => {
-  const mockResponse = "This is a mock response from the AI. Since no API key is provided, this is a placeholder to demonstrate the streaming functionality. Please add your Google Gemini API key in the settings to get real responses.";
-  const chunks = mockResponse.split(" ");
-  for (const chunk of chunks) {
-    await new Promise(resolve => setTimeout(resolve, 50));
-    updateFn(chunk + " ");
-  }
-};
-
 const Index = () => {
   const [chats, setChats] = useState<Chat[]>(initialChats);
   const [activeChatId, setActiveChatId] = useState<number | null>(
@@ -67,8 +58,38 @@ const Index = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleStreamingResponse = async (messagesForApi: Message[]) => {
-    const apiKey = localStorage.getItem("gemini_api_key");
+  const handleStreamingResponse = async (userMessage: string) => {
+    const apiKey = localStorage.getItem("perplexity_api_key");
+
+    if (!apiKey) {
+      toast.error("API Key not found", {
+        description: "Please add your Perplexity API key in the settings.",
+      });
+      const assistantMessageId = generateUniqueId();
+      setChats((prevChats) =>
+        prevChats.map((chat) => {
+          if (chat.id === activeChatId) {
+            return {
+              ...chat,
+              messages: [
+                ...chat.messages,
+                {
+                  id: assistantMessageId,
+                  content:
+                    "Error: Perplexity API key not set. Please add it in the settings menu.",
+                  role: "assistant",
+                  timestamp: new Date(),
+                  isStreaming: false,
+                },
+              ],
+            };
+          }
+          return chat;
+        })
+      );
+      return;
+    }
+
     const assistantMessageId = generateUniqueId();
 
     // Add initial empty message for streaming
@@ -93,73 +114,26 @@ const Index = () => {
       })
     );
 
-    if (!apiKey) {
-      toast.info("Using mock response", {
-        description: "No API key found. Add one in settings for real AI responses.",
-      });
-
-      const updateFn = (token: string) => {
-        setChats((prevChats) =>
-          prevChats.map((chat) => {
-            if (chat.id === activeChatId) {
-              return {
-                ...chat,
-                messages: chat.messages.map((msg) =>
-                  msg.id === assistantMessageId
-                    ? { ...msg, content: msg.content + token }
-                    : msg
-                ),
-              };
-            }
-            return chat;
-          })
-        );
-      };
-      
-      await mockStreamingResponse(updateFn);
-      
-      setChats((prevChats) =>
-        prevChats.map((chat) => {
-          if (chat.id === activeChatId) {
-            return {
-              ...chat,
-              messages: chat.messages.map((msg) =>
-                msg.id === assistantMessageId ? { ...msg, isStreaming: false } : msg
-              ),
-            };
-          }
-          return chat;
-        })
-      );
-      setIsLoading(false);
-      return;
-    }
-
-    const geminiMessages = messagesForApi.map(msg => ({
-      role: msg.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: msg.content }],
-    }));
-
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:streamGenerateContent?key=${apiKey}`, {
+      const response = await fetch("https://api.perplexity.ai/chat/completions", {
         method: "POST",
         headers: {
+          "Authorization": `Bearer ${apiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          contents: geminiMessages,
-          safetySettings: [
-            { "category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE" },
-            { "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE" },
-            { "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE" },
-            { "category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE" }
-          ]
+          model: "llama-3.1-sonar-small-128k-online",
+          messages: [
+            { role: "system", content: "Be precise and concise." },
+            { role: "user", content: userMessage },
+          ],
+          stream: true,
         }),
       });
 
       if (!response.ok || !response.body) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.error?.message || `HTTP error! Status: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.error.message || `HTTP error! Status: ${response.status}`);
       }
 
       const reader = response.body.getReader();
@@ -171,48 +145,45 @@ const Index = () => {
         if (done) break;
         
         buffer += decoder.decode(value, { stream: true });
-        // Attempt to process line-by-line. This is speculative for Gemini's stream format.
         const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
+        buffer = lines.pop() || ""; // Keep partial line in buffer
 
         for (const line of lines) {
-          if (line.trim().length < 2) continue; // Skip empty lines or brackets
+          if (line.startsWith("data: ")) {
+            const jsonString = line.substring(6);
+            if (jsonString === "[DONE]") continue;
 
-          try {
-            // Clean up chunk before parsing
-            let cleanedLine = line.trim();
-            if (cleanedLine.startsWith(',')) cleanedLine = cleanedLine.substring(1);
-            if (cleanedLine.endsWith(',')) cleanedLine = cleanedLine.slice(0, -1);
+            try {
+              const parsed = JSON.parse(jsonString);
+              const token = parsed.choices[0]?.delta?.content;
 
-            const parsed = JSON.parse(cleanedLine);
-            const token = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
-
-            if (token) {
-              setChats((prevChats) =>
-                prevChats.map((chat) => {
-                  if (chat.id === activeChatId) {
-                    return {
-                      ...chat,
-                      messages: chat.messages.map((msg) =>
-                        msg.id === assistantMessageId
-                          ? { ...msg, content: msg.content + token }
-                          : msg
-                      ),
-                    };
-                  }
-                  return chat;
-                })
-              );
+              if (token) {
+                setChats((prevChats) =>
+                  prevChats.map((chat) => {
+                    if (chat.id === activeChatId) {
+                      return {
+                        ...chat,
+                        messages: chat.messages.map((msg) =>
+                          msg.id === assistantMessageId
+                            ? { ...msg, content: msg.content + token }
+                            : msg
+                        ),
+                      };
+                    }
+                    return chat;
+                  })
+                );
+              }
+            } catch (error) {
+              console.error("Error parsing stream chunk:", error, jsonString);
             }
-          } catch (error) {
-            console.error("Error parsing stream chunk:", error, `LINE: "${line}"`);
           }
         }
       }
     } catch (error) {
-      console.error("Error calling Google Gemini API:", error);
+      console.error("Error calling Perplexity API:", error);
       const errorContent = error instanceof Error ? error.message : "An unknown error occurred.";
-      toast.error("Failed to get response from Gemini.");
+      toast.error("Failed to get response from Perplexity.");
        setChats((prevChats) =>
         prevChats.map((chat) => {
           if (chat.id === activeChatId) {
@@ -242,7 +213,6 @@ const Index = () => {
             return chat;
             })
         );
-        setIsLoading(false);
     }
   };
 
@@ -258,7 +228,6 @@ const Index = () => {
     };
     
     const isNewChat = activeChat && activeChat.messages.length === 0;
-    const messagesForApi = [...(activeChat?.messages || []), userMessage];
 
     setChats(prevChats => prevChats.map(chat => {
       if (chat.id === activeChatId) {
@@ -266,7 +235,7 @@ const Index = () => {
         return {
           ...chat,
           title: newTitle.length > 30 ? newTitle.substring(0, 27) + "..." : newTitle,
-          messages: messagesForApi
+          messages: [...chat.messages, userMessage]
         };
       }
       return chat;
@@ -276,10 +245,11 @@ const Index = () => {
     setIsLoading(true);
 
     try {
-      await handleStreamingResponse(messagesForApi);
+      await handleStreamingResponse(input.trim());
     } catch (error) {
       console.error("Error:", error);
       toast.error("An unexpected error occurred.");
+    } finally {
       setIsLoading(false);
     }
   };
@@ -321,7 +291,7 @@ const Index = () => {
 
   return (
     <>
-      <AppSidebar
+      <AppSidebar 
         isDarkMode={isDarkMode}
         toggleDarkMode={toggleDarkMode}
         chats={chats}
@@ -330,39 +300,45 @@ const Index = () => {
         onSelectChat={handleSelectChat}
         onDeleteChat={handleDeleteChat}
       />
-      <SidebarInset className={isDarkMode ? "dark" : ""}>
-        <div className="min-h-screen bg-background text-foreground">
+      <SidebarInset>
+        <div className={`min-h-screen ${isDarkMode 
+          ? 'bg-black' 
+          : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100'
+        }`}>
           <div className="container mx-auto max-w-4xl h-screen flex flex-col">
-            <div className="flex items-center gap-2 p-4 border-b border-border">
-              <SidebarTrigger className="text-foreground/80 hover:text-foreground" />
+            <div className="flex items-center gap-2 p-4">
+              <SidebarTrigger className={`${isDarkMode ? 'text-white hover:text-gray-300' : 'text-gray-600 hover:text-gray-900'}`} />
               <Header isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
             </div>
 
             <div className="flex-1 flex flex-col overflow-hidden">
               {messages.length === 0 ? (
-                <WelcomeScreen
+                <WelcomeScreen 
+                  isDarkMode={isDarkMode} 
                   suggestedQuestions={suggestedQuestions}
                   onQuestionSelect={(question) => {
                     if (!activeChat) {
-                      handleNewChat();
+                       const newChatId = chats.length > 0 ? Math.max(...chats.map(c => c.id)) + 1 : 1;
+                        const newChat: Chat = {
+                          id: newChatId,
+                          title: "New Chat",
+                          date: "Today",
+                          messages: []
+                        };
+                        setChats(prev => [newChat, ...prev]);
+                        setActiveChatId(newChatId);
                     }
                     setInput(question);
-                    // This is a bit of a hack to make sure the state updates before we submit
-                    setTimeout(() => {
-                        const form = document.querySelector('form');
-                        if (form) {
-                            form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-                        }
-                    }, 0);
                   }}
                 />
               ) : (
                 <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
-                  <div className="space-y-6">
+                  <div className="space-y-4">
                     {messages.map((message) => (
-                      <ChatMessage
-                        key={message.id}
-                        message={message}
+                      <ChatMessage 
+                        key={message.id} 
+                        message={message} 
+                        isDarkMode={isDarkMode} 
                       />
                     ))}
                     <div ref={messagesEndRef} />
@@ -370,11 +346,12 @@ const Index = () => {
                 </ScrollArea>
               )}
 
-              <InputArea
+              <InputArea 
                 input={input}
                 setInput={setInput}
                 onSubmit={handleSubmit}
                 isLoading={isLoading}
+                isDarkMode={isDarkMode}
               />
             </div>
           </div>
