@@ -54,7 +54,7 @@ const InputArea = ({ input, setInput, onSubmit, isLoading }: InputAreaProps) => 
         </div>
       </form>
       <p className="text-xs mt-2 text-center text-muted-foreground">
-        InsightSeeker AI can make mistakes. Press Shift+Enter for a new line.
+        InsightSeeker can make mistakes. Press Shift+Enter for a new line.
       </p>
     </div>
   );

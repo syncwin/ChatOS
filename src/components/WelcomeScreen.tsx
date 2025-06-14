@@ -15,7 +15,7 @@ const WelcomeScreen = ({ suggestedQuestions, onQuestionSelect }: WelcomeScreenPr
           <Bot className="w-8 h-8 text-primary-foreground" />
         </div>
         <h2 className="text-3xl font-bold mb-2 text-foreground">
-          Welcome to InsightSeeker AI
+          Welcome to InsightSeeker
         </h2>
         <p className="mb-8 text-muted-foreground">
           Your intelligent research companion. Start a conversation below.

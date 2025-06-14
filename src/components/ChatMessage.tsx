@@ -40,7 +40,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
           <div className="w-full h-full bg-primary rounded-full flex items-center justify-center">
             <Bot className="w-5 h-5 text-primary-foreground" />
           </div>
-          <AvatarFallback>AI</AvatarFallback>
+          <AvatarFallback>IS</AvatarFallback>
         </Avatar>
       )}
       <div className="flex items-center max-w-[80%]">
@@ -51,7 +51,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
               : "bg-card border"
           }`}
         >
-          <p className="text-sm leading-relaxed whitespace-pre-wrap">
+          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
             {message.content}
             {message.isStreaming && (
               <span className="inline-block w-2 h-4 bg-current ml-1 animate-pulse" />

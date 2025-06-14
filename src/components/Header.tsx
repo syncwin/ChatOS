@@ -16,7 +16,7 @@ const Header = ({ isDarkMode, toggleDarkMode }: HeaderProps) => {
           <Sparkles className="w-4 h-4 text-primary-foreground" />
         </div>
         <h1 className="text-xl font-semibold text-foreground">
-          InsightSeeker AI
+          InsightSeeker
         </h1>
       </div>
       <div className="flex items-center gap-4">
