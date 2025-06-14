@@ -30,6 +30,15 @@ const initialChats: Chat[] = [
   { id: 4, title: "Data Science Projects", date: "1 week ago", messages: [] },
 ];
 
+const mockStreamingResponse = async (updateFn: (chunk: string) => void) => {
+  const mockResponse = "This is a mock response from the AI. Since no API key is provided, this is a placeholder to demonstrate the streaming functionality. Please add your Google Gemini API key in the settings to get real responses.";
+  const chunks = mockResponse.split(" ");
+  for (const chunk of chunks) {
+    await new Promise(resolve => setTimeout(resolve, 50));
+    updateFn(chunk + " ");
+  }
+};
+
 const Index = () => {
   const [chats, setChats] = useState<Chat[]>(initialChats);
   const [activeChatId, setActiveChatId] = useState<number | null>(
@@ -60,16 +69,6 @@ const Index = () => {
 
   const handleStreamingResponse = async (messagesForApi: Message[]) => {
     const apiKey = localStorage.getItem("gemini_api_key");
-
-    if (!apiKey) {
-      toast.error("API Key not found", {
-        description: "Please add your Google Gemini API key in the settings.",
-      });
-      // No need to add error message to chat, toast is enough and stops loading indicator.
-      setIsLoading(false);
-      return;
-    }
-
     const assistantMessageId = generateUniqueId();
 
     // Add initial empty message for streaming
@@ -93,6 +92,48 @@ const Index = () => {
         return chat;
       })
     );
+
+    if (!apiKey) {
+      toast.info("Using mock response", {
+        description: "No API key found. Add one in settings for real AI responses.",
+      });
+
+      const updateFn = (token: string) => {
+        setChats((prevChats) =>
+          prevChats.map((chat) => {
+            if (chat.id === activeChatId) {
+              return {
+                ...chat,
+                messages: chat.messages.map((msg) =>
+                  msg.id === assistantMessageId
+                    ? { ...msg, content: msg.content + token }
+                    : msg
+                ),
+              };
+            }
+            return chat;
+          })
+        );
+      };
+      
+      await mockStreamingResponse(updateFn);
+      
+      setChats((prevChats) =>
+        prevChats.map((chat) => {
+          if (chat.id === activeChatId) {
+            return {
+              ...chat,
+              messages: chat.messages.map((msg) =>
+                msg.id === assistantMessageId ? { ...msg, isStreaming: false } : msg
+              ),
+            };
+          }
+          return chat;
+        })
+      );
+      setIsLoading(false);
+      return;
+    }
 
     const geminiMessages = messagesForApi.map(msg => ({
       role: msg.role === 'assistant' ? 'model' : 'user',
