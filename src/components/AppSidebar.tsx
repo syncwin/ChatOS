@@ -1,32 +1,16 @@
-
 import { useState } from "react";
 import { User, MessageSquare, Settings, Plus, Search, History, Trash2 } from "lucide-react";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarHeader,
-  SidebarFooter,
-  SidebarSeparator,
-  SidebarMenuAction,
-} from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, SidebarSeparator, SidebarMenuAction } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import SettingsDialog from "./SettingsDialog";
 import UserProfileDialog from "./UserProfileDialog";
-
 interface Chat {
   id: number;
   title: string;
   date: string;
   messages: unknown[];
 }
-
 interface AppSidebarProps {
   isDarkMode: boolean;
   toggleDarkMode: () => void;
@@ -36,41 +20,30 @@ interface AppSidebarProps {
   onSelectChat: (chat: Chat) => void;
   onDeleteChat: (chatId: number) => void;
 }
-
-const AppSidebar = ({ 
-  isDarkMode, 
+const AppSidebar = ({
+  isDarkMode,
   toggleDarkMode,
   chats,
   activeChatId,
-  onNewChat, 
+  onNewChat,
   onSelectChat,
-  onDeleteChat,
+  onDeleteChat
 }: AppSidebarProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
-
   const handleDeleteChat = (e: React.MouseEvent, chatId: number) => {
     e.stopPropagation();
     onDeleteChat(chatId);
   };
-
-  const filteredChats = chats.filter(chat => 
-    chat.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  return (
-    <>
+  const filteredChats = chats.filter(chat => chat.title.toLowerCase().includes(searchTerm.toLowerCase()));
+  return <>
       <Sidebar className={`${isDarkMode ? 'dark bg-black' : 'bg-sidebar'} border-sidebar-border`}>
         <SidebarHeader className="p-4">
-          <Button 
-            onClick={onNewChat}
-            className="w-full justify-start gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-          >
+          <Button onClick={onNewChat} className="w-full justify-start gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
             <Plus className="w-4 h-4" />
             New Chat
           </Button>
@@ -82,13 +55,7 @@ const AppSidebar = ({
             <SidebarGroupContent>
               <div className="relative px-2">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Search chats..."
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                  className="w-full pl-10 pr-4 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-input border border-border text-foreground placeholder:text-muted-foreground"
-                />
+                <input type="text" placeholder="Search chats..." value={searchTerm} onChange={handleSearchChange} className="w-full pl-10 pr-4 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-input border border-border text-foreground placeholder:text-muted-foreground" />
               </div>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -102,29 +69,18 @@ const AppSidebar = ({
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {filteredChats.map((chat) => (
-                  <SidebarMenuItem key={chat.id}>
-                    <SidebarMenuButton 
-                      onClick={() => onSelectChat(chat)}
-                      className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                      data-active={chat.id === activeChatId}
-                    >
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <MessageSquare className="w-4 h-4 flex-shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-sm font-medium">{chat.title}</div>
-                          <div className="text-xs text-muted-foreground">{chat.date}</div>
-                        </div>
+                {filteredChats.map(chat => <SidebarMenuItem key={chat.id}>
+                    <SidebarMenuButton onClick={() => onSelectChat(chat)} className="group w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-primary data-[active=true]:text-primary-foreground" data-active={chat.id === activeChatId}>
+                      <MessageSquare className="w-4 h-4 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="truncate text-sm font-medium py-[10px] px-[10px]">{chat.title}</div>
+                        <div className="text-xs text-muted-foreground group-data-[active=true]:text-primary-foreground/70">{chat.date}</div>
                       </div>
                     </SidebarMenuButton>
-                    <SidebarMenuAction
-                      onClick={(e) => handleDeleteChat(e, chat.id)}
-                      showOnHover
-                    >
+                    <SidebarMenuAction onClick={e => handleDeleteChat(e, chat.id)} showOnHover className="text-muted-foreground peer-hover/menu-button:text-primary-foreground peer-data-[active=true]/menu-button:text-primary-foreground">
                       <Trash2 />
                     </SidebarMenuAction>
-                  </SidebarMenuItem>
-                ))}
+                  </SidebarMenuItem>)}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -139,19 +95,13 @@ const AppSidebar = ({
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    onClick={() => alert("Chat History clicked! This feature is not yet implemented.")} 
-                    className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  >
+                  <SidebarMenuButton onClick={() => alert("Chat History clicked! This feature is not yet implemented.")} className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
                     <History className="w-4 h-4" />
                     <span>Chat History</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    onClick={() => setIsSettingsOpen(true)}
-                    className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  >
+                  <SidebarMenuButton onClick={() => setIsSettingsOpen(true)} className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
                     <Settings className="w-4 h-4" />
                     <span>Settings</span>
                   </SidebarMenuButton>
@@ -163,10 +113,7 @@ const AppSidebar = ({
 
         <SidebarFooter className="p-4">
           {/* User Account */}
-          <div 
-            onClick={() => setIsProfileOpen(true)}
-            className="flex items-center gap-3 p-3 rounded-lg transition-colors cursor-pointer bg-sidebar-accent hover:bg-sidebar-accent/80 text-sidebar-accent-foreground"
-          >
+          <div onClick={() => setIsProfileOpen(true)} className="flex items-center gap-3 p-3 rounded-lg transition-colors cursor-pointer bg-sidebar-accent hover:bg-sidebar-accent/80 text-sidebar-accent-foreground">
             <Avatar className="w-8 h-8">
               <AvatarFallback className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm">
                 JD
@@ -180,19 +127,8 @@ const AppSidebar = ({
           </div>
         </SidebarFooter>
       </Sidebar>
-      <SettingsDialog 
-        isOpen={isSettingsOpen}
-        onOpenChange={setIsSettingsOpen}
-        isDarkMode={isDarkMode}
-        toggleDarkMode={toggleDarkMode}
-      />
-      <UserProfileDialog
-        isOpen={isProfileOpen}
-        onOpenChange={setIsProfileOpen}
-        isDarkMode={isDarkMode}
-      />
-    </>
-  );
+      <SettingsDialog isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+      <UserProfileDialog isOpen={isProfileOpen} onOpenChange={setIsProfileOpen} isDarkMode={isDarkMode} />
+    </>;
 };
-
 export default AppSidebar;

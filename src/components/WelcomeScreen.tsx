@@ -25,7 +25,7 @@ const WelcomeScreen = ({ suggestedQuestions, onQuestionSelect }: WelcomeScreenPr
             <Button
               key={index}
               variant="outline"
-              className="text-left justify-start h-auto p-3 transition-all bg-card hover:bg-accent text-card-foreground hover:text-accent-foreground border-border"
+              className="text-left justify-start h-auto p-3 transition-all bg-card hover:bg-accent text-card-foreground hover:text-accent-foreground border-border whitespace-normal"
               onClick={() => onQuestionSelect(question)}
             >
               {question}
