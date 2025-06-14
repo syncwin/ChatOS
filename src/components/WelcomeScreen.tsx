@@ -27,7 +27,7 @@ const WelcomeScreen = ({ isDarkMode, suggestedQuestions, onQuestionSelect }: Wel
               key={index}
               variant="outline"
               className={`text-left justify-start h-auto p-3 transition-all ${isDarkMode 
-                ? 'hover:bg-gray-700 border-gray-600 hover:border-gray-500 text-gray-200 hover:text-white' 
+                ? 'bg-gray-900 hover:bg-gray-800 border-gray-700 hover:border-gray-600 text-gray-200 hover:text-white' 
                 : 'hover:bg-blue-50 border-blue-200 hover:border-blue-300 text-gray-700 hover:text-gray-900'
               }`}
               onClick={() => onQuestionSelect(question)}
