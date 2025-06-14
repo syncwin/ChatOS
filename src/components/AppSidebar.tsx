@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { User, MessageSquare, Settings, Plus, Search, History, Trash2 } from "lucide-react";
 import {
@@ -106,20 +105,19 @@ const AppSidebar = ({
                   <SidebarMenuItem key={chat.id}>
                     <SidebarMenuButton 
                       onClick={() => onSelectChat(chat)}
-                      className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      className="group w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-primary data-[active=true]:text-primary-foreground"
                       data-active={chat.id === activeChatId}
                     >
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <MessageSquare className="w-4 h-4 flex-shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-sm font-medium">{chat.title}</div>
-                          <div className="text-xs text-muted-foreground">{chat.date}</div>
-                        </div>
+                      <MessageSquare className="w-4 h-4 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="truncate text-sm font-medium">{chat.title}</div>
+                        <div className="text-xs text-muted-foreground group-data-[active=true]:text-primary-foreground/70">{chat.date}</div>
                       </div>
                     </SidebarMenuButton>
                     <SidebarMenuAction
                       onClick={(e) => handleDeleteChat(e, chat.id)}
                       showOnHover
+                      className="text-muted-foreground peer-hover/menu-button:text-primary-foreground peer-data-[active=true]/menu-button:text-primary-foreground"
                     >
                       <Trash2 />
                     </SidebarMenuAction>
