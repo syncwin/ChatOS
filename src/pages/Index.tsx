@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
-import { Avatar, AvatarContent, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
 interface Message {
@@ -155,9 +155,9 @@ const Index = () => {
                   >
                     {message.role === "assistant" && (
                       <Avatar className="w-8 h-8 mt-1">
-                        <AvatarContent className="bg-gradient-to-r from-blue-600 to-purple-600">
+                        <div className="w-full h-full bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
                           <Bot className="w-4 h-4 text-white" />
-                        </AvatarContent>
+                        </div>
                         <AvatarFallback>AI</AvatarFallback>
                       </Avatar>
                     )}
@@ -180,9 +180,9 @@ const Index = () => {
                     </Card>
                     {message.role === "user" && (
                       <Avatar className="w-8 h-8 mt-1">
-                        <AvatarContent className="bg-gray-200">
+                        <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center">
                           <User className="w-4 h-4 text-gray-600" />
-                        </AvatarContent>
+                        </div>
                         <AvatarFallback>You</AvatarFallback>
                       </Avatar>
                     )}
