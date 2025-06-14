@@ -280,7 +280,7 @@ const Index = () => {
 
   return (
     <>
-      <AppSidebar 
+      <AppSidebar
         isDarkMode={isDarkMode}
         toggleDarkMode={toggleDarkMode}
         chats={chats}
@@ -289,45 +289,39 @@ const Index = () => {
         onSelectChat={handleSelectChat}
         onDeleteChat={handleDeleteChat}
       />
-      <SidebarInset>
-        <div className={`min-h-screen ${isDarkMode 
-          ? 'bg-black' 
-          : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100'
-        }`}>
+      <SidebarInset className={isDarkMode ? "dark" : ""}>
+        <div className="min-h-screen bg-background text-foreground">
           <div className="container mx-auto max-w-4xl h-screen flex flex-col">
-            <div className="flex items-center gap-2 p-4">
-              <SidebarTrigger className={`${isDarkMode ? 'text-white hover:text-gray-300' : 'text-gray-600 hover:text-gray-900'}`} />
+            <div className="flex items-center gap-2 p-4 border-b border-border">
+              <SidebarTrigger className="text-foreground/80 hover:text-foreground" />
               <Header isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
             </div>
 
             <div className="flex-1 flex flex-col overflow-hidden">
               {messages.length === 0 ? (
-                <WelcomeScreen 
-                  isDarkMode={isDarkMode} 
+                <WelcomeScreen
                   suggestedQuestions={suggestedQuestions}
                   onQuestionSelect={(question) => {
                     if (!activeChat) {
-                       const newChatId = chats.length > 0 ? Math.max(...chats.map(c => c.id)) + 1 : 1;
-                        const newChat: Chat = {
-                          id: newChatId,
-                          title: "New Chat",
-                          date: "Today",
-                          messages: []
-                        };
-                        setChats(prev => [newChat, ...prev]);
-                        setActiveChatId(newChatId);
+                      handleNewChat();
                     }
                     setInput(question);
+                    // This is a bit of a hack to make sure the state updates before we submit
+                    setTimeout(() => {
+                        const form = document.querySelector('form');
+                        if (form) {
+                            form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                        }
+                    }, 0);
                   }}
                 />
               ) : (
                 <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {messages.map((message) => (
-                      <ChatMessage 
-                        key={message.id} 
-                        message={message} 
-                        isDarkMode={isDarkMode} 
+                      <ChatMessage
+                        key={message.id}
+                        message={message}
                       />
                     ))}
                     <div ref={messagesEndRef} />
@@ -335,12 +329,11 @@ const Index = () => {
                 </ScrollArea>
               )}
 
-              <InputArea 
+              <InputArea
                 input={input}
                 setInput={setInput}
                 onSubmit={handleSubmit}
                 isLoading={isLoading}
-                isDarkMode={isDarkMode}
               />
             </div>
           </div>
