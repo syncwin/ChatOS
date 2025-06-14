@@ -36,7 +36,7 @@ const ChatMessage = ({ message, isDarkMode }: ChatMessageProps) => {
           message.role === "user"
             ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0"
             : isDarkMode 
-              ? "bg-gray-800 border-gray-700 shadow-sm text-gray-100"
+              ? "bg-gray-900 border-gray-800 shadow-sm text-white"
               : "bg-white border-gray-200 shadow-sm text-gray-900"
         }`}
       >
@@ -53,10 +53,10 @@ const ChatMessage = ({ message, isDarkMode }: ChatMessageProps) => {
       {message.role === "user" && (
         <Avatar className="w-8 h-8 mt-1">
           <div className={`w-full h-full rounded-full flex items-center justify-center ${isDarkMode 
-            ? 'bg-gray-600' 
+            ? 'bg-gray-800' 
             : 'bg-gray-200'
           }`}>
-            <User className={`w-4 h-4 ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`} />
+            <User className={`w-4 h-4 ${isDarkMode ? 'text-white' : 'text-gray-600'}`} />
           </div>
           <AvatarFallback>You</AvatarFallback>
         </Avatar>

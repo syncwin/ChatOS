@@ -14,7 +14,7 @@ interface InputAreaProps {
 const InputArea = ({ input, setInput, onSubmit, isLoading, isDarkMode }: InputAreaProps) => {
   return (
     <div className={`p-4 border-t ${isDarkMode 
-      ? 'bg-gray-800/80 backdrop-blur-sm border-gray-700' 
+      ? 'bg-black/90 backdrop-blur-sm border-gray-800' 
       : 'bg-white/80 backdrop-blur-sm border-gray-200'
     }`}>
       <form onSubmit={onSubmit} className="flex gap-2">
@@ -24,7 +24,7 @@ const InputArea = ({ input, setInput, onSubmit, isLoading, isDarkMode }: InputAr
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask me anything..."
             className={`pr-12 h-12 focus:ring-blue-500 ${isDarkMode 
-              ? 'bg-gray-700 border-gray-600 focus:border-blue-500 text-white placeholder-gray-400' 
+              ? 'bg-gray-900 border-gray-700 focus:border-blue-500 text-white placeholder-gray-400' 
               : 'bg-white border-gray-300 focus:border-blue-500 text-gray-900 placeholder-gray-500'
             }`}
             disabled={isLoading}

@@ -112,7 +112,7 @@ const Index = () => {
       <AppSidebar isDarkMode={isDarkMode} />
       <SidebarInset>
         <div className={`min-h-screen ${isDarkMode 
-          ? 'bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900' 
+          ? 'bg-black' 
           : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100'
         }`}>
           <div className="container mx-auto max-w-4xl h-screen flex flex-col">

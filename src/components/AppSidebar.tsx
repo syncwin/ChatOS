@@ -29,7 +29,7 @@ const AppSidebar = ({ isDarkMode }: AppSidebarProps) => {
   ];
 
   return (
-    <Sidebar className={`${isDarkMode ? 'bg-gray-900 border-gray-700' : 'bg-white border-gray-200'}`}>
+    <Sidebar className={`${isDarkMode ? 'bg-black border-gray-800' : 'bg-white border-gray-200'}`}>
       <SidebarHeader className="p-4">
         <Button 
           className="w-full justify-start gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
@@ -49,7 +49,7 @@ const AppSidebar = ({ isDarkMode }: AppSidebarProps) => {
                 type="text"
                 placeholder="Search chats..."
                 className={`w-full pl-10 pr-4 py-2 rounded-md text-sm ${isDarkMode 
-                  ? 'bg-gray-800 border-gray-700 text-gray-200 placeholder-gray-400' 
+                  ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-400' 
                   : 'bg-gray-100 border-gray-300 text-gray-900 placeholder-gray-500'
                 } border focus:outline-none focus:ring-2 focus:ring-blue-500`}
               />
@@ -68,7 +68,7 @@ const AppSidebar = ({ isDarkMode }: AppSidebarProps) => {
             <SidebarMenu>
               {recentChats.map((chat) => (
                 <SidebarMenuItem key={chat.id}>
-                  <SidebarMenuButton className={`group w-full justify-between ${isDarkMode ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-gray-100 text-gray-700'}`}>
+                  <SidebarMenuButton className={`group w-full justify-between ${isDarkMode ? 'hover:bg-gray-900 text-white' : 'hover:bg-gray-100 text-gray-700'}`}>
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       <MessageSquare className="w-4 h-4 flex-shrink-0" />
                       <div className="min-w-0 flex-1">
@@ -94,13 +94,13 @@ const AppSidebar = ({ isDarkMode }: AppSidebarProps) => {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton className={`${isDarkMode ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-gray-100 text-gray-700'}`}>
+                <SidebarMenuButton className={`${isDarkMode ? 'hover:bg-gray-900 text-white' : 'hover:bg-gray-100 text-gray-700'}`}>
                   <History className="w-4 h-4" />
                   <span>Chat History</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton className={`${isDarkMode ? 'hover:bg-gray-800 text-gray-200' : 'hover:bg-gray-100 text-gray-700'}`}>
+                <SidebarMenuButton className={`${isDarkMode ? 'hover:bg-gray-900 text-white' : 'hover:bg-gray-100 text-gray-700'}`}>
                   <Settings className="w-4 h-4" />
                   <span>Settings</span>
                 </SidebarMenuButton>
@@ -112,14 +112,14 @@ const AppSidebar = ({ isDarkMode }: AppSidebarProps) => {
 
       <SidebarFooter className="p-4">
         {/* User Account */}
-        <div className={`flex items-center gap-3 p-3 rounded-lg ${isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'} transition-colors cursor-pointer`}>
+        <div className={`flex items-center gap-3 p-3 rounded-lg ${isDarkMode ? 'bg-gray-900 hover:bg-gray-800' : 'bg-gray-100 hover:bg-gray-200'} transition-colors cursor-pointer`}>
           <Avatar className="w-8 h-8">
             <AvatarFallback className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm">
               JD
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <div className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-900'}`}>John Doe</div>
+            <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>John Doe</div>
             <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>john@example.com</div>
           </div>
           <User className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
