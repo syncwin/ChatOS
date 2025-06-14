@@ -24,6 +24,12 @@ const Index = () => {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageIdCounter = useRef(0);
+
+  const generateUniqueId = () => {
+    messageIdCounter.current += 1;
+    return `msg-${Date.now()}-${messageIdCounter.current}`;
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -44,7 +50,7 @@ const Index = () => {
     const randomResponse = responses[Math.floor(Math.random() * responses.length)];
     const words = randomResponse.split(" ");
     
-    const assistantMessageId = Date.now().toString();
+    const assistantMessageId = generateUniqueId();
     
     // Add initial empty message
     setMessages(prev => [...prev, {
@@ -72,7 +78,7 @@ const Index = () => {
     if (!input.trim() || isLoading) return;
 
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: generateUniqueId(),
       content: input.trim(),
       role: "user",
       timestamp: new Date()
