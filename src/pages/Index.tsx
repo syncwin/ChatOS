@@ -1,5 +1,5 @@
+
 import { useState, useRef, useEffect } from "react";
-import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import Header from "@/components/Header";
@@ -58,161 +58,53 @@ const Index = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleStreamingResponse = async (userMessage: string) => {
-    const apiKey = localStorage.getItem("perplexity_api_key");
+  const simulateStreamingResponse = async (userMessage: string) => {
+    const responses = [
+      "I'm an AI assistant designed to help you with various tasks and answer your questions. I can provide information, assist with analysis, help with creative tasks, and much more.",
+      "Based on your question about AI chatbots, I can explain that modern AI systems like myself use large language models trained on diverse datasets to understand and generate human-like text responses.",
+      "Perplexity AI is known for its search-augmented responses, combining real-time web search with AI-generated answers. This allows for more current and factual information compared to traditional chatbots.",
+      "I can help you with research, writing, coding, analysis, creative projects, and answering questions across a wide range of topics. What would you like to explore today?"
+    ];
 
-    if (!apiKey) {
-      toast.error("API Key not found", {
-        description: "Please add your Perplexity API key in the settings.",
-      });
-      const assistantMessageId = generateUniqueId();
-      setChats((prevChats) =>
-        prevChats.map((chat) => {
-          if (chat.id === activeChatId) {
-            return {
-              ...chat,
-              messages: [
-                ...chat.messages,
-                {
-                  id: assistantMessageId,
-                  content:
-                    "Error: Perplexity API key not set. Please add it in the settings menu.",
-                  role: "assistant",
-                  timestamp: new Date(),
-                  isStreaming: false,
-                },
-              ],
-            };
-          }
-          return chat;
-        })
-      );
-      return;
-    }
-
+    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+    const words = randomResponse.split(" ");
+    
     const assistantMessageId = generateUniqueId();
+    
+    // Add initial empty message
+    setChats(prevChats => prevChats.map(chat => {
+      if (chat.id === activeChatId) {
+        return {
+          ...chat,
+          messages: [...chat.messages, {
+            id: assistantMessageId,
+            content: "",
+            role: "assistant",
+            timestamp: new Date(),
+            isStreaming: true
+          }]
+        };
+      }
+      return chat;
+    }));
 
-    // Add initial empty message for streaming
-    setChats((prevChats) =>
-      prevChats.map((chat) => {
+    // Simulate streaming by adding words progressively
+    for (let i = 0; i <= words.length; i++) {
+      await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 100));
+      
+      setChats(prevChats => prevChats.map(chat => {
         if (chat.id === activeChatId) {
           return {
             ...chat,
-            messages: [
-              ...chat.messages,
-              {
-                id: assistantMessageId,
-                content: "",
-                role: "assistant",
-                timestamp: new Date(),
-                isStreaming: true,
-              },
-            ],
+            messages: chat.messages.map(msg => 
+              msg.id === assistantMessageId 
+                ? { ...msg, content: words.slice(0, i).join(" "), isStreaming: i < words.length }
+                : msg
+            )
           };
         }
         return chat;
-      })
-    );
-
-    try {
-      const response = await fetch("https://api.perplexity.ai/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "llama-3.1-sonar-small-128k-online",
-          messages: [
-            { role: "system", content: "Be precise and concise." },
-            { role: "user", content: userMessage },
-          ],
-          stream: true,
-        }),
-      });
-
-      if (!response.ok || !response.body) {
-        const errorData = await response.json();
-        throw new Error(errorData.error.message || `HTTP error! Status: ${response.status}`);
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || ""; // Keep partial line in buffer
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const jsonString = line.substring(6);
-            if (jsonString === "[DONE]") continue;
-
-            try {
-              const parsed = JSON.parse(jsonString);
-              const token = parsed.choices[0]?.delta?.content;
-
-              if (token) {
-                setChats((prevChats) =>
-                  prevChats.map((chat) => {
-                    if (chat.id === activeChatId) {
-                      return {
-                        ...chat,
-                        messages: chat.messages.map((msg) =>
-                          msg.id === assistantMessageId
-                            ? { ...msg, content: msg.content + token }
-                            : msg
-                        ),
-                      };
-                    }
-                    return chat;
-                  })
-                );
-              }
-            } catch (error) {
-              console.error("Error parsing stream chunk:", error, jsonString);
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error calling Perplexity API:", error);
-      const errorContent = error instanceof Error ? error.message : "An unknown error occurred.";
-      toast.error("Failed to get response from Perplexity.");
-       setChats((prevChats) =>
-        prevChats.map((chat) => {
-          if (chat.id === activeChatId) {
-            return {
-              ...chat,
-              messages: chat.messages.map((msg) =>
-                msg.id === assistantMessageId
-                  ? { ...msg, content: `Error: ${errorContent}`, isStreaming: false }
-                  : msg
-              ),
-            };
-          }
-          return chat;
-        })
-      );
-    } finally {
-        setChats((prevChats) =>
-            prevChats.map((chat) => {
-            if (chat.id === activeChatId) {
-                return {
-                ...chat,
-                messages: chat.messages.map((msg) =>
-                    msg.id === assistantMessageId ? { ...msg, isStreaming: false } : msg
-                ),
-                };
-            }
-            return chat;
-            })
-        );
+      }));
     }
   };
 
@@ -245,10 +137,9 @@ const Index = () => {
     setIsLoading(true);
 
     try {
-      await handleStreamingResponse(input.trim());
+      await simulateStreamingResponse(input.trim());
     } catch (error) {
       console.error("Error:", error);
-      toast.error("An unexpected error occurred.");
     } finally {
       setIsLoading(false);
     }
@@ -318,15 +209,7 @@ const Index = () => {
                   suggestedQuestions={suggestedQuestions}
                   onQuestionSelect={(question) => {
                     if (!activeChat) {
-                       const newChatId = chats.length > 0 ? Math.max(...chats.map(c => c.id)) + 1 : 1;
-                        const newChat: Chat = {
-                          id: newChatId,
-                          title: "New Chat",
-                          date: "Today",
-                          messages: []
-                        };
-                        setChats(prev => [newChat, ...prev]);
-                        setActiveChatId(newChatId);
+                      handleNewChat();
                     }
                     setInput(question);
                   }}

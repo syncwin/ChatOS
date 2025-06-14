@@ -1,5 +1,4 @@
 
-import * as React from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,9 +9,6 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Sun, Moon } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 
 interface SettingsDialogProps {
   isOpen: boolean;
@@ -21,27 +17,7 @@ interface SettingsDialogProps {
   toggleDarkMode: () => void;
 }
 
-const SettingsDialog = ({
-  isOpen,
-  onOpenChange,
-  isDarkMode,
-  toggleDarkMode,
-}: SettingsDialogProps) => {
-  const [apiKey, setApiKey] = React.useState("");
-
-  React.useEffect(() => {
-    if (isOpen) {
-      const storedApiKey = localStorage.getItem("perplexity_api_key") || "";
-      setApiKey(storedApiKey);
-    }
-  }, [isOpen]);
-
-  const handleSaveApiKey = () => {
-    localStorage.setItem("perplexity_api_key", apiKey);
-    toast.success("Perplexity API Key saved!");
-    onOpenChange(false);
-  };
-
+const SettingsDialog = ({ isOpen, onOpenChange, isDarkMode, toggleDarkMode }: SettingsDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className={isDarkMode ? "dark" : ""}>
@@ -51,7 +27,7 @@ const SettingsDialog = ({
             Manage your application settings.
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4 space-y-6">
+        <div className="py-4">
           <div className="flex items-center justify-between">
             <Label htmlFor="dark-mode" className="flex flex-col gap-1">
               <span>Dark Mode</span>
@@ -60,37 +36,15 @@ const SettingsDialog = ({
               </span>
             </Label>
             <div className="flex items-center gap-2">
-              <Sun
-                className={`h-5 w-5 ${
-                  !isDarkMode ? "text-amber-500" : "text-muted-foreground"
-                }`}
-              />
+              <Sun className={`h-5 w-5 ${!isDarkMode ? 'text-amber-500' : 'text-muted-foreground'}`} />
               <Switch
                 id="dark-mode"
                 checked={isDarkMode}
                 onCheckedChange={toggleDarkMode}
               />
-              <Moon
-                className={`h-5 w-5 ${
-                  isDarkMode ? "text-blue-400" : "text-muted-foreground"
-                }`}
-              />
+              <Moon className={`h-5 w-5 ${isDarkMode ? 'text-blue-400' : 'text-muted-foreground'}`} />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="api-key">Perplexity API Key</Label>
-            <p className="text-sm text-muted-foreground">
-              Needed for AI responses. Your key is stored only in your browser.
-            </p>
-            <Input
-              id="api-key"
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Enter your Perplexity API key (pplx-...)"
-            />
-          </div>
-          <Button onClick={handleSaveApiKey}>Save API Key</Button>
         </div>
       </DialogContent>
     </Dialog>
