@@ -31,14 +31,14 @@ const SettingsDialog = ({
 
   React.useEffect(() => {
     if (isOpen) {
-      const storedApiKey = localStorage.getItem("perplexity_api_key") || "";
+      const storedApiKey = localStorage.getItem("gemini_api_key") || "";
       setApiKey(storedApiKey);
     }
   }, [isOpen]);
 
   const handleSaveApiKey = () => {
-    localStorage.setItem("perplexity_api_key", apiKey);
-    toast.success("Perplexity API Key saved!");
+    localStorage.setItem("gemini_api_key", apiKey);
+    toast.success("Google Gemini API Key saved!");
     onOpenChange(false);
   };
 
@@ -78,16 +78,16 @@ const SettingsDialog = ({
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="api-key">Perplexity API Key</Label>
+            <Label htmlFor="api-key">Google Gemini API Key</Label>
             <p className="text-sm text-muted-foreground">
-              Needed for AI responses. Your key is stored only in your browser.
+              Needed for AI responses. Get one from Google AI Studio. Your key is stored only in your browser.
             </p>
             <Input
               id="api-key"
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Enter your Perplexity API key (pplx-...)"
+              placeholder="Enter your Google Gemini API key"
             />
           </div>
           <Button onClick={handleSaveApiKey}>Save API Key</Button>

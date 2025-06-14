@@ -58,35 +58,15 @@ const Index = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleStreamingResponse = async (userMessage: string) => {
-    const apiKey = localStorage.getItem("perplexity_api_key");
+  const handleStreamingResponse = async (messagesForApi: Message[]) => {
+    const apiKey = localStorage.getItem("gemini_api_key");
 
     if (!apiKey) {
       toast.error("API Key not found", {
-        description: "Please add your Perplexity API key in the settings.",
+        description: "Please add your Google Gemini API key in the settings.",
       });
-      const assistantMessageId = generateUniqueId();
-      setChats((prevChats) =>
-        prevChats.map((chat) => {
-          if (chat.id === activeChatId) {
-            return {
-              ...chat,
-              messages: [
-                ...chat.messages,
-                {
-                  id: assistantMessageId,
-                  content:
-                    "Error: Perplexity API key not set. Please add it in the settings menu.",
-                  role: "assistant",
-                  timestamp: new Date(),
-                  isStreaming: false,
-                },
-              ],
-            };
-          }
-          return chat;
-        })
-      );
+      // No need to add error message to chat, toast is enough and stops loading indicator.
+      setIsLoading(false);
       return;
     }
 
@@ -114,26 +94,31 @@ const Index = () => {
       })
     );
 
+    const geminiMessages = messagesForApi.map(msg => ({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: msg.content }],
+    }));
+
     try {
-      const response = await fetch("https://api.perplexity.ai/chat/completions", {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:streamGenerateContent?key=${apiKey}`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${apiKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "llama-3.1-sonar-small-128k-online",
-          messages: [
-            { role: "system", content: "Be precise and concise." },
-            { role: "user", content: userMessage },
-          ],
-          stream: true,
+          contents: geminiMessages,
+          safetySettings: [
+            { "category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE" },
+            { "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE" },
+            { "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE" },
+            { "category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE" }
+          ]
         }),
       });
 
       if (!response.ok || !response.body) {
-        const errorData = await response.json();
-        throw new Error(errorData.error.message || `HTTP error! Status: ${response.status}`);
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error?.message || `HTTP error! Status: ${response.status}`);
       }
 
       const reader = response.body.getReader();
@@ -145,45 +130,48 @@ const Index = () => {
         if (done) break;
         
         buffer += decoder.decode(value, { stream: true });
+        // Attempt to process line-by-line. This is speculative for Gemini's stream format.
         const lines = buffer.split("\n");
-        buffer = lines.pop() || ""; // Keep partial line in buffer
+        buffer = lines.pop() || "";
 
         for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const jsonString = line.substring(6);
-            if (jsonString === "[DONE]") continue;
+          if (line.trim().length < 2) continue; // Skip empty lines or brackets
 
-            try {
-              const parsed = JSON.parse(jsonString);
-              const token = parsed.choices[0]?.delta?.content;
+          try {
+            // Clean up chunk before parsing
+            let cleanedLine = line.trim();
+            if (cleanedLine.startsWith(',')) cleanedLine = cleanedLine.substring(1);
+            if (cleanedLine.endsWith(',')) cleanedLine = cleanedLine.slice(0, -1);
 
-              if (token) {
-                setChats((prevChats) =>
-                  prevChats.map((chat) => {
-                    if (chat.id === activeChatId) {
-                      return {
-                        ...chat,
-                        messages: chat.messages.map((msg) =>
-                          msg.id === assistantMessageId
-                            ? { ...msg, content: msg.content + token }
-                            : msg
-                        ),
-                      };
-                    }
-                    return chat;
-                  })
-                );
-              }
-            } catch (error) {
-              console.error("Error parsing stream chunk:", error, jsonString);
+            const parsed = JSON.parse(cleanedLine);
+            const token = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+
+            if (token) {
+              setChats((prevChats) =>
+                prevChats.map((chat) => {
+                  if (chat.id === activeChatId) {
+                    return {
+                      ...chat,
+                      messages: chat.messages.map((msg) =>
+                        msg.id === assistantMessageId
+                          ? { ...msg, content: msg.content + token }
+                          : msg
+                      ),
+                    };
+                  }
+                  return chat;
+                })
+              );
             }
+          } catch (error) {
+            console.error("Error parsing stream chunk:", error, `LINE: "${line}"`);
           }
         }
       }
     } catch (error) {
-      console.error("Error calling Perplexity API:", error);
+      console.error("Error calling Google Gemini API:", error);
       const errorContent = error instanceof Error ? error.message : "An unknown error occurred.";
-      toast.error("Failed to get response from Perplexity.");
+      toast.error("Failed to get response from Gemini.");
        setChats((prevChats) =>
         prevChats.map((chat) => {
           if (chat.id === activeChatId) {
@@ -213,6 +201,7 @@ const Index = () => {
             return chat;
             })
         );
+        setIsLoading(false);
     }
   };
 
@@ -228,6 +217,7 @@ const Index = () => {
     };
     
     const isNewChat = activeChat && activeChat.messages.length === 0;
+    const messagesForApi = [...(activeChat?.messages || []), userMessage];
 
     setChats(prevChats => prevChats.map(chat => {
       if (chat.id === activeChatId) {
@@ -235,7 +225,7 @@ const Index = () => {
         return {
           ...chat,
           title: newTitle.length > 30 ? newTitle.substring(0, 27) + "..." : newTitle,
-          messages: [...chat.messages, userMessage]
+          messages: messagesForApi
         };
       }
       return chat;
@@ -245,11 +235,10 @@ const Index = () => {
     setIsLoading(true);
 
     try {
-      await handleStreamingResponse(input.trim());
+      await handleStreamingResponse(messagesForApi);
     } catch (error) {
       console.error("Error:", error);
       toast.error("An unexpected error occurred.");
-    } finally {
       setIsLoading(false);
     }
   };
