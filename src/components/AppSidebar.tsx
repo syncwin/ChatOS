@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { User, MessageSquare, Settings, Plus, Search, History, Trash2 } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, SidebarSeparator, SidebarMenuAction } from "@/components/ui/sidebar";
@@ -70,10 +71,10 @@ const AppSidebar = ({
             <SidebarGroupContent>
               <SidebarMenu>
                 {filteredChats.map(chat => <SidebarMenuItem key={chat.id}>
-                    <SidebarMenuButton onClick={() => onSelectChat(chat)} className="group w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-primary data-[active=true]:text-primary-foreground" data-active={chat.id === activeChatId}>
+                    <SidebarMenuButton onClick={() => onSelectChat(chat)} className="group w-full justify-start h-auto p-2.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-primary data-[active=true]:text-primary-foreground" data-active={chat.id === activeChatId}>
                       <MessageSquare className="w-4 h-4 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <div className="truncate text-sm font-medium py-[10px] px-[10px]">{chat.title}</div>
+                        <div className="truncate text-sm font-medium">{chat.title}</div>
                         <div className="text-xs text-muted-foreground group-data-[active=true]:text-primary-foreground/70">{chat.date}</div>
                       </div>
                     </SidebarMenuButton>
