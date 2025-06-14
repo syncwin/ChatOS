@@ -1,10 +1,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import Header from "@/components/Header";
 import ChatMessage from "@/components/ChatMessage";
 import WelcomeScreen from "@/components/WelcomeScreen";
 import InputArea from "@/components/InputArea";
+import AppSidebar from "@/components/AppSidebar";
 
 interface Message {
   id: string;
@@ -106,45 +108,53 @@ const Index = () => {
   };
 
   return (
-    <div className={`min-h-screen ${isDarkMode 
-      ? 'bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900' 
-      : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100'
-    }`}>
-      <div className="container mx-auto max-w-4xl h-screen flex flex-col">
-        <Header isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+    <>
+      <AppSidebar isDarkMode={isDarkMode} />
+      <SidebarInset>
+        <div className={`min-h-screen ${isDarkMode 
+          ? 'bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900' 
+          : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100'
+        }`}>
+          <div className="container mx-auto max-w-4xl h-screen flex flex-col">
+            <div className="flex items-center gap-2 p-4">
+              <SidebarTrigger className={`${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`} />
+              <Header isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+            </div>
 
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {messages.length === 0 ? (
-            <WelcomeScreen 
-              isDarkMode={isDarkMode} 
-              suggestedQuestions={suggestedQuestions}
-              onQuestionSelect={setInput}
-            />
-          ) : (
-            <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
-              <div className="space-y-4">
-                {messages.map((message) => (
-                  <ChatMessage 
-                    key={message.id} 
-                    message={message} 
-                    isDarkMode={isDarkMode} 
-                  />
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-            </ScrollArea>
-          )}
+            <div className="flex-1 flex flex-col overflow-hidden">
+              {messages.length === 0 ? (
+                <WelcomeScreen 
+                  isDarkMode={isDarkMode} 
+                  suggestedQuestions={suggestedQuestions}
+                  onQuestionSelect={setInput}
+                />
+              ) : (
+                <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
+                  <div className="space-y-4">
+                    {messages.map((message) => (
+                      <ChatMessage 
+                        key={message.id} 
+                        message={message} 
+                        isDarkMode={isDarkMode} 
+                      />
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </div>
+                </ScrollArea>
+              )}
 
-          <InputArea 
-            input={input}
-            setInput={setInput}
-            onSubmit={handleSubmit}
-            isLoading={isLoading}
-            isDarkMode={isDarkMode}
-          />
+              <InputArea 
+                input={input}
+                setInput={setInput}
+                onSubmit={handleSubmit}
+                isLoading={isLoading}
+                isDarkMode={isDarkMode}
+              />
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      </SidebarInset>
+    </>
   );
 };
 

@@ -10,9 +10,9 @@ interface HeaderProps {
 
 const Header = ({ isDarkMode, toggleDarkMode }: HeaderProps) => {
   return (
-    <div className={`flex items-center justify-between p-4 border-b ${isDarkMode 
-      ? 'border-gray-700 bg-gray-800/80 backdrop-blur-sm' 
-      : 'bg-white/80 backdrop-blur-sm border-gray-200'
+    <div className={`flex items-center justify-between flex-1 px-4 py-2 ${isDarkMode 
+      ? 'text-gray-200' 
+      : 'text-gray-700'
     }`}>
       <div className="flex items-center gap-2">
         <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
