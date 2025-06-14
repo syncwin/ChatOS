@@ -97,19 +97,19 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900">
       <div className="container mx-auto max-w-4xl h-screen flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b bg-white/80 backdrop-blur-sm">
+        <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-800/80 backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
               <Sparkles className="w-4 h-4 text-white" />
             </div>
-            <h1 className="text-xl font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-xl font-semibold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
               InsightSeeker AI
             </h1>
           </div>
-          <Badge variant="secondary" className="flex items-center gap-1">
+          <Badge variant="secondary" className="flex items-center gap-1 bg-gray-700 text-gray-200 border-gray-600">
             <Search className="w-3 h-3" />
             AI-Powered
           </Badge>
@@ -123,10 +123,10 @@ const Index = () => {
                 <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center mx-auto mb-4">
                   <Bot className="w-8 h-8 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                   Welcome to InsightSeeker AI
                 </h2>
-                <p className="text-gray-600 mb-6">
+                <p className="text-gray-300 mb-6">
                   Your intelligent research companion. Ask me anything and I'll provide detailed, insightful answers.
                 </p>
                 <div className="grid grid-cols-1 gap-2">
@@ -134,7 +134,7 @@ const Index = () => {
                     <Button
                       key={index}
                       variant="outline"
-                      className="text-left justify-start h-auto p-3 hover:bg-blue-50 border-blue-200 hover:border-blue-300 transition-all"
+                      className="text-left justify-start h-auto p-3 hover:bg-gray-700 border-gray-600 hover:border-gray-500 transition-all text-gray-200 hover:text-white"
                       onClick={() => setInput(question)}
                     >
                       {question}
@@ -165,7 +165,7 @@ const Index = () => {
                       className={`max-w-[80%] p-4 ${
                         message.role === "user"
                           ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0"
-                          : "bg-white border-gray-200 shadow-sm"
+                          : "bg-gray-800 border-gray-700 shadow-sm text-gray-100"
                       }`}
                     >
                       <p className="text-sm leading-relaxed">
@@ -180,8 +180,8 @@ const Index = () => {
                     </Card>
                     {message.role === "user" && (
                       <Avatar className="w-8 h-8 mt-1">
-                        <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center">
-                          <User className="w-4 h-4 text-gray-600" />
+                        <div className="w-full h-full bg-gray-600 rounded-full flex items-center justify-center">
+                          <User className="w-4 h-4 text-gray-200" />
                         </div>
                         <AvatarFallback>You</AvatarFallback>
                       </Avatar>
@@ -194,14 +194,14 @@ const Index = () => {
           )}
 
           {/* Input Area */}
-          <div className="p-4 bg-white/80 backdrop-blur-sm border-t">
+          <div className="p-4 bg-gray-800/80 backdrop-blur-sm border-t border-gray-700">
             <form onSubmit={handleSubmit} className="flex gap-2">
               <div className="flex-1 relative">
                 <Input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Ask me anything..."
-                  className="pr-12 h-12 bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  className="pr-12 h-12 bg-gray-700 border-gray-600 focus:border-blue-500 focus:ring-blue-500 text-white placeholder-gray-400"
                   disabled={isLoading}
                 />
                 <Button
@@ -214,7 +214,7 @@ const Index = () => {
                 </Button>
               </div>
             </form>
-            <p className="text-xs text-gray-500 mt-2 text-center">
+            <p className="text-xs text-gray-400 mt-2 text-center">
               InsightSeeker AI can make mistakes. Please verify important information.
             </p>
           </div>
