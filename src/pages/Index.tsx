@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -96,6 +95,14 @@ const Index = () => {
     }
   };
 
+  const handleNewChat = () => {
+    setMessages([]);
+  };
+
+  const handleSelectChat = (chat: { id: number; title: string; date: string }) => {
+    alert(`Selected chat: "${chat.title}".\n\nFunctionality to load past conversations is not yet implemented.`);
+  };
+
   const suggestedQuestions = [
     "What is artificial intelligence?",
     "How do large language models work?",
@@ -109,7 +116,11 @@ const Index = () => {
 
   return (
     <>
-      <AppSidebar isDarkMode={isDarkMode} />
+      <AppSidebar 
+        isDarkMode={isDarkMode}
+        onNewChat={handleNewChat}
+        onSelectChat={handleSelectChat}
+      />
       <SidebarInset>
         <div className={`min-h-screen ${isDarkMode 
           ? 'bg-black' 
