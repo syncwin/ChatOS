@@ -1,13 +1,10 @@
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Search, Sparkles, Bot, User, Moon, Sun } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
+import Header from "@/components/Header";
+import ChatMessage from "@/components/ChatMessage";
+import WelcomeScreen from "@/components/WelcomeScreen";
+import InputArea from "@/components/InputArea";
 
 interface Message {
   id: string;
@@ -114,152 +111,37 @@ const Index = () => {
       : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100'
     }`}>
       <div className="container mx-auto max-w-4xl h-screen flex flex-col">
-        {/* Header */}
-        <div className={`flex items-center justify-between p-4 border-b ${isDarkMode 
-          ? 'border-gray-700 bg-gray-800/80 backdrop-blur-sm' 
-          : 'bg-white/80 backdrop-blur-sm border-gray-200'
-        }`}>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
-            <h1 className="text-xl font-semibold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              InsightSeeker AI
-            </h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <Badge variant="secondary" className={`flex items-center gap-1 ${isDarkMode 
-              ? 'bg-gray-700 text-gray-200 border-gray-600' 
-              : 'bg-gray-100 text-gray-700 border-gray-300'
-            }`}>
-              <Search className="w-3 h-3" />
-              AI-Powered
-            </Badge>
-            <div className="flex items-center gap-2">
-              <Sun className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-yellow-500'}`} />
-              <Switch checked={isDarkMode} onCheckedChange={toggleDarkMode} />
-              <Moon className={`w-4 h-4 ${isDarkMode ? 'text-blue-400' : 'text-gray-400'}`} />
-            </div>
-          </div>
-        </div>
+        <Header isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
 
-        {/* Chat Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {messages.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center p-8">
-              <div className="text-center max-w-md">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center mx-auto mb-4">
-                  <Bot className="w-8 h-8 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                  Welcome to InsightSeeker AI
-                </h2>
-                <p className={`mb-6 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  Your intelligent research companion. Ask me anything and I'll provide detailed, insightful answers.
-                </p>
-                <div className="grid grid-cols-1 gap-2">
-                  {suggestedQuestions.map((question, index) => (
-                    <Button
-                      key={index}
-                      variant="outline"
-                      className={`text-left justify-start h-auto p-3 transition-all ${isDarkMode 
-                        ? 'hover:bg-gray-700 border-gray-600 hover:border-gray-500 text-gray-200 hover:text-white' 
-                        : 'hover:bg-blue-50 border-blue-200 hover:border-blue-300 text-gray-700 hover:text-gray-900'
-                      }`}
-                      onClick={() => setInput(question)}
-                    >
-                      {question}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <WelcomeScreen 
+              isDarkMode={isDarkMode} 
+              suggestedQuestions={suggestedQuestions}
+              onQuestionSelect={setInput}
+            />
           ) : (
             <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
               <div className="space-y-4">
                 {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex gap-3 ${
-                      message.role === "user" ? "justify-end" : "justify-start"
-                    }`}
-                  >
-                    {message.role === "assistant" && (
-                      <Avatar className="w-8 h-8 mt-1">
-                        <div className="w-full h-full bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-                          <Bot className="w-4 h-4 text-white" />
-                        </div>
-                        <AvatarFallback>AI</AvatarFallback>
-                      </Avatar>
-                    )}
-                    <Card
-                      className={`max-w-[80%] p-4 ${
-                        message.role === "user"
-                          ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0"
-                          : isDarkMode 
-                            ? "bg-gray-800 border-gray-700 shadow-sm text-gray-100"
-                            : "bg-white border-gray-200 shadow-sm text-gray-900"
-                      }`}
-                    >
-                      <p className="text-sm leading-relaxed">
-                        {message.content}
-                        {message.isStreaming && (
-                          <span className="inline-block w-2 h-4 bg-current ml-1 animate-pulse" />
-                        )}
-                      </p>
-                      <div className="text-xs opacity-70 mt-2">
-                        {message.timestamp.toLocaleTimeString()}
-                      </div>
-                    </Card>
-                    {message.role === "user" && (
-                      <Avatar className="w-8 h-8 mt-1">
-                        <div className={`w-full h-full rounded-full flex items-center justify-center ${isDarkMode 
-                          ? 'bg-gray-600' 
-                          : 'bg-gray-200'
-                        }`}>
-                          <User className={`w-4 h-4 ${isDarkMode ? 'text-gray-200' : 'text-gray-600'}`} />
-                        </div>
-                        <AvatarFallback>You</AvatarFallback>
-                      </Avatar>
-                    )}
-                  </div>
+                  <ChatMessage 
+                    key={message.id} 
+                    message={message} 
+                    isDarkMode={isDarkMode} 
+                  />
                 ))}
                 <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
           )}
 
-          {/* Input Area */}
-          <div className={`p-4 border-t ${isDarkMode 
-            ? 'bg-gray-800/80 backdrop-blur-sm border-gray-700' 
-            : 'bg-white/80 backdrop-blur-sm border-gray-200'
-          }`}>
-            <form onSubmit={handleSubmit} className="flex gap-2">
-              <div className="flex-1 relative">
-                <Input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask me anything..."
-                  className={`pr-12 h-12 focus:ring-blue-500 ${isDarkMode 
-                    ? 'bg-gray-700 border-gray-600 focus:border-blue-500 text-white placeholder-gray-400' 
-                    : 'bg-white border-gray-300 focus:border-blue-500 text-gray-900 placeholder-gray-500'
-                  }`}
-                  disabled={isLoading}
-                />
-                <Button
-                  type="submit"
-                  size="sm"
-                  disabled={!input.trim() || isLoading}
-                  className="absolute right-1 top-1 h-10 w-10 p-0 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
-              </div>
-            </form>
-            <p className={`text-xs mt-2 text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              InsightSeeker AI can make mistakes. Please verify important information.
-            </p>
-          </div>
+          <InputArea 
+            input={input}
+            setInput={setInput}
+            onSubmit={handleSubmit}
+            isLoading={isLoading}
+            isDarkMode={isDarkMode}
+          />
         </div>
       </div>
     </div>
