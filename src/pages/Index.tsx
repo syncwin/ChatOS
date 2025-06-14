@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -15,14 +16,34 @@ interface Message {
   isStreaming?: boolean;
 }
 
+interface Chat {
+  id: number;
+  title: string;
+  date: string;
+  messages: Message[];
+}
+
+const initialChats: Chat[] = [
+  { id: 1, title: "AI and Machine Learning", date: "Today", messages: [] },
+  { id: 2, title: "Quantum Computing Basics", date: "Yesterday", messages: [] },
+  { id: 3, title: "Web Development Tips", date: "2 days ago", messages: [] },
+  { id: 4, title: "Data Science Projects", date: "1 week ago", messages: [] },
+];
+
 const Index = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [chats, setChats] = useState<Chat[]>(initialChats);
+  const [activeChatId, setActiveChatId] = useState<number | null>(
+    initialChats.length > 0 ? initialChats[0].id : null
+  );
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageIdCounter = useRef(0);
+
+  const activeChat = chats.find((chat) => chat.id === activeChatId);
+  const messages = activeChat ? activeChat.messages : [];
 
   const generateUniqueId = () => {
     messageIdCounter.current += 1;
@@ -51,29 +72,45 @@ const Index = () => {
     const assistantMessageId = generateUniqueId();
     
     // Add initial empty message
-    setMessages(prev => [...prev, {
-      id: assistantMessageId,
-      content: "",
-      role: "assistant",
-      timestamp: new Date(),
-      isStreaming: true
-    }]);
+    setChats(prevChats => prevChats.map(chat => {
+      if (chat.id === activeChatId) {
+        return {
+          ...chat,
+          messages: [...chat.messages, {
+            id: assistantMessageId,
+            content: "",
+            role: "assistant",
+            timestamp: new Date(),
+            isStreaming: true
+          }]
+        };
+      }
+      return chat;
+    }));
 
     // Simulate streaming by adding words progressively
     for (let i = 0; i <= words.length; i++) {
       await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 100));
       
-      setMessages(prev => prev.map(msg => 
-        msg.id === assistantMessageId 
-          ? { ...msg, content: words.slice(0, i).join(" "), isStreaming: i < words.length }
-          : msg
-      ));
+      setChats(prevChats => prevChats.map(chat => {
+        if (chat.id === activeChatId) {
+          return {
+            ...chat,
+            messages: chat.messages.map(msg => 
+              msg.id === assistantMessageId 
+                ? { ...msg, content: words.slice(0, i).join(" "), isStreaming: i < words.length }
+                : msg
+            )
+          };
+        }
+        return chat;
+      }));
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading || !activeChatId) return;
 
     const userMessage: Message = {
       id: generateUniqueId(),
@@ -81,8 +118,21 @@ const Index = () => {
       role: "user",
       timestamp: new Date()
     };
+    
+    const isNewChat = activeChat && activeChat.messages.length === 0;
 
-    setMessages(prev => [...prev, userMessage]);
+    setChats(prevChats => prevChats.map(chat => {
+      if (chat.id === activeChatId) {
+        const newTitle = isNewChat ? input.trim() : chat.title;
+        return {
+          ...chat,
+          title: newTitle.length > 30 ? newTitle.substring(0, 27) + "..." : newTitle,
+          messages: [...chat.messages, userMessage]
+        };
+      }
+      return chat;
+    }));
+
     setInput("");
     setIsLoading(true);
 
@@ -96,11 +146,27 @@ const Index = () => {
   };
 
   const handleNewChat = () => {
-    setMessages([]);
+    const newChatId = chats.length > 0 ? Math.max(...chats.map(c => c.id)) + 1 : 1;
+    const newChat: Chat = {
+      id: newChatId,
+      title: "New Chat",
+      date: "Today",
+      messages: []
+    };
+    setChats(prev => [newChat, ...prev]);
+    setActiveChatId(newChatId);
   };
 
-  const handleSelectChat = (chat: { id: number; title: string; date: string }) => {
-    alert(`Selected chat: "${chat.title}".\n\nFunctionality to load past conversations is not yet implemented.`);
+  const handleSelectChat = (chatToSelect: Chat) => {
+    setActiveChatId(chatToSelect.id);
+  };
+  
+  const handleDeleteChat = (chatIdToDelete: number) => {
+    const remainingChats = chats.filter(c => c.id !== chatIdToDelete);
+    setChats(remainingChats);
+    if (activeChatId === chatIdToDelete) {
+      setActiveChatId(remainingChats.length > 0 ? remainingChats[0].id : null);
+    }
   };
 
   const suggestedQuestions = [
@@ -118,8 +184,12 @@ const Index = () => {
     <>
       <AppSidebar 
         isDarkMode={isDarkMode}
+        toggleDarkMode={toggleDarkMode}
+        chats={chats}
+        activeChatId={activeChatId}
         onNewChat={handleNewChat}
         onSelectChat={handleSelectChat}
+        onDeleteChat={handleDeleteChat}
       />
       <SidebarInset>
         <div className={`min-h-screen ${isDarkMode 
@@ -137,7 +207,12 @@ const Index = () => {
                 <WelcomeScreen 
                   isDarkMode={isDarkMode} 
                   suggestedQuestions={suggestedQuestions}
-                  onQuestionSelect={setInput}
+                  onQuestionSelect={(question) => {
+                    if (!activeChat) {
+                      handleNewChat();
+                    }
+                    setInput(question);
+                  }}
                 />
               ) : (
                 <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
