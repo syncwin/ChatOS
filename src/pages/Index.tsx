@@ -117,7 +117,7 @@ const Index = () => {
         }`}>
           <div className="container mx-auto max-w-4xl h-screen flex flex-col">
             <div className="flex items-center gap-2 p-4">
-              <SidebarTrigger className={`${isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`} />
+              <SidebarTrigger className={`${isDarkMode ? 'text-white hover:text-gray-300' : 'text-gray-600 hover:text-gray-900'}`} />
               <Header isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
             </div>
 
