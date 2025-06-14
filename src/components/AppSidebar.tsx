@@ -29,7 +29,7 @@ const AppSidebar = ({ isDarkMode }: AppSidebarProps) => {
   ];
 
   return (
-    <Sidebar className={`${isDarkMode ? 'bg-black border-gray-800' : 'bg-white border-gray-200'}`}>
+    <Sidebar className="bg-sidebar border-sidebar-border">
       <SidebarHeader className="p-4">
         <Button 
           className="w-full justify-start gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
@@ -44,14 +44,11 @@ const AppSidebar = ({ isDarkMode }: AppSidebarProps) => {
         <SidebarGroup>
           <SidebarGroupContent>
             <div className="relative px-2">
-              <Search className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Search chats..."
-                className={`w-full pl-10 pr-4 py-2 rounded-md text-sm ${isDarkMode 
-                  ? 'bg-gray-900 border-gray-700 text-white placeholder-gray-400' 
-                  : 'bg-gray-100 border-gray-300 text-gray-900 placeholder-gray-500'
-                } border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                className="w-full pl-10 pr-4 py-2 rounded-md text-sm bg-input border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
           </SidebarGroupContent>
@@ -61,19 +58,19 @@ const AppSidebar = ({ isDarkMode }: AppSidebarProps) => {
 
         {/* Recent Chats */}
         <SidebarGroup>
-          <SidebarGroupLabel className={`text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          <SidebarGroupLabel className="text-xs font-medium text-muted-foreground">
             Recent Chats
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {recentChats.map((chat) => (
                 <SidebarMenuItem key={chat.id}>
-                  <SidebarMenuButton className={`group w-full justify-between ${isDarkMode ? 'hover:bg-gray-900 text-white' : 'hover:bg-gray-100 text-gray-700'}`}>
+                  <SidebarMenuButton className="group w-full justify-between text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       <MessageSquare className="w-4 h-4 flex-shrink-0" />
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-sm font-medium">{chat.title}</div>
-                        <div className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>{chat.date}</div>
+                        <div className="text-xs text-muted-foreground">{chat.date}</div>
                       </div>
                     </div>
                     <Trash2 className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -88,19 +85,19 @@ const AppSidebar = ({ isDarkMode }: AppSidebarProps) => {
 
         {/* Navigation */}
         <SidebarGroup>
-          <SidebarGroupLabel className={`text-xs font-medium ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          <SidebarGroupLabel className="text-xs font-medium text-muted-foreground">
             Navigation
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton className={`${isDarkMode ? 'hover:bg-gray-900 text-white' : 'hover:bg-gray-100 text-gray-700'}`}>
+                <SidebarMenuButton className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
                   <History className="w-4 h-4" />
                   <span>Chat History</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton className={`${isDarkMode ? 'hover:bg-gray-900 text-white' : 'hover:bg-gray-100 text-gray-700'}`}>
+                <SidebarMenuButton className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
                   <Settings className="w-4 h-4" />
                   <span>Settings</span>
                 </SidebarMenuButton>
@@ -112,17 +109,17 @@ const AppSidebar = ({ isDarkMode }: AppSidebarProps) => {
 
       <SidebarFooter className="p-4">
         {/* User Account */}
-        <div className={`flex items-center gap-3 p-3 rounded-lg ${isDarkMode ? 'bg-gray-900 hover:bg-gray-800' : 'bg-gray-100 hover:bg-gray-200'} transition-colors cursor-pointer`}>
+        <div className="flex items-center gap-3 p-3 rounded-lg bg-sidebar-accent hover:bg-sidebar-accent/80 text-sidebar-accent-foreground transition-colors cursor-pointer">
           <Avatar className="w-8 h-8">
             <AvatarFallback className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm">
               JD
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <div className={`text-sm font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>John Doe</div>
-            <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>john@example.com</div>
+            <div className="text-sm font-medium">John Doe</div>
+            <div className="text-xs text-muted-foreground">john@example.com</div>
           </div>
-          <User className={`w-4 h-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+          <User className="w-4 h-4 text-muted-foreground" />
         </div>
       </SidebarFooter>
     </Sidebar>
