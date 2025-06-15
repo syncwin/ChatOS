@@ -12,7 +12,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import ChatOsIcon from "@/components/icons/ChatOsIcon";
 import type { Folder } from "@/services/chatService";
-
 interface Chat {
   id: string;
   title: string;
@@ -30,7 +29,10 @@ interface AppSidebarProps {
   onNewChat: () => void;
   onSelectChat: (chat: Chat) => void;
   createFolder: (name: string) => void;
-  updateFolder: (args: { folderId: string; name: string; }) => void;
+  updateFolder: (args: {
+    folderId: string;
+    name: string;
+  }) => void;
   deleteFolder: (folderId: string) => void;
 }
 const AppSidebar = ({
@@ -43,7 +45,7 @@ const AppSidebar = ({
   onSelectChat,
   createFolder,
   updateFolder,
-  deleteFolder,
+  deleteFolder
 }: AppSidebarProps) => {
   const {
     user,
@@ -106,8 +108,8 @@ const AppSidebar = ({
       {!isCollapsed && <span>New Chat</span>}
     </Button>;
   const logo = <a href="/" className={cn("flex items-center gap-2", isCollapsed && "justify-center")}>
-      <ChatOsIcon className="w-10 h-10 text-primary" />
-      {!isCollapsed && <span className="whitespace-nowrap text-3xl font-semibold">ChatOS</span>}
+      <ChatOsIcon className="w-8h-8 text-primary" />
+      {!isCollapsed && <span className="whitespace-nowrap font-semibold text-2xl">ChatOS</span>}
     </a>;
   return <>
       <Sidebar collapsible="icon" variant="inset">
@@ -127,23 +129,7 @@ const AppSidebar = ({
         <SidebarSeparator />
 
         <SidebarContent>
-          <ChatHistory 
-            chats={chats}
-            folders={folders}
-            activeChatId={activeChatId} 
-            editingChatId={editingChatId} 
-            newChatTitle={newChatTitle} 
-            onSelectChat={onSelectChat} 
-            onStartEdit={handleStartEdit} 
-            onPinChat={handlePinChat} 
-            onDeleteChat={handleDeleteChat} 
-            onTitleChange={handleTitleChange} 
-            onUpdateTitle={handleUpdateTitle} 
-            onTitleKeyDown={handleTitleKeyDown}
-            createFolder={createFolder}
-            updateFolder={updateFolder}
-            deleteFolder={deleteFolder}
-          />
+          <ChatHistory chats={chats} folders={folders} activeChatId={activeChatId} editingChatId={editingChatId} newChatTitle={newChatTitle} onSelectChat={onSelectChat} onStartEdit={handleStartEdit} onPinChat={handlePinChat} onDeleteChat={handleDeleteChat} onTitleChange={handleTitleChange} onUpdateTitle={handleUpdateTitle} onTitleKeyDown={handleTitleKeyDown} createFolder={createFolder} updateFolder={updateFolder} deleteFolder={deleteFolder} />
           
           <SidebarSeparator />
 
