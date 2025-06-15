@@ -1,4 +1,3 @@
-
 import { User, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -6,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 interface UserFooterProps {
   isGuest: boolean;
-  user: { email: string | null } | null;
+  user: { email?: string | null } | null;
   onOpenProfile: () => void;
 }
 
