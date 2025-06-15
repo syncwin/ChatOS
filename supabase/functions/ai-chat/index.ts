@@ -64,97 +64,122 @@ serve(async (req) => {
       apiKey: guestApiKey 
     } = await req.json() as ChatRequest;
 
-    console.log(`Processing request for provider: ${provider}`);
-    
-    let apiKey: string;
+    console.log(`[ai-chat] Provider: ${provider} | Model: ${model} | Guest?: ${!!guestApiKey}`);
+
+    let apiKey: string | undefined;
     const supabaseClient = getSupabaseClient(req);
+
+    // 1. Try to get logged-in user (should be present for non-guest)
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
 
     if (userError) {
-      console.error('Error getting user:', userError);
+      console.error('[ai-chat] Error fetching user:', userError);
     }
+    console.log(`[ai-chat] User status: ${user ? user.id : 'unauthenticated'}`);
 
-    console.log('User authentication status:', user ? 'authenticated' : 'not authenticated');
-    console.log('Guest API key provided:', !!guestApiKey);
-
+    // 2. Authenticated user path (DB lookup): use service key and log issues
     if (user) {
-      // Authenticated user path
-      console.log('Fetching API key for authenticated user:', user.id);
-      
-      // Use the service role key to bypass RLS and read the API key.
-      // This is safe because this is a trusted server-side environment.
+      console.log(`[ai-chat] Getting provider API key for user ${user.id}`);
       const serviceClient = createClient(
         Deno.env.get('SUPABASE_URL') ?? '',
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
         { auth: { autoRefreshToken: false, persistSession: false } }
       );
 
+      // Defensive: If provider is undefined, throw error here
+      if (!provider) {
+        console.error('[ai-chat] Provider missing in request (user auth).');
+        throw new Error('No provider specified.');
+      }
+
       const { data: apiKeyData, error: apiKeyError } = await serviceClient
         .from('api_keys')
         .select('api_key')
         .eq('provider', provider)
         .eq('user_id', user.id)
-        .single();
-
-      console.log('API key query result:', { data: !!apiKeyData, error: apiKeyError });
+        .maybeSingle();
 
       if (apiKeyError) {
-        console.error('API key error for user:', user.id, apiKeyError);
-        if (apiKeyError.code === 'PGRST116') {
-          throw new Error(`No API key found for provider: ${provider}. Please add your API key in the settings.`);
-        }
-        throw new Error(`Failed to fetch API key: ${apiKeyError.message}`);
+        console.error(`[ai-chat] Supabase DB error for user ${user.id}:`, apiKeyError);
+        throw new Error(`[INTERNAL] Failed to look up your API key for ${provider}. Please try again or check your settings.`);
       }
-      
-      if (!apiKeyData) {
-        throw new Error(`No API key found for provider: ${provider}. Please add your API key in the settings.`);
+      if (!apiKeyData || !apiKeyData.api_key) {
+        console.warn(`[ai-chat] No API key found in DB for user ${user.id} and provider ${provider}`);
+        throw new Error(
+          `No API key found for ${provider}. Please add your API key for this provider in the Settings page.`
+        );
       }
-      
       apiKey = apiKeyData.api_key;
-      console.log('Successfully retrieved API key for user');
-    } else if (guestApiKey) {
-      // Guest user path
-      console.log('Using guest API key');
+      console.log('[ai-chat] Found provider API key for logged-in user.');
+    } 
+    // 3. Guest path: get key from payload
+    else if (guestApiKey) {
       apiKey = guestApiKey;
-    } else {
-      console.error('Authentication failed: No user session and no guest API key provided');
-      throw new Error('Authentication error: Please sign in or provide an API key to use this feature.');
+      if (!provider) {
+        console.error('[ai-chat] Provider missing in request (guest).');
+        throw new Error('No provider specified.');
+      }
+      console.log(`[ai-chat] Using guest API key for provider: ${provider}`);
+    } 
+    // 4. No auth found: error
+    else {
+      console.error('[ai-chat] No authentication found (no user or API key)');
+      throw new Error('You must be logged in or provide an API key to chat.');
     }
-    
-    console.log(`Sending request to ${provider} with model: ${model || 'default'}`);
+
+    // 5. Final check: make sure we have an apiKey
+    if (!apiKey) {
+      console.error('[ai-chat] apiKey variable still undefined after all checks.');
+      throw new Error('Internal error: Could not resolve an API key to use.');
+    }
+
+    // 6. Proceed to provider-specific handler
     let response: NormalizedResponse;
-
-    switch (provider) {
-      case 'OpenAI':
-        response = await handleOpenAI(apiKey, model || 'gpt-4o-mini', messages, temperature, max_tokens);
-        break;
-      case 'Anthropic':
-        response = await handleAnthropic(apiKey, model || 'claude-3-5-haiku-20241022', messages, temperature, max_tokens);
-        break;
-      case 'Google Gemini':
-        response = await handleGemini(apiKey, model || 'gemini-1.5-flash', messages, temperature, max_tokens);
-        break;
-      case 'Mistral':
-        response = await handleMistral(apiKey, model || 'mistral-small-latest', messages, temperature, max_tokens);
-        break;
-      case 'OpenRouter':
-        response = await handleOpenRouter(apiKey, model || 'anthropic/claude-3.5-sonnet', messages, temperature, max_tokens);
-        break;
-      default:
-        throw new Error(`Unsupported provider: ${provider}`);
+    try {
+      switch (provider) {
+        case 'OpenAI':
+          response = await handleOpenAI(apiKey, model || 'gpt-4o-mini', messages, temperature, max_tokens);
+          break;
+        case 'Anthropic':
+          response = await handleAnthropic(apiKey, model || 'claude-3-5-haiku-20241022', messages, temperature, max_tokens);
+          break;
+        case 'Google Gemini':
+          response = await handleGemini(apiKey, model || 'gemini-1.5-flash', messages, temperature, max_tokens);
+          break;
+        case 'Mistral':
+          response = await handleMistral(apiKey, model || 'mistral-small-latest', messages, temperature, max_tokens);
+          break;
+        case 'OpenRouter':
+          response = await handleOpenRouter(apiKey, model || 'anthropic/claude-3.5-sonnet', messages, temperature, max_tokens);
+          break;
+        default:
+          console.error(`[ai-chat] Unsupported provider: ${provider}`);
+          throw new Error(`Unsupported AI provider: ${provider}`);
+      }
+    } catch (providerError) {
+      // Pass through downstream provider errors
+      console.error('[ai-chat] Error calling AI provider API:', providerError);
+      throw new Error(
+        `Failed to fetch response from ${provider}: ${providerError instanceof Error ? providerError.message : String(providerError)}`
+      );
     }
 
-    console.log(`Successfully processed request for ${provider}`);
+    // 7. All good, return
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Error in ai-chat function:', error);
-    return new Response(JSON.stringify({ 
-      error: error.message || 'An unexpected error occurred' 
-    }), {
-      status: 500,
+    // Main error handler
+    const errMsg = (error && typeof error === "object" && "message" in error) ? (error as Error).message : String(error);
+    console.error('[ai-chat] Error:', errMsg);
+
+    // Respond with error, 400 for user mistakes, 500 otherwise
+    // If error message hints at "Please add your API key", consider it a 400
+    const status = errMsg && errMsg.includes("add your API key") ? 400 : 500;
+
+    return new Response(JSON.stringify({ error: errMsg }), {
+      status,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
