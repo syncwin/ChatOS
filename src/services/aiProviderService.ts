@@ -64,7 +64,7 @@ export const getDefaultModel = (provider: string): string => {
 };
 
 // Available models for each provider
-export const getAvailableModels = (provider: string): string[] => {
+export const getAvailableModels = (provider:string): string[] => {
   const models: Record<string, string[]> = {
     'OpenAI': ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'],
     'Anthropic': [
@@ -86,7 +86,11 @@ export const getAvailableModels = (provider: string): string[] => {
       'anthropic/claude-3.5-sonnet',
       'openai/gpt-4o',
       'openai/gpt-4o-mini',
-      'google/gemini-pro'
+      'google/gemini-1.5-pro-latest',
+      'deepseek/deepseek-chat',
+      'mistralai/mistral-large-latest',
+      'meta-llama/llama-3-70b-instruct',
+      'meta-llama/llama-3-8b-instruct',
     ]
   };
 
