@@ -81,7 +81,15 @@ serve(async (req) => {
       // Authenticated user path
       console.log('Fetching API key for authenticated user:', user.id);
       
-      const { data: apiKeyData, error: apiKeyError } = await supabaseClient
+      // Use the service role key to bypass RLS and read the API key.
+      // This is safe because this is a trusted server-side environment.
+      const serviceClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+        { auth: { autoRefreshToken: false, persistSession: false } }
+      );
+
+      const { data: apiKeyData, error: apiKeyError } = await serviceClient
         .from('api_keys')
         .select('api_key')
         .eq('provider', provider)
