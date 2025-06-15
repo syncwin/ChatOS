@@ -1,5 +1,5 @@
 
-import { Pin, PinOff, Pencil, Trash2 } from "lucide-react";
+import { Pin, PinOff, Pencil, Trash2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarMenuItem } from "@/components/ui/sidebar";
@@ -53,15 +53,25 @@ const ChatItem = ({
         className="w-full text-left rounded-md cursor-pointer transition-colors p-2.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-primary data-[active=true]:text-primary-foreground"
       >
         {isEditing ? (
-          <Input
-            value={newChatTitle}
-            onChange={onTitleChange}
-            onBlur={() => onUpdateTitle(chat.id)}
-            onKeyDown={(e) => onTitleKeyDown(e, chat.id)}
-            onClick={(e) => e.stopPropagation()}
-            className="h-7 text-sm flex-1 bg-transparent border-0 border-b border-current focus-visible:ring-0 focus-visible:ring-offset-0"
-            autoFocus
-          />
+          <div className="flex items-center gap-2">
+            <Input
+              value={newChatTitle}
+              onChange={onTitleChange}
+              onKeyDown={(e) => onTitleKeyDown(e, chat.id)}
+              onClick={(e) => e.stopPropagation()}
+              className="h-7 text-sm flex-1"
+              autoFocus
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground group-data-[active=true]/item:text-primary-foreground group-data-[active=true]/item:hover:bg-primary/80"
+              onClick={() => onUpdateTitle(chat.id)}
+              aria-label="Save title"
+            >
+              <Check className="w-4 h-4" />
+            </Button>
+          </div>
         ) : (
           <div>
             <div className="flex items-start">
