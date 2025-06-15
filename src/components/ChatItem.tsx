@@ -75,11 +75,11 @@ const ChatItem = ({
             onClick={() => onUpdateTitle(chat.id)}
             aria-label="Save title"
           >
-            <Check className="w-5 h-5" />
+            <Check className="w-4 h-4" />
           </Button>
         </div>
       ) : isCollapsed ? (
-        chat.is_pinned ? <Pin className="w-5 h-5 text-amber-500" /> : <MessageSquare className="w-5 h-5" />
+        chat.is_pinned ? <Pin className="w-4 h-4 text-amber-500" /> : <MessageSquare className="w-4 h-4" />
       ) : (
         <div>
           <div className="flex items-start">
@@ -101,7 +101,7 @@ const ChatItem = ({
               onClick={handleEditClick}
               aria-label={`Edit chat title: ${chat.title}`}
             >
-              <Pencil className="w-5 h-5" />
+              <Pencil className="w-4 h-4" />
             </Button>
             <Button
               variant="ghost"
@@ -110,7 +110,7 @@ const ChatItem = ({
               onClick={e => onPinChat(e, chat.id, chat.is_pinned)}
               aria-label={chat.is_pinned ? `Unpin chat: ${chat.title}` : `Pin chat: ${chat.title}`}
             >
-              {chat.is_pinned ? <PinOff className="w-5 h-5" /> : <Pin className="w-5 h-5" />}
+              {chat.is_pinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
             </Button>
             <Button
               variant="ghost"
@@ -119,7 +119,7 @@ const ChatItem = ({
               onClick={e => onDeleteChat(e, chat.id)} 
               aria-label={`Delete chat: ${chat.title}`}
             >
-              <Trash2 className="w-5 h-5" />
+              <Trash2 className="w-4 h-4" />
             </Button>
           </div>
         </div>
