@@ -108,7 +108,7 @@ const AppSidebar = ({
       {!isCollapsed && <span>New Chat</span>}
     </Button>;
   const logo = <a href="/" className={cn("flex items-center gap-2", isCollapsed && "justify-center")}>
-      <ChatOsIcon className="w-8h-8 text-primary" />
+      <ChatOsIcon className="w-8 h-8 text-primary" />
       {!isCollapsed && <span className="whitespace-nowrap font-semibold text-2xl">ChatOS</span>}
     </a>;
   return <>
