@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Settings, Plus } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarFooter, SidebarSeparator, useSidebar } from "@/components/ui/sidebar";
@@ -10,6 +11,7 @@ import UserFooter from "./UserFooter";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import ChatOsIcon from "@/components/icons/ChatOsIcon";
 
 interface Chat {
   id: string;
@@ -96,10 +98,26 @@ const AppSidebar = ({
     </Button>
   );
 
+  const logo = (
+    <a href="/" className={cn(
+      "flex items-center gap-2",
+      isCollapsed && "justify-center"
+    )}>
+      <ChatOsIcon className="w-6 h-6 text-primary" />
+      {!isCollapsed && <span className="text-lg font-semibold whitespace-nowrap">ChatOS</span>}
+    </a>
+  );
+
   return (
     <>
       <Sidebar collapsible="icon" variant="inset">
-        <SidebarHeader className={cn("p-4", isCollapsed && "p-1 flex justify-center")}>
+        <SidebarHeader className={cn("p-4", isCollapsed && "p-2")}>
+          {isCollapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>{logo}</TooltipTrigger>
+              <TooltipContent side="right"><p>ChatOS</p></TooltipContent>
+            </Tooltip>
+          ) : logo}
           {isCollapsed ? (
             <Tooltip>
               <TooltipTrigger asChild>{newChatButton}</TooltipTrigger>
