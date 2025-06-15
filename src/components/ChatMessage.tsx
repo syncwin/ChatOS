@@ -1,4 +1,3 @@
-
 import { Bot, User, Copy, Check } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -48,7 +47,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
             <ReactMarkdown
               components={{
                 code(props) {
-                  const { children, className, ...rest } = props;
+                  const { children, className, node, ...rest } = props;
                   const match = /language-(\w+)/.exec(className || '');
                   return match ? (
                     <SyntaxHighlighter
@@ -56,7 +55,6 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
                       language={match[1]}
                       PreTag="div"
                       className="rounded-md my-2"
-                      {...rest}
                     >
                       {String(children).replace(/\n$/, '')}
                     </SyntaxHighlighter>
