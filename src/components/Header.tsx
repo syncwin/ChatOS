@@ -1,3 +1,4 @@
+
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
@@ -8,7 +9,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { useTheme } from "@/components/ThemeProvider";
 import ChatOsIcon from "./icons/ChatOsIcon";
 
 interface HeaderProps {
@@ -36,11 +36,9 @@ const Header = ({
 }: HeaderProps) => {
   return (
     <div className="flex items-center gap-3 w-full">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 select-none">
+        <span className="text-xl font-semibold tracking-tight">Chat</span>
         <ChatOsIcon className="w-8 h-8 text-primary" />
-        <span className="text-xl font-semibold tracking-tight select-none">
-          Chat<span className="font-bold text-primary-foreground bg-primary rounded px-1 ml-1">OS</span>
-        </span>
       </div>
       <div className="flex-1 flex justify-end gap-3 items-center">
         {availableProviders.length > 1 && (

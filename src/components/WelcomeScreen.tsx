@@ -16,7 +16,7 @@ const WelcomeScreen = ({ suggestedQuestions, onQuestionSelect }: WelcomeScreenPr
         </div>
         <h2 className="text-2xl font-bold mb-2 text-foreground flex justify-center items-center gap-2">
           <span>Chat</span>
-          <span className="font-bold text-primary-foreground bg-primary rounded px-2 ml-1">OS</span>
+          <ChatOsIcon className="w-7 h-7 text-primary" />
         </h2>
         <p className="mb-6 text-muted-foreground">
           Start a new conversation by typing a message below or selecting a suggestion.
