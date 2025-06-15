@@ -36,14 +36,14 @@ const InputArea = ({ input, setInput, onSubmit, isLoading }: InputAreaProps) => 
             type="submit"
             size="icon"
             disabled={!input.trim() || isLoading}
-            className="absolute right-2 bottom-1.5 h-8 w-8 bg-primary hover:bg-primary/90 transition-all"
+            className="absolute right-2 bottom-2 h-8 w-8 bg-primary hover:bg-primary/90 transition-all"
           >
             <Send className="w-4 h-4" />
           </Button>
         </div>
       </form>
       <p className="text-xs mt-2 text-center text-muted-foreground">
-        Perplexity can make mistakes. Please verify important information.
+        InsightSeeker can make mistakes. Please verify important information.
       </p>
     </div>
   );

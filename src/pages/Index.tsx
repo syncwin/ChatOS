@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -69,7 +70,7 @@ const Index = () => {
     const responses = [
       "I'm an AI assistant designed to help you with various tasks and answer your questions. I can provide information, assist with analysis, help with creative tasks, and much more.",
       "Based on your question about AI chatbots, I can explain that modern AI systems like myself use large language models trained on diverse datasets to understand and generate human-like text responses.",
-      "Perplexity AI is known for its search-augmented responses, combining real-time web search with AI-generated answers. This allows for more current and factual information compared to traditional chatbots.",
+      "InsightSeeker is known for its search-augmented responses, combining real-time web search with AI-generated answers. This allows for more current and factual information compared to traditional chatbots.",
       "I can help you with research, writing, coding, analysis, creative projects, and answering questions across a wide range of topics. What would you like to explore today?"
     ];
 
