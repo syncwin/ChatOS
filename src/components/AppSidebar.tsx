@@ -12,7 +12,12 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import ChatOsIcon from "@/components/icons/ChatOsIcon";
-import type { Folder, Tag, Chat } from "@/services/chatService";
+import type { Folder, Tag, Chat as DbChat } from "@/services/chatService";
+
+interface Chat extends DbChat {
+  tags: Tag[];
+  date: string;
+}
 
 interface AppSidebarProps {
   isDarkMode: boolean;
