@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ChatMessage {
@@ -27,16 +26,45 @@ export interface NormalizedResponse {
   provider: string;
 }
 
-export const sendChatMessage = async (request: ChatRequest): Promise<NormalizedResponse> => {
-  const { data, error } = await supabase.functions.invoke('ai-chat', {
-    body: request,
-  });
+const SUPABASE_URL = 'https://ejjmwhkjnkxtmzvpqnig.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqam13aGtqbmt4dG16dnBxbmlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5ODUyNDYsImV4cCI6MjA2NTU2MTI0Nn0.EiOR2sXfGi_YnUcm_hEsyG0yRF6vqhWGH3KFrV0stl8';
 
-  if (error) {
-    throw new Error(error.message || 'Failed to send chat message');
+async function invokeAiChat(request: ChatRequest): Promise<Response> {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    'apikey': SUPABASE_ANON_KEY,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
-  return data;
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-chat`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    let errorMessage = `Edge Function returned an error: ${response.status}`;
+    try {
+      const errorData = JSON.parse(errorText);
+      errorMessage = errorData.error || errorMessage;
+    } catch {
+      errorMessage = errorText || errorMessage;
+    }
+    throw new Error(errorMessage);
+  }
+
+  return response;
+}
+
+export const sendChatMessage = async (request: ChatRequest): Promise<NormalizedResponse> => {
+  const response = await invokeAiChat({ ...request, stream: false });
+  return await response.json();
 };
 
 export const streamChatMessage = async (
@@ -44,35 +72,8 @@ export const streamChatMessage = async (
   onDelta: (chunk: string) => void,
   onError: (error: Error) => void
 ): Promise<void> => {
-  const { data: { session } } = await supabase.auth.getSession();
-  const token = session?.access_token;
-  
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqam13aGtqbmt4dG16dnBxbmlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5ODUyNDYsImV4cCI6MjA2NTU2MTI0Nn0.EiOR2sXfGi_YnUcm_hEsyG0yRF6vqhWGH3KFrV0stl8',
-  };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
   try {
-    const response = await fetch(`https://ejjmwhkjnkxtmzvpqnig.supabase.co/functions/v1/ai-chat`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ ...request, stream: true }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      let errorMessage = 'Failed to stream chat message';
-      try {
-        const errorData = JSON.parse(errorText);
-        errorMessage = errorData.error || errorMessage;
-      } catch {
-        errorMessage = errorText || errorMessage;
-      }
-      throw new Error(errorMessage);
-    }
+    const response = await invokeAiChat({ ...request, stream: true });
 
     if (!response.body) {
       throw new Error('Response body is null');
