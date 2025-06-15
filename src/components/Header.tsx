@@ -1,3 +1,4 @@
+
 import { Sun, Moon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import ChatOsIcon from "./icons/ChatOsIcon";
@@ -9,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Folder, Chat, Tag } from "@/services/chatService";
-import TagSelector from "./TagSelector";
+import FolderSelector from "./FolderSelector";
 
 interface HeaderProps {
   isDarkMode: boolean;
@@ -25,10 +26,7 @@ interface HeaderProps {
   isLoadingFolders: boolean;
   onAssignChatToFolder: (folderId: string) => void;
   activeChat: (Chat & { tags: Tag[] }) | undefined;
-  tags: Tag[];
-  createTag: (name: string) => void;
-  assignTagToChat: (args: { chatId: string; tagId: string }) => void;
-  removeTagFromChat: (args: { chatId: string; tagId: string }) => void;
+  createFolder: (name: string) => void;
 }
 
 const Header = ({
@@ -45,10 +43,7 @@ const Header = ({
   isLoadingFolders,
   onAssignChatToFolder,
   activeChat,
-  tags,
-  createTag,
-  assignTagToChat,
-  removeTagFromChat,
+  createFolder,
 }: HeaderProps) => {
   return (
     <div className="flex items-center justify-between w-full gap-4">
@@ -91,31 +86,11 @@ const Header = ({
           </SelectContent>
         </Select>
 
-        <Select
-          onValueChange={onAssignChatToFolder}
-          value={activeChat?.folder_id || 'none'}
-          disabled={!activeChat || isLoadingFolders}
-        >
-          <SelectTrigger className="w-[150px] truncate h-9">
-            <SelectValue placeholder="Move to folder..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">
-              <em>No folder</em>
-            </SelectItem>
-            {folders.map((folder) => (
-              <SelectItem key={folder.id} value={folder.id}>
-                {folder.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <TagSelector
+        <FolderSelector
           activeChat={activeChat}
-          tags={tags}
-          createTag={createTag}
-          assignTagToChat={assignTagToChat}
-          removeTagFromChat={removeTagFromChat}
+          folders={folders}
+          createFolder={createFolder}
+          onAssignChatToFolder={onAssignChatToFolder}
         />
       </div>
       <div className="flex items-center gap-3">

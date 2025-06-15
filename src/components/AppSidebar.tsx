@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Settings, Plus } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarFooter, SidebarSeparator, useSidebar } from "@/components/ui/sidebar";
@@ -11,15 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import ChatOsIcon from "@/components/icons/ChatOsIcon";
-import type { Folder, Tag } from "@/services/chatService";
-interface Chat {
-  id: string;
-  title: string;
-  date: string;
-  is_pinned: boolean;
-  folder_id: string | null;
-  tags: Tag[];
-}
+import type { Folder, Tag, Chat } from "@/services/chatService";
+
 interface AppSidebarProps {
   isDarkMode: boolean;
   toggleDarkMode: () => void;
@@ -34,6 +28,10 @@ interface AppSidebarProps {
     name: string;
   }) => void;
   deleteFolder: (folderId: string) => void;
+  tags: Tag[];
+  createTag: (name: string) => void;
+  assignTagToChat: (args: { chatId: string; tagId: string }) => void;
+  removeTagFromChat: (args: { chatId: string; tagId: string }) => void;
 }
 const AppSidebar = ({
   isDarkMode,
@@ -45,7 +43,11 @@ const AppSidebar = ({
   onSelectChat,
   createFolder,
   updateFolder,
-  deleteFolder
+  deleteFolder,
+  tags,
+  createTag,
+  assignTagToChat,
+  removeTagFromChat,
 }: AppSidebarProps) => {
   const {
     user,
@@ -129,7 +131,27 @@ const AppSidebar = ({
         <SidebarSeparator />
 
         <SidebarContent>
-          <ChatHistory chats={chats} folders={folders} activeChatId={activeChatId} editingChatId={editingChatId} newChatTitle={newChatTitle} onSelectChat={onSelectChat} onStartEdit={handleStartEdit} onPinChat={handlePinChat} onDeleteChat={handleDeleteChat} onTitleChange={handleTitleChange} onUpdateTitle={handleUpdateTitle} onTitleKeyDown={handleTitleKeyDown} createFolder={createFolder} updateFolder={updateFolder} deleteFolder={deleteFolder} />
+          <ChatHistory 
+            chats={chats} 
+            folders={folders} 
+            activeChatId={activeChatId} 
+            editingChatId={editingChatId} 
+            newChatTitle={newChatTitle} 
+            onSelectChat={onSelectChat} 
+            onStartEdit={handleStartEdit} 
+            onPinChat={handlePinChat} 
+            onDeleteChat={handleDeleteChat} 
+            onTitleChange={handleTitleChange} 
+            onUpdateTitle={handleUpdateTitle} 
+            onTitleKeyDown={handleTitleKeyDown} 
+            createFolder={createFolder} 
+            updateFolder={updateFolder} 
+            deleteFolder={deleteFolder}
+            tags={tags}
+            createTag={createTag}
+            assignTagToChat={assignTagToChat}
+            removeTagFromChat={removeTagFromChat}
+          />
           
           <SidebarSeparator />
 

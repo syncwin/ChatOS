@@ -6,20 +6,13 @@ import ChatItem from "./ChatItem";
 import { useSidebar } from "@/components/ui/sidebar";
 import { FolderList } from "./FolderList";
 import { UncategorizedChatList } from "./UncategorizedChatList";
-import type { Folder, Tag } from "@/services/chatService";
-
-interface Chat {
-  id: string;
-  title: string;
-  date: string;
-  is_pinned: boolean;
-  folder_id: string | null;
-  tags: Tag[];
-}
+import { TagList } from "./TagList";
+import type { Folder, Tag, Chat } from "@/services/chatService";
 
 interface ChatHistoryProps {
   chats: Chat[];
   folders: Folder[];
+  tags: Tag[];
   activeChatId: string | null;
   editingChatId: string | null;
   newChatTitle: string;
@@ -33,10 +26,13 @@ interface ChatHistoryProps {
   createFolder: (name: string) => void;
   updateFolder: (args: { folderId: string; name: string }) => void;
   deleteFolder: (folderId: string) => void;
+  createTag: (name: string) => void;
+  assignTagToChat: (args: { chatId: string; tagId: string }) => void;
+  removeTagFromChat: (args: { chatId: string; tagId: string }) => void;
 }
 
 const ChatHistory = (props: ChatHistoryProps) => {
-  const { chats, folders, ...restProps } = props;
+  const { chats, folders, tags, ...restProps } = props;
   const [searchTerm, setSearchTerm] = useState("");
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
@@ -54,6 +50,11 @@ const ChatHistory = (props: ChatHistoryProps) => {
     ...folder,
     chats: filteredChats.filter(chat => chat.folder_id === folder.id)
   })), [folders, filteredChats]);
+
+  const chatsByTag = useMemo(() => tags.map(tag => ({
+    ...tag,
+    chats: filteredChats.filter(chat => chat.tags.some(t => t.id === tag.id))
+  })), [tags, filteredChats]);
 
   const chatsWithoutFolder = useMemo(() => 
     filteredChats.filter(chat => !chat.folder_id),
@@ -111,6 +112,13 @@ const ChatHistory = (props: ChatHistoryProps) => {
         createFolder={props.createFolder}
         updateFolder={props.updateFolder}
         deleteFolder={props.deleteFolder}
+        searchTerm={searchTerm}
+        {...restProps}
+      />
+
+      <TagList
+        tagsWithChats={chatsByTag}
+        createTag={props.createTag}
         searchTerm={searchTerm}
         {...restProps}
       />
