@@ -4,15 +4,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import type { Tables } from '@/integrations/supabase/types';
+import type { Tables, TablesUpdate } from '@/integrations/supabase/types';
 import { useRef, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Pencil } from 'lucide-react';
+import { useProfile } from '@/hooks/useProfile';
 
 const profileFormSchema = z.object({
   full_name: z.string().min(2, { message: "Full name must be at least 2 characters." }).max(50).or(z.literal('')),
@@ -27,7 +27,7 @@ interface ProfileFormProps {
 
 const ProfileForm = ({ profile, onSuccess }: ProfileFormProps) => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { updateProfile, isUpdatingProfile } = useProfile();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(profile.avatar_url);
@@ -85,13 +85,13 @@ const ProfileForm = ({ profile, onSuccess }: ProfileFormProps) => {
   };
 
   const onSubmit = async (data: ProfileFormValues) => {
-    let avatarUrl = profile.avatar_url;
+    const updates: TablesUpdate<'profiles'> = { full_name: data.full_name || '' };
 
     if (avatarFile) {
       try {
         const newAvatarUrl = await handleAvatarUpload(avatarFile);
         if (newAvatarUrl) {
-          avatarUrl = newAvatarUrl;
+          updates.avatar_url = newAvatarUrl;
         }
       } catch (error: any) {
         toast.error(`Failed to upload avatar: ${error.message}`);
@@ -99,7 +99,13 @@ const ProfileForm = ({ profile, onSuccess }: ProfileFormProps) => {
       }
     }
     
-    updateProfileMutation.mutate({ fullName: data.full_name || '', avatarUrl: avatarUrl || undefined });
+    updateProfile(updates, {
+      onSuccess: () => {
+        if (onSuccess) {
+          onSuccess();
+        }
+      }
+    });
   };
   
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -157,8 +163,8 @@ const ProfileForm = ({ profile, onSuccess }: ProfileFormProps) => {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full" disabled={updateProfileMutation.isPending}>
-            {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
+          <Button type="submit" className="w-full" disabled={isUpdatingProfile}>
+            {isUpdatingProfile ? 'Saving...' : 'Save Changes'}
           </Button>
         </form>
       </Form>

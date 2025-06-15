@@ -1,4 +1,3 @@
-
 import {
   Dialog,
   DialogContent,
@@ -15,6 +14,7 @@ import { LogOut, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import ProfileForm from "./ProfileForm";
+import { useProfile } from "@/hooks/useProfile";
 
 interface UserProfileDialogProps {
   isOpen: boolean;
@@ -25,27 +25,7 @@ interface UserProfileDialogProps {
 const UserProfileDialog = ({ isOpen, onOpenChange, isDarkMode }: UserProfileDialogProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-
-  const { data: profile, isLoading: isLoadingProfile } = useQuery({
-    queryKey: ['profile', user?.id],
-    queryFn: async () => {
-      if (!user) return null;
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-      
-      // PGRST116: No rows found. This is okay for a new user.
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching profile:', error);
-        toast.error('Failed to fetch profile.');
-        return null;
-      }
-      return data;
-    },
-    enabled: !!user,
-  });
+  const { profile, isLoadingProfile } = useProfile();
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -81,7 +61,8 @@ const UserProfileDialog = ({ isOpen, onOpenChange, isDarkMode }: UserProfileDial
                 avatar_url: null, 
                 full_name: '', 
                 website: null, 
-                updated_at: null 
+                updated_at: null,
+                theme: 'dark'
               }} 
               onSuccess={() => onOpenChange(false)} 
             />

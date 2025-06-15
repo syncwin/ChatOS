@@ -11,6 +11,7 @@ import AppSidebar from "@/components/AppSidebar";
 import { useChat } from "@/hooks/useChat";
 import { useAIProvider } from "@/hooks/useAIProvider";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 import type { ChatMessage as CoreChatMessage } from "@/services/aiProviderService";
 import type { NewMessage, Message as DbMessage } from "@/services/chatService";
 import { formatDistanceToNow } from "date-fns";
@@ -20,6 +21,7 @@ type Message = DbMessage & { isStreaming?: boolean };
 
 const Index = () => {
   const { user, isGuest } = useAuth();
+  const { profile, updateProfile } = useProfile();
   const queryClient = useQueryClient();
   const {
     chats,
@@ -50,7 +52,7 @@ const Index = () => {
   } = useAIProvider();
 
   const [input, setInput] = useState("");
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const isDarkMode = profile?.theme !== 'light'; // Default to dark theme
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -211,7 +213,11 @@ const Index = () => {
     "What are the latest trends in AI?"
   ];
 
-  const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
+  const toggleDarkMode = () => {
+    if (profile) {
+      updateProfile({ theme: isDarkMode ? 'light' : 'dark' });
+    }
+  };
 
   return (
     <>
