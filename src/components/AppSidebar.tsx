@@ -1,15 +1,17 @@
 import { useState } from "react";
-import { User, MessageSquare, Settings, Plus, Search, Trash2, LogIn, Pin, PinOff } from "lucide-react";
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, SidebarSeparator, SidebarMenuAction } from "@/components/ui/sidebar";
+import { User, MessageSquare, Settings, Plus, Search, Trash2, LogIn, Pin, PinOff, Pencil } from "lucide-react";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, SidebarSeparator } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import SettingsDialog from "./SettingsDialog";
 import UserProfileDialog from "./UserProfileDialog";
 import { useAuth } from "@/hooks/useAuth";
+import { useChat } from "@/hooks/useChat";
+import { Input } from "@/components/ui/input";
 
 interface Chat {
-  id: number;
+  id: string;
   title: string;
   date: string;
   messages: unknown[];
@@ -20,11 +22,11 @@ interface AppSidebarProps {
   isDarkMode: boolean;
   toggleDarkMode: () => void;
   chats: Chat[];
-  activeChatId: number | null;
+  activeChatId: string | null;
   onNewChat: () => void;
   onSelectChat: (chat: Chat) => void;
-  onDeleteChat: (chatId: number) => void;
-  onPinChat: (chatId: number) => void;
+  onDeleteChat: (chatId: string) => void;
+  onPinChat: (chatId: string, is_pinned: boolean) => void;
 }
 
 const AppSidebar = ({
@@ -34,27 +36,55 @@ const AppSidebar = ({
   activeChatId,
   onNewChat,
   onSelectChat,
-  onDeleteChat,
-  onPinChat,
 }: AppSidebarProps) => {
   const navigate = useNavigate();
   const { user, isGuest } = useAuth();
+  const { updateChatTitle, deleteChat, updateChatPinStatus } = useChat();
   const [searchTerm, setSearchTerm] = useState("");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [editingChatId, setEditingChatId] = useState<string | null>(null);
+  const [newChatTitle, setNewChatTitle] = useState("");
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
-  const handleDeleteChat = (e: React.MouseEvent, chatId: number) => {
+  const handleDeleteChat = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
-    onDeleteChat(chatId);
+    deleteChat(chatId);
   };
 
-  const handlePinChat = (e: React.MouseEvent, chatId: number) => {
+  const handlePinChat = (e: React.MouseEvent, chatId: string, isPinned: boolean) => {
     e.stopPropagation();
-    onPinChat(chatId);
+    updateChatPinStatus({ chatId, is_pinned: !isPinned });
+  };
+  
+  const handleEditClick = (e: React.MouseEvent, chatId: string, currentTitle: string) => {
+    e.stopPropagation();
+    setEditingChatId(chatId);
+    setNewChatTitle(currentTitle);
+  };
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewChatTitle(e.target.value);
+  };
+
+  const handleTitleUpdate = (chatId: string) => {
+    if (newChatTitle.trim() && newChatTitle.trim() !== chats.find(c => c.id === chatId)?.title) {
+      updateChatTitle({ chatId, title: newChatTitle.trim() });
+    }
+    setEditingChatId(null);
+    setNewChatTitle("");
+  };
+
+  const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, chatId: string) => {
+    if (e.key === 'Enter') {
+      handleTitleUpdate(chatId);
+    } else if (e.key === 'Escape') {
+      setEditingChatId(null);
+      setNewChatTitle("");
+    }
   };
 
   const filteredChats = chats.filter(chat => chat.title.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -111,23 +141,44 @@ const AppSidebar = ({
                 {filteredChats.map(chat => (
                   <SidebarMenuItem key={chat.id} className="group/item relative" data-active={chat.id === activeChatId}>
                     <SidebarMenuButton 
-                      onClick={() => onSelectChat(chat)} 
+                      onClick={() => editingChatId !== chat.id && onSelectChat(chat)} 
                       data-active={chat.id === activeChatId} 
-                      className="group/button w-full justify-start h-auto p-2.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-primary data-[active=true]:text-primary-foreground px-[5px] py-[5px] pr-20"
+                      className="group/button w-full justify-start h-auto p-2.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-primary data-[active=true]:text-primary-foreground px-[5px] py-[5px] pr-24"
                     >
                       {chat.is_pinned && <Pin className="w-3 h-3 mr-2 flex-shrink-0 text-amber-500" />}
-                      <MessageSquare className="w-4 h-4 flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="truncate text-sm font-medium">{chat.title}</div>
-                        <div className="text-xs text-muted-foreground group-data-[active=true]/button:text-primary-foreground/70">{chat.date}</div>
-                      </div>
+                      <MessageSquare className="w-4 h-4 mr-2 flex-shrink-0" />
+                      {editingChatId === chat.id ? (
+                        <Input
+                          value={newChatTitle}
+                          onChange={handleTitleChange}
+                          onBlur={() => handleTitleUpdate(chat.id)}
+                          onKeyDown={(e) => handleTitleKeyDown(e, chat.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="h-7 text-sm flex-1"
+                          autoFocus
+                        />
+                      ) : (
+                        <div className="flex-1 min-w-0">
+                          <div className="truncate text-sm font-medium">{chat.title}</div>
+                          <div className="text-xs text-muted-foreground group-data-[active=true]/button:text-primary-foreground/70">{chat.date}</div>
+                        </div>
+                      )}
                     </SidebarMenuButton>
-                    <div className="absolute top-1/2 right-1 -translate-y-1/2 flex items-center opacity-0 transition-opacity group-hover/item:opacity-100 group-data-[active=true]/item:opacity-100">
+                    <div className="absolute top-1/2 right-1.5 -translate-y-1/2 flex items-center gap-0.5 opacity-0 transition-opacity group-hover/item:opacity-100 group-data-[active=true]/item:opacity-100">
+                       <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground group-data-[active=true]/item:text-primary-foreground group-data-[active=true]/item:hover:bg-primary/80"
+                        onClick={e => handleEditClick(e, chat.id, chat.title)}
+                        aria-label={`Edit chat title: ${chat.title}`}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-foreground group-data-[active=true]/item:text-primary-foreground group-data-[active=true]/item:hover:bg-primary/80"
-                        onClick={e => handlePinChat(e, chat.id)}
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground group-data-[active=true]/item:text-primary-foreground group-data-[active=true]/item:hover:bg-primary/80"
+                        onClick={e => handlePinChat(e, chat.id, chat.is_pinned)}
                         aria-label={chat.is_pinned ? `Unpin chat: ${chat.title}` : `Pin chat: ${chat.title}`}
                       >
                         {chat.is_pinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
@@ -135,7 +186,7 @@ const AppSidebar = ({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-foreground group-data-[active=true]/item:text-primary-foreground group-data-[active=true]/item:hover:bg-primary/80"
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground group-data-[active=true]/item:text-primary-foreground group-data-[active=true]/item:hover:bg-primary/80"
                         onClick={e => handleDeleteChat(e, chat.id)} 
                         aria-label={`Delete chat: ${chat.title}`}
                       >
