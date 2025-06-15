@@ -79,6 +79,10 @@ const Index = () => {
                 activeChat={activeChat}
                 onAssignChatToFolder={handleAssignChatToFolder}
                 createFolder={createFolder}
+                tags={tags}
+                createTag={createTag}
+                assignTagToChat={assignTagToChat}
+                removeTagFromChat={removeTagFromChat}
               />
             </div>
           </header>

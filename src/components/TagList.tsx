@@ -46,10 +46,6 @@ export const TagList = ({ tagsWithChats, createTag, ...props }: TagListProps) =>
             setIsCreatingTag(false);
         }
     };
-    
-    if (tagsWithChats.length === 0 && props.searchTerm === "") {
-        return null;
-    }
 
     return (
         <SidebarGroup>
@@ -73,18 +69,19 @@ export const TagList = ({ tagsWithChats, createTag, ...props }: TagListProps) =>
                         <Button size="sm" onClick={handleCreateTag}>Create</Button>
                     </div>
                 )}
-                <Accordion type="multiple" className="w-full px-2" value={openTags} onValueChange={setOpenTags} defaultValue={allTagIds}>
-                    {tagsWithChats.map(tag => {
-                        const isOpen = openTags.includes(tag.id);
-                        return (
-                            <TagItem
-                                key={tag.id}
-                                tag={tag}
-                                {...props}
-                            />
-                        )
-                    })}
-                </Accordion>
+                {tagsWithChats.length > 0 && (
+                    <Accordion type="multiple" className="w-full px-2" value={openTags} onValueChange={setOpenTags} defaultValue={allTagIds}>
+                        {tagsWithChats.map(tag => {
+                            return (
+                                <TagItem
+                                    key={tag.id}
+                                    tag={tag}
+                                    {...props}
+                                />
+                            )
+                        })}
+                    </Accordion>
+                )}
             </SidebarGroupContent>
         </SidebarGroup>
     );
