@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 
 export const useAIProvider = () => {
   const { user, isGuest, guestApiKeys } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isAiResponding, setIsAiResponding] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<string>('');
   const [selectedModel, setSelectedModel] = useState<string>('');
 
@@ -47,7 +47,7 @@ export const useAIProvider = () => {
       return null;
     }
 
-    setIsLoading(true);
+    setIsAiResponding(true);
 
     try {
       const request: ChatRequest = {
@@ -78,7 +78,7 @@ export const useAIProvider = () => {
       toast.error(error instanceof Error ? error.message : 'Failed to send message');
       return null;
     } finally {
-      setIsLoading(false);
+      setIsAiResponding(false);
     }
   }, [selectedProvider, selectedModel, user, isGuest, guestApiKeys]);
 
@@ -93,7 +93,7 @@ export const useAIProvider = () => {
 
   return {
     // State
-    isLoading,
+    isAiResponding,
     isLoadingProviders,
     selectedProvider,
     selectedModel,

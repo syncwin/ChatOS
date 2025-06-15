@@ -108,40 +108,29 @@ const Index = () => {
     setActiveChatId(null);
   };
 
-  // The AppSidebar expects numeric IDs, but our DB uses string UUIDs.
-  // We'll map string IDs to numeric indices for the sidebar and back.
+  // The AppSidebar expects numeric IDs. We map string IDs to numeric indices.
   const sidebarChats = chats.map((chat, index) => ({
     ...chat,
-    id: isGuest ? chat.id : index, // Use real ID for guests, index for users
+    id: index,
     date: formatDistanceToNow(new Date(chat.updated_at), { addSuffix: true }),
     messages: [], // Not needed for sidebar
   }));
 
   const activeSidebarChatIndex = activeChatId
-    ? isGuest
-      ? activeChatId
-      : chats.findIndex((c) => c.id === activeChatId)
+    ? chats.findIndex((c) => c.id === activeChatId)
     : -1;
 
-  const handleSelectChat = (chat: { id: number | string }) => {
-    if (isGuest) {
-      setActiveChatId(chat.id as string);
-    } else {
-      const realChat = chats[chat.id as number];
-      if (realChat) {
-        setActiveChatId(realChat.id);
-      }
+  const handleSelectChat = (chat: { id: number }) => {
+    const realChat = chats[chat.id];
+    if (realChat) {
+      setActiveChatId(realChat.id);
     }
   };
 
-  const handleDeleteChat = (chatId: number | string) => {
-    if (isGuest) {
-      deleteChat(chatId as string);
-    } else {
-      const realChat = chats[chatId as number];
-      if (realChat) {
-        deleteChat(realChat.id);
-      }
+  const handleDeleteChat = (chatId: number) => {
+    const realChat = chats[chatId];
+    if (realChat) {
+      deleteChat(realChat.id);
     }
   };
 
