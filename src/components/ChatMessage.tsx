@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import ReactMarkdown from 'react-markdown';
 import type { Tables } from "@/integrations/supabase/types";
-import OsIcon from "./icons/OsIcon";
+import ChatOsIcon from "./icons/ChatOsIcon";
 
 type Message = Tables<'chat_messages'> & {
   isStreaming?: boolean;
@@ -31,7 +31,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
       {message.role === "assistant" && (
         <Avatar className="w-8 h-8 mt-1">
           <div className="w-full h-full bg-primary rounded-full flex items-center justify-center">
-            <OsIcon className="w-4 h-4 text-primary-foreground" />
+            <ChatOsIcon className="w-4 h-4 text-primary-foreground" />
           </div>
           <AvatarFallback>AI</AvatarFallback>
         </Avatar>
