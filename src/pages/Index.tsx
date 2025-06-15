@@ -36,6 +36,12 @@ const Index = () => {
     updateFolder,
     deleteFolder,
     assignChatToFolder,
+    tags,
+    isLoadingTags,
+    createTag,
+    updateTag,
+    deleteTag,
+    assignTagToChat,
   } = useChat();
 
   const messages: Message[] = dbMessages;
@@ -180,6 +186,16 @@ const Index = () => {
     }
   };
 
+  const handleAssignTagToChat = (tagId: string) => {
+    if (activeChatId) {
+      assignTagToChat({ chatId: activeChatId, tagId });
+    }
+  };
+
+  const handleCreateTag = (name: string, color?: string) => {
+    createTag(name, color);
+  };
+
   const isLoading = isLoadingChats || isLoadingMessages || isLoadingFolders;
 
   const toggleDarkMode = () => {
@@ -201,6 +217,11 @@ const Index = () => {
         createFolder={createFolder}
         updateFolder={updateFolder}
         deleteFolder={deleteFolder}
+        tags={tags}
+        createTag={handleCreateTag}
+        updateTag={updateTag}
+        deleteTag={deleteTag}
+        onAssignTagToChat={handleAssignTagToChat}
       />
       <SidebarInset>
         <div className="min-h-screen bg-background text-foreground h-screen flex flex-col">
@@ -221,6 +242,11 @@ const Index = () => {
                 isLoadingFolders={isLoadingFolders}
                 activeChat={activeChat}
                 onAssignChatToFolder={handleAssignChatToFolder}
+                tags={tags}
+                isLoadingTags={isLoadingTags}
+                onAssignTagToChat={handleAssignTagToChat}
+                onCreateFolder={createFolder}
+                onCreateTag={handleCreateTag}
               />
             </div>
           </header>

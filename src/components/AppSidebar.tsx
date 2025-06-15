@@ -6,12 +6,14 @@ import UserProfileDialog from "./UserProfileDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useChat } from "@/hooks/useChat";
 import ChatHistory from "./ChatHistory";
+import TagList from "./TagList";
 import UserFooter from "./UserFooter";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import ChatOsIcon from "@/components/icons/ChatOsIcon";
-import type { Folder } from "@/services/chatService";
+import type { Folder, Tag } from "@/services/chatService";
+
 interface Chat {
   id: string;
   title: string;
@@ -19,7 +21,9 @@ interface Chat {
   messages: unknown[];
   is_pinned: boolean;
   folder_id: string | null;
+  tags?: Tag[];
 }
+
 interface AppSidebarProps {
   isDarkMode: boolean;
   toggleDarkMode: () => void;
@@ -34,7 +38,12 @@ interface AppSidebarProps {
     name: string;
   }) => void;
   deleteFolder: (folderId: string) => void;
+  tags: Tag[];
+  createTag: (name: string, color?: string) => void;
+  updateTag: (args: { tagId: string; name: string; color?: string }) => void;
+  deleteTag: (tagId: string) => void;
 }
+
 const AppSidebar = ({
   isDarkMode,
   toggleDarkMode,
@@ -45,7 +54,11 @@ const AppSidebar = ({
   onSelectChat,
   createFolder,
   updateFolder,
-  deleteFolder
+  deleteFolder,
+  tags,
+  createTag,
+  updateTag,
+  deleteTag,
 }: AppSidebarProps) => {
   const {
     user,
@@ -133,6 +146,18 @@ const AppSidebar = ({
           
           <SidebarSeparator />
 
+          <TagList
+            tags={tags}
+            chats={chats}
+            activeChatId={activeChatId}
+            onSelectChat={onSelectChat}
+            onCreateTag={createTag}
+            onUpdateTag={updateTag}
+            onDeleteTag={deleteTag}
+          />
+          
+          <SidebarSeparator />
+
           {/* Navigation */}
           <SidebarGroup>
             <SidebarGroupLabel className="text-xs font-medium text-muted-foreground">
@@ -160,4 +185,5 @@ const AppSidebar = ({
       <UserProfileDialog isOpen={isProfileOpen} onOpenChange={setIsProfileOpen} isDarkMode={isDarkMode} />
     </>;
 };
+
 export default AppSidebar;

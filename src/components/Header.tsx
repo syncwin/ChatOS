@@ -9,7 +9,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Folder, Chat } from "@/services/chatService";
+import FolderDropdown from "./FolderDropdown";
+import TagDropdown from "./TagDropdown";
+import type { Folder, Chat, Tag } from "@/services/chatService";
 
 interface HeaderProps {
   isDarkMode: boolean;
@@ -25,6 +27,11 @@ interface HeaderProps {
   isLoadingFolders: boolean;
   onAssignChatToFolder: (folderId: string) => void;
   activeChat: Chat | undefined;
+  tags: Tag[];
+  isLoadingTags: boolean;
+  onAssignTagToChat: (tagId: string) => void;
+  onCreateFolder: (name: string) => void;
+  onCreateTag: (name: string, color?: string) => void;
 }
 
 const Header = ({
@@ -41,6 +48,11 @@ const Header = ({
   isLoadingFolders,
   onAssignChatToFolder,
   activeChat,
+  tags,
+  isLoadingTags,
+  onAssignTagToChat,
+  onCreateFolder,
+  onCreateTag,
 }: HeaderProps) => {
   return (
     <div className="flex items-center justify-between w-full gap-4">
@@ -83,25 +95,21 @@ const Header = ({
           </SelectContent>
         </Select>
 
-        <Select
-          onValueChange={onAssignChatToFolder}
-          value={activeChat?.folder_id || 'none'}
-          disabled={!activeChat || isLoadingFolders}
-        >
-          <SelectTrigger className="w-[180px] truncate">
-            <SelectValue placeholder="Move to folder..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">
-              <em>No folder</em>
-            </SelectItem>
-            {folders.map((folder) => (
-              <SelectItem key={folder.id} value={folder.id}>
-                {folder.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <FolderDropdown
+          folders={folders}
+          activeChat={activeChat}
+          onAssignChatToFolder={onAssignChatToFolder}
+          onCreateFolder={onCreateFolder}
+          isLoading={isLoadingFolders}
+        />
+
+        <TagDropdown
+          tags={tags}
+          activeChat={activeChat}
+          onAssignTagToChat={onAssignTagToChat}
+          onCreateTag={onCreateTag}
+          isLoading={isLoadingTags}
+        />
       </div>
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
