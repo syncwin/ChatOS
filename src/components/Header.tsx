@@ -1,4 +1,3 @@
-
 import { Sun, Moon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import ChatOsIcon from "./icons/ChatOsIcon";
@@ -36,8 +35,12 @@ const Header = ({
   return (
     <div className="flex items-center justify-between w-full gap-4">
       <div className="flex items-center gap-2">
-        <ChatOsIcon className="w-8 h-8 text-primary" />
-        <h1 className="text-xl font-semibold shrink-0">ChatOS</h1>
+        {/* ChatOS branding */}
+        <span className="flex items-center gap-1">
+          <span className="text-xl font-semibold shrink-0 text-foreground">Chat</span>
+          <ChatOsIcon className="w-7 h-7" />
+          <span className="sr-only">OS</span>
+        </span>
       </div>
       <div className="hidden sm:flex items-center justify-center gap-2">
         <Select
