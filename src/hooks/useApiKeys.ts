@@ -20,8 +20,8 @@ export const useApiKeys = () => {
   const queryClient = useQueryClient();
 
   if (isGuest) {
-    const saveGuestKeyMutation = useMutation({
-      mutationFn: async (values: ApiKeyFormValues) => {
+    const saveGuestKeyMutation = useMutation<void, Error, ApiKeyFormValues>({
+      mutationFn: async (values) => {
         addGuestApiKey(values);
       },
       onSuccess: (_, values) => {
@@ -32,8 +32,8 @@ export const useApiKeys = () => {
       },
     });
 
-    const deleteGuestKeyMutation = useMutation({
-      mutationFn: async (provider: ApiKeyFormValues['provider']) => {
+    const deleteGuestKeyMutation = useMutation<void, Error, ApiKeyFormValues['provider']>({
+      mutationFn: async (provider) => {
         deleteGuestApiKey(provider);
       },
       onSuccess: (_, provider) => {
@@ -54,7 +54,7 @@ export const useApiKeys = () => {
 
   const { data: savedKeys, isLoading: isLoadingKeys } = useQuery({
     queryKey: ["apiKeys", user?.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<{ provider: ApiKeyFormValues['provider'] }[]> => {
       if (!user) return [];
       const { data, error } = await supabase
         .from("api_keys")
@@ -64,7 +64,7 @@ export const useApiKeys = () => {
         toast.error("Failed to fetch API keys: " + error.message);
         return [];
       }
-      return data;
+      return data as { provider: ApiKeyFormValues['provider'] }[];
     },
     enabled: !!user,
   });
@@ -108,7 +108,7 @@ export const useApiKeys = () => {
   });
 
   return {
-    savedKeys,
+    savedKeys: savedKeys || [],
     isLoadingKeys,
     saveMutation,
     deleteMutation,
