@@ -69,7 +69,7 @@ const UserFooter = ({ isGuest, user, onOpenProfile }: UserFooterProps) => {
       aria-label="Open user profile"
       className={cn(
         "flex items-center gap-3 p-3 rounded-lg transition-colors cursor-pointer bg-sidebar-accent hover:bg-sidebar-accent/80 text-sidebar-accent-foreground w-full text-left",
-        isCollapsed && "w-10 h-10 justify-center p-0"
+        isCollapsed && "w-10 h-10 justify-center p-1"
       )}
     >
       <Avatar className="w-8 h-8">

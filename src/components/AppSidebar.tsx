@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Settings, Plus } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarFooter, SidebarSeparator } from "@/components/ui/sidebar";
@@ -85,7 +84,7 @@ const AppSidebar = ({
     <>
       <Sidebar collapsible="icon" variant="inset" className={`${isDarkMode ? 'dark bg-black' : 'bg-sidebar'} border-sidebar-border`}>
         <SidebarHeader className="p-4">
-          <SidebarMenuButton onClick={onNewChat} tooltip="New Chat" className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
+          <SidebarMenuButton onClick={onNewChat} tooltip="New Chat" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
             <Plus className="w-4 h-4" />
             <span>New Chat</span>
           </SidebarMenuButton>
