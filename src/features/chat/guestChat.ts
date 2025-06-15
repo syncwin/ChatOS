@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
 import type { Chat, Message, NewMessage } from '@/services/chatService';
@@ -28,6 +27,7 @@ export const createGuestChat = (
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     user_id: '',
+    is_pinned: false,
     messages: [],
   };
   setGuestChats(prev => [newChat, ...prev]);
