@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { User, MessageSquare, Settings, Plus, Search, History, Trash2 } from "lucide-react";
+import { User, MessageSquare, Settings, Plus, Search, Trash2 } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, SidebarSeparator, SidebarMenuAction } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -40,6 +41,11 @@ const AppSidebar = ({
     onDeleteChat(chatId);
   };
   const filteredChats = chats.filter(chat => chat.title.toLowerCase().includes(searchTerm.toLowerCase()));
+  
+  const handleOpenProfile = () => {
+    setIsProfileOpen(true);
+  };
+
   return <>
       <Sidebar className={`${isDarkMode ? 'dark bg-black' : 'bg-sidebar'} border-sidebar-border`}>
         <SidebarHeader className="p-4">
@@ -95,12 +101,6 @@ const AppSidebar = ({
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton onClick={() => alert("Chat History clicked! This feature is not yet implemented.")} className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-                    <History className="w-4 h-4" />
-                    <span>Chat History</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
                   <SidebarMenuButton onClick={() => setIsSettingsOpen(true)} className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
                     <Settings className="w-4 h-4" />
                     <span>Settings</span>
@@ -127,7 +127,13 @@ const AppSidebar = ({
           </div>
         </SidebarFooter>
       </Sidebar>
-      <SettingsDialog isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+      <SettingsDialog 
+        isOpen={isSettingsOpen} 
+        onOpenChange={setIsSettingsOpen} 
+        isDarkMode={isDarkMode} 
+        toggleDarkMode={toggleDarkMode} 
+        onOpenProfile={handleOpenProfile}
+      />
       <UserProfileDialog isOpen={isProfileOpen} onOpenChange={setIsProfileOpen} isDarkMode={isDarkMode} />
     </>;
 };
