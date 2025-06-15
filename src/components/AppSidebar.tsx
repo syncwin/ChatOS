@@ -92,7 +92,7 @@ const AppSidebar = ({
       size={isCollapsed ? "icon" : "default"}
       className={cn("bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white", !isCollapsed && "w-full")}
     >
-      <Plus className="w-4 h-4" />
+      <Plus className="w-5 h-5" />
       {!isCollapsed && <span>New Chat</span>}
     </Button>
   );
@@ -100,7 +100,7 @@ const AppSidebar = ({
   return (
     <>
       <Sidebar collapsible="icon" variant="inset">
-        <SidebarHeader className="p-4">
+        <SidebarHeader className={cn("p-4", isCollapsed && "p-1")}>
           {isCollapsed ? (
             <Tooltip>
               <TooltipTrigger asChild>{newChatButton}</TooltipTrigger>
@@ -144,7 +144,7 @@ const AppSidebar = ({
                     className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     aria-label="Open settings"
                   >
-                    <Settings className="w-4 h-4" />
+                    <Settings className="w-5 h-5" />
                     {!isCollapsed && <span>Settings</span>}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -153,7 +153,7 @@ const AppSidebar = ({
           </SidebarGroup>
         </SidebarContent>
 
-        <SidebarFooter className="p-4">
+        <SidebarFooter className={cn("p-4", isCollapsed && "p-1")}>
           <UserFooter
             isGuest={isGuest}
             user={user}

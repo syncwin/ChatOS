@@ -1,3 +1,4 @@
+
 import { User, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -31,7 +32,7 @@ const UserFooter = ({ isGuest, user, onOpenProfile }: UserFooterProps) => {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button onClick={() => navigate('/auth')} size="icon" className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
-                <LogIn className="w-4 h-4" />
+                <LogIn className="w-5 h-5" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">
@@ -55,7 +56,7 @@ const UserFooter = ({ isGuest, user, onOpenProfile }: UserFooterProps) => {
             size="sm" 
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
           >
-            <LogIn className="w-4 h-4 mr-2" />
+            <LogIn className="w-5 h-5 mr-2" />
             Sign In
           </Button>
         </div>
@@ -83,7 +84,7 @@ const UserFooter = ({ isGuest, user, onOpenProfile }: UserFooterProps) => {
             <div className="text-sm font-medium truncate">{user?.email}</div>
             <div className="text-xs text-muted-foreground">Signed in</div>
           </div>
-          <User className="w-4 h-4 text-muted-foreground" />
+          <User className="w-5 h-5 text-muted-foreground" />
         </>
       )}
     </button>
