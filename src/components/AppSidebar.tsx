@@ -84,7 +84,7 @@ const AppSidebar = ({
 
   return (
     <>
-      <Sidebar collapsible="icon" className={`${isDarkMode ? 'dark bg-black' : 'bg-sidebar'} border-sidebar-border`}>
+      <Sidebar collapsible="icon" variant="inset" className={`${isDarkMode ? 'dark bg-black' : 'bg-sidebar'} border-sidebar-border`}>
         <SidebarHeader className="p-4">
           <Button onClick={onNewChat} className="w-full justify-start gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
             <Plus className="w-4 h-4" />
