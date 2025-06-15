@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { Folder, Chat } from "@/services/chatService";
 
 interface HeaderProps {
   isDarkMode: boolean;
@@ -20,6 +21,10 @@ interface HeaderProps {
   selectedModel: string;
   onSelectModel: (model: string) => void;
   isLoadingProviders: boolean;
+  folders: Folder[];
+  isLoadingFolders: boolean;
+  onAssignChatToFolder: (folderId: string) => void;
+  activeChat: Chat | undefined;
 }
 
 const Header = ({
@@ -32,6 +37,10 @@ const Header = ({
   selectedModel,
   onSelectModel,
   isLoadingProviders,
+  folders,
+  isLoadingFolders,
+  onAssignChatToFolder,
+  activeChat,
 }: HeaderProps) => {
   return (
     <div className="flex items-center justify-between w-full gap-4">
@@ -69,6 +78,26 @@ const Header = ({
             {availableModels.map((model) => (
               <SelectItem key={model} value={model}>
                 {model}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          onValueChange={onAssignChatToFolder}
+          value={activeChat?.folder_id || 'none'}
+          disabled={!activeChat || isLoadingFolders}
+        >
+          <SelectTrigger className="w-[180px] truncate">
+            <SelectValue placeholder="Move to folder..." />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">
+              <em>No folder</em>
+            </SelectItem>
+            {folders.map((folder) => (
+              <SelectItem key={folder.id} value={folder.id}>
+                {folder.name}
               </SelectItem>
             ))}
           </SelectContent>

@@ -1,9 +1,9 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 
 export type Chat = Tables<'chats'>;
 export type Message = Tables<'chat_messages'>;
+export type Folder = Tables<'folders'>;
 export type NewMessage = Omit<TablesInsert<'chat_messages'>, 'id' | 'created_at' | 'user_id'>;
 
 export const getChats = async (): Promise<Chat[]> => {
@@ -19,6 +19,24 @@ export const getChats = async (): Promise<Chat[]> => {
   if (error) {
     console.error('Error fetching chats:', error);
     throw new Error('Failed to fetch chats');
+  }
+
+  return data || [];
+};
+
+export const getFolders = async (): Promise<Folder[]> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  const { data, error } = await supabase
+    .from('folders')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching folders:', error);
+    throw new Error('Failed to fetch folders');
   }
 
   return data || [];
@@ -64,6 +82,24 @@ export const createChat = async (title: string): Promise<Chat> => {
   return data;
 };
 
+export const createFolder = async (name: string): Promise<Folder> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const { data, error } = await supabase
+        .from('folders')
+        .insert({ name, user_id: user.id })
+        .select()
+        .single();
+
+    if (error) {
+        console.error('Error creating folder:', error);
+        throw new Error('Failed to create folder');
+    }
+
+    return data;
+};
+
 export const addMessage = async (message: NewMessage): Promise<Message> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
@@ -92,6 +128,22 @@ export const addMessage = async (message: NewMessage): Promise<Message> => {
   return data;
 };
 
+export const assignChatToFolder = async (chatId: string, folderId: string | null): Promise<void> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const { error } = await supabase
+        .from('chats')
+        .update({ folder_id: folderId })
+        .eq('id', chatId)
+        .eq('user_id', user.id);
+
+    if (error) {
+        console.error('Error assigning chat to folder:', error);
+        throw new Error('Failed to assign chat to folder');
+    }
+};
+
 export const updateChatTitle = async (chatId: string, title: string): Promise<void> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
@@ -106,6 +158,22 @@ export const updateChatTitle = async (chatId: string, title: string): Promise<vo
     console.error('Error updating chat title:', error);
     throw new Error('Failed to update chat title');
   }
+};
+
+export const updateFolder = async (folderId: string, name: string): Promise<void> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const { error } = await supabase
+        .from('folders')
+        .update({ name })
+        .eq('id', folderId)
+        .eq('user_id', user.id);
+
+    if (error) {
+        console.error('Error updating folder name:', error);
+        throw new Error('Failed to update folder name');
+    }
 };
 
 export const deleteChat = async (chatId: string): Promise<void> => {
@@ -151,4 +219,20 @@ export const updateChatPinStatus = async (chatId: string, is_pinned: boolean): P
     console.error('Error updating chat pin status:', error);
     throw new Error('Failed to update chat pin status');
   }
+};
+
+export const deleteFolder = async (folderId: string): Promise<void> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const { error } = await supabase
+        .from('folders')
+        .delete()
+        .eq('id', folderId)
+        .eq('user_id', user.id);
+
+    if (error) {
+        console.error('Error deleting folder:', error);
+        throw new Error('Failed to delete folder');
+    }
 };

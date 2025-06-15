@@ -11,28 +11,39 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import ChatOsIcon from "@/components/icons/ChatOsIcon";
+import type { Folder } from "@/services/chatService";
+
 interface Chat {
   id: string;
   title: string;
   date: string;
   messages: unknown[];
   is_pinned: boolean;
+  folder_id: string | null;
 }
 interface AppSidebarProps {
   isDarkMode: boolean;
   toggleDarkMode: () => void;
   chats: Chat[];
+  folders: Folder[];
   activeChatId: string | null;
   onNewChat: () => void;
   onSelectChat: (chat: Chat) => void;
+  createFolder: (name: string) => void;
+  updateFolder: (args: { folderId: string; name: string; }) => void;
+  deleteFolder: (folderId: string) => void;
 }
 const AppSidebar = ({
   isDarkMode,
   toggleDarkMode,
   chats,
+  folders,
   activeChatId,
   onNewChat,
-  onSelectChat
+  onSelectChat,
+  createFolder,
+  updateFolder,
+  deleteFolder,
 }: AppSidebarProps) => {
   const {
     user,
@@ -116,7 +127,23 @@ const AppSidebar = ({
         <SidebarSeparator />
 
         <SidebarContent>
-          <ChatHistory chats={chats} activeChatId={activeChatId} editingChatId={editingChatId} newChatTitle={newChatTitle} onSelectChat={onSelectChat} onStartEdit={handleStartEdit} onPinChat={handlePinChat} onDeleteChat={handleDeleteChat} onTitleChange={handleTitleChange} onUpdateTitle={handleUpdateTitle} onTitleKeyDown={handleTitleKeyDown} />
+          <ChatHistory 
+            chats={chats}
+            folders={folders}
+            activeChatId={activeChatId} 
+            editingChatId={editingChatId} 
+            newChatTitle={newChatTitle} 
+            onSelectChat={onSelectChat} 
+            onStartEdit={handleStartEdit} 
+            onPinChat={handlePinChat} 
+            onDeleteChat={handleDeleteChat} 
+            onTitleChange={handleTitleChange} 
+            onUpdateTitle={handleUpdateTitle} 
+            onTitleKeyDown={handleTitleKeyDown}
+            createFolder={createFolder}
+            updateFolder={updateFolder}
+            deleteFolder={deleteFolder}
+          />
           
           <SidebarSeparator />
 

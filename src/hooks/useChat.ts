@@ -8,8 +8,14 @@ import {
   updateChatTitle,
   deleteChat,
   updateChatPinStatus,
+  getFolders,
+  createFolder,
+  updateFolder,
+  deleteFolder,
+  assignChatToFolder,
   type Chat,
   type Message,
+  type Folder,
   type NewMessage,
 } from '@/services/chatService';
 import { useAuth } from './useAuth';
@@ -36,6 +42,12 @@ export const useChat = () => {
   const { data: chats = [], isLoading: isLoadingChats } = useQuery<Chat[]>({
     queryKey: ['chats', user?.id],
     queryFn: getChats,
+    enabled: !!user && !isGuest,
+  });
+
+  const { data: folders = [], isLoading: isLoadingFolders } = useQuery<Folder[]>({
+    queryKey: ['folders', user?.id],
+    queryFn: getFolders,
     enabled: !!user && !isGuest,
   });
 
@@ -101,6 +113,50 @@ export const useChat = () => {
     },
   });
 
+  const createFolderMutation = useMutation({
+    mutationFn: (name: string) => createFolder(name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['folders', user?.id] });
+      toast.success('Folder created.');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
+  });
+
+  const updateFolderMutation = useMutation({
+    mutationFn: ({ folderId, name }: { folderId: string; name: string }) => updateFolder(folderId, name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['folders', user?.id] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
+  });
+
+  const deleteFolderMutation = useMutation({
+    mutationFn: (folderId: string) => deleteFolder(folderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['folders', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['chats', user?.id] });
+      toast.success('Folder deleted.');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
+  });
+
+  const assignChatToFolderMutation = useMutation({
+    mutationFn: ({ chatId, folderId }: { chatId: string; folderId: string | null }) => assignChatToFolder(chatId, folderId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['chats', user?.id] });
+      toast.success('Chat moved.');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
+  });
+
   // Effect to manage activeChatId for authenticated user
   useEffect(() => {
     if (isGuest || isLoadingChats) return;
@@ -157,6 +213,12 @@ export const useChat = () => {
       updateChatTitle: (args: { chatId: string, title: string }) => updateGuestChatTitleLogic(args, setGuestChats),
       deleteChat: (chatId: string) => deleteGuestChatLogic(chatId, guestChats, setGuestChats, activeChatId, setActiveChatId),
       updateChatPinStatus: () => { toast.info("Sign in to pin chats."); },
+      folders: [],
+      isLoadingFolders: false,
+      createFolder: () => toast.info('Sign in to use folders.'),
+      updateFolder: () => toast.info('Sign in to use folders.'),
+      deleteFolder: () => toast.info('Sign in to use folders.'),
+      assignChatToFolder: () => toast.info('Sign in to use folders.'),
     };
   }
 
@@ -173,5 +235,11 @@ export const useChat = () => {
     updateChatTitle: updateChatTitleMutation.mutate,
     deleteChat: deleteChatMutation.mutate,
     updateChatPinStatus: updateChatPinStatusMutation.mutate,
+    folders,
+    isLoadingFolders,
+    createFolder: createFolderMutation.mutate,
+    updateFolder: updateFolderMutation.mutate,
+    deleteFolder: deleteFolderMutation.mutate,
+    assignChatToFolder: assignChatToFolderMutation.mutate,
   };
 };

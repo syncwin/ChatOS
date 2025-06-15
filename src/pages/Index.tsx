@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { v4 as uuidv4 } from 'uuid';
@@ -10,8 +9,8 @@ import { useChat } from "@/hooks/useChat";
 import { useAIProvider } from "@/hooks/useAIProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
-import type { ChatMessage as CoreChatMessage } from "@/services/aiProviderService";
-import type { NewMessage, Message as DbMessage } from "@/services/chatService";
+import type { CoreChatMessage } from "@/services/aiProviderService";
+import type { NewMessage, Message as DbMessage, Chat } from "@/services/chatService";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 
@@ -24,6 +23,8 @@ const Index = () => {
   const {
     chats,
     isLoadingChats,
+    folders,
+    isLoadingFolders,
     activeChatId,
     setActiveChatId,
     messages: dbMessages,
@@ -31,6 +32,10 @@ const Index = () => {
     createChatAsync,
     addMessage: addMessageMutation,
     updateChatTitle,
+    createFolder,
+    updateFolder,
+    deleteFolder,
+    assignChatToFolder,
   } = useChat();
 
   const messages: Message[] = dbMessages;
@@ -167,7 +172,15 @@ const Index = () => {
     setActiveChatId(chat.id);
   };
 
-  const isLoading = isLoadingChats || isLoadingMessages;
+  const activeChat = chats.find(c => c.id === activeChatId);
+
+  const handleAssignChatToFolder = (folderId: string) => {
+    if (activeChatId) {
+      assignChatToFolder({ chatId: activeChatId, folderId: folderId === 'none' ? null : folderId });
+    }
+  };
+
+  const isLoading = isLoadingChats || isLoadingMessages || isLoadingFolders;
 
   const toggleDarkMode = () => {
     if (profile) {
@@ -181,9 +194,13 @@ const Index = () => {
         isDarkMode={isDarkMode}
         toggleDarkMode={toggleDarkMode}
         chats={sidebarChats}
+        folders={folders}
         activeChatId={activeChatId}
         onNewChat={handleNewChat}
         onSelectChat={handleSelectChat}
+        createFolder={createFolder}
+        updateFolder={updateFolder}
+        deleteFolder={deleteFolder}
       />
       <SidebarInset>
         <div className="min-h-screen bg-background text-foreground h-screen flex flex-col">
@@ -200,6 +217,10 @@ const Index = () => {
                 selectedModel={selectedModel}
                 onSelectModel={switchModel}
                 isLoadingProviders={isLoadingProviders}
+                folders={folders}
+                isLoadingFolders={isLoadingFolders}
+                activeChat={activeChat}
+                onAssignChatToFolder={handleAssignChatToFolder}
               />
             </div>
           </header>

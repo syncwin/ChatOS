@@ -1,3 +1,4 @@
+
 import { Pin, PinOff, Pencil, Trash2, Check, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ interface Chat {
   date: string;
   messages: unknown[];
   is_pinned: boolean;
+  folder_id: string | null;
 }
 
 interface ChatItemProps {
