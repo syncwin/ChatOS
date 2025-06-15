@@ -1,3 +1,4 @@
+
 import { User, Copy, Check } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
           <AvatarFallback>AI</AvatarFallback>
         </Avatar>
       )}
-      <div className={`max-w-[85%] p-4 rounded-lg relative group ${
+      <div className={`max-w-[85%] p-4 rounded-xl shadow-md relative group ${
           message.role === "user"
             ? "bg-primary text-primary-foreground"
             : "bg-card border"
@@ -133,10 +134,9 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
       </div>
       {message.role === "user" && (
         <Avatar className="w-8 h-8 mt-1">
-          <div className="w-full h-full rounded-full flex items-center justify-center bg-muted">
-            <User className="w-4 h-4 text-muted-foreground" />
-          </div>
-          <AvatarFallback>You</AvatarFallback>
+          <AvatarFallback className="bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center">
+            <User className="w-4 h-4" />
+          </AvatarFallback>
         </Avatar>
       )}
     </div>

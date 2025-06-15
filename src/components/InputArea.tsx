@@ -20,29 +20,29 @@ const InputArea = ({ input, setInput, onSubmit, isLoading }: InputAreaProps) => 
 
   return (
     <div className="py-4 border-t border-border bg-background/90 backdrop-blur-sm">
-      <form onSubmit={onSubmit} className="flex gap-2 items-end">
-        <div className="flex-1 relative">
-          <label htmlFor="chat-input" className="sr-only">Type your message</label>
-          <TextareaAutosize
-            id="chat-input"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Ask me anything..."
-            className="w-full resize-none p-3 pr-12 text-sm bg-input border border-input rounded-lg focus:ring-1 focus:ring-ring focus:outline-none transition-shadow"
-            disabled={isLoading}
-            maxRows={5}
-            minRows={1}
-          />
-          <Button
-            type="submit"
-            size="icon"
-            disabled={!input.trim() || isLoading}
-            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 bg-primary hover:bg-primary/90 transition-all"
-            aria-label="Send message"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
+      <form onSubmit={onSubmit} className="flex gap-4 items-end">
+        <div className="flex-1 flex items-center p-2 bg-input rounded-2xl border border-input focus-within:ring-2 focus-within:ring-primary transition-all">
+            <label htmlFor="chat-input" className="sr-only">Type your message</label>
+            <TextareaAutosize
+                id="chat-input"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask me anything..."
+                className="flex-1 w-full resize-none p-2 bg-transparent text-base focus:outline-none"
+                disabled={isLoading}
+                maxRows={5}
+                minRows={1}
+            />
+            <Button
+                type="submit"
+                size="icon"
+                disabled={!input.trim() || isLoading}
+                className="h-9 w-9 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-all flex-shrink-0 disabled:bg-muted"
+                aria-label="Send message"
+            >
+                <Send className="w-4 h-4" />
+            </Button>
         </div>
       </form>
       <p className="text-xs mt-2 text-center text-muted-foreground" aria-live="polite">
