@@ -1,4 +1,3 @@
-
 import { User, Copy, Check } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -30,10 +29,9 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
     <div className={`flex gap-3 w-full ${message.role === "user" ? "justify-end" : "justify-start"}`}>
       {message.role === "assistant" && (
         <Avatar className="w-8 h-8 mt-1">
-          <div className="w-full h-full bg-primary rounded-full flex items-center justify-center">
-            <ChatOsIcon className="w-4 h-4 text-primary-foreground" />
-          </div>
-          <AvatarFallback>AI</AvatarFallback>
+          <AvatarFallback className="bg-primary text-primary-foreground flex items-center justify-center">
+            <ChatOsIcon className="w-4 h-4" />
+          </AvatarFallback>
         </Avatar>
       )}
       <div className={`max-w-[85%] p-4 rounded-xl shadow-md relative group ${
