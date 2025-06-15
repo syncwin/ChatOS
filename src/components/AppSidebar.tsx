@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Settings, Plus } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarFooter, SidebarSeparator, useSidebar } from "@/components/ui/sidebar";
@@ -103,7 +102,7 @@ const AppSidebar = ({
       "flex items-center gap-2",
       isCollapsed && "justify-center"
     )}>
-      <ChatOsIcon className="w-6 h-6 text-primary" />
+      <ChatOsIcon className="w-8 h-8 text-primary" />
       {!isCollapsed && <span className="text-lg font-semibold whitespace-nowrap">ChatOS</span>}
     </a>
   );

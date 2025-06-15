@@ -35,7 +35,7 @@ const Header = ({
 }: HeaderProps) => {
   return (
     <div className="flex items-center justify-between w-full gap-4">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 md:hidden">
         <ChatOsIcon className="w-8 h-8 text-primary" />
         <h1 className="text-xl font-semibold shrink-0">ChatOS</h1>
       </div>
