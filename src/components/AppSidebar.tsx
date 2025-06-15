@@ -8,6 +8,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useChat } from "@/hooks/useChat";
 import ChatHistory from "./ChatHistory";
 import UserFooter from "./UserFooter";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 interface Chat {
   id: string;
@@ -83,14 +86,31 @@ const AppSidebar = ({
     setIsProfileOpen(true);
   };
 
+  const newChatButton = (
+    <Button
+      onClick={onNewChat}
+      size={isCollapsed ? "icon" : "default"}
+      className={cn("bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white", !isCollapsed && "w-full")}
+    >
+      <Plus className="w-4 h-4" />
+      {!isCollapsed && <span>New Chat</span>}
+    </Button>
+  );
+
   return (
     <>
-      <Sidebar collapsible="icon" variant="inset" className={`${isDarkMode ? 'dark bg-black' : 'bg-sidebar'}`}>
+      <Sidebar collapsible="icon" variant="inset">
         <SidebarHeader className="p-4">
-          <SidebarMenuButton onClick={onNewChat} tooltip="New Chat" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
-            <Plus className="w-4 h-4" />
-            {!isCollapsed && <span>New Chat</span>}
-          </SidebarMenuButton>
+          {isCollapsed ? (
+            <Tooltip>
+              <TooltipTrigger asChild>{newChatButton}</TooltipTrigger>
+              <TooltipContent side="right">
+                <p>New Chat</p>
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            newChatButton
+          )}
         </SidebarHeader>
 
         <SidebarContent>
