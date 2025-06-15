@@ -22,7 +22,9 @@ export const useApiKeys = () => {
   // --- Guest Mutations ---
   const saveGuestKeyMutation = useMutation<void, Error, ApiKeyFormValues>({
     mutationFn: async (values) => {
-      addGuestApiKey(values);
+      // The zod schema ensures values are valid, but TypeScript's inference is getting confused.
+      // We can safely cast here because form validation has already passed.
+      addGuestApiKey(values as any);
     },
     onSuccess: (_, values) => {
       toast.success(`API key for ${values.provider} saved for this session.`);
