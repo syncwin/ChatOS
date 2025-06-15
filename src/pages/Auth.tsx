@@ -5,12 +5,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Sparkles, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { SignInForm } from '@/components/auth/SignInForm';
 import { SignUpForm } from '@/components/auth/SignUpForm';
 import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
 import type { AuthFormValues, ForgotPasswordFormValues } from '@/lib/schemas/auth';
+import ChatOsIcon from '@/components/icons/ChatOsIcon';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -92,9 +93,9 @@ const Auth = () => {
         <div className="flex justify-center mb-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-primary-foreground" />
+              <ChatOsIcon className="w-5 h-5 text-primary-foreground" />
             </div>
-            <h1 className="text-2xl font-semibold">InsightSeeker</h1>
+            <h1 className="text-2xl font-semibold">ChatOS</h1>
           </div>
         </div>
         <div className="flex justify-center mb-4">

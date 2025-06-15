@@ -15,7 +15,7 @@ const WelcomeScreen = ({ suggestedQuestions, onQuestionSelect }: WelcomeScreenPr
           <Bot className="w-8 h-8 text-primary-foreground" />
         </div>
         <h2 className="text-2xl font-bold mb-2 text-foreground">
-          Welcome to OS Chat
+          Welcome to ChatOS
         </h2>
         <p className="mb-6 text-muted-foreground">
           Start a new conversation by typing a message below or selecting a suggestion.
