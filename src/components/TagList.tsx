@@ -31,8 +31,8 @@ interface TagListProps {
 }
 
 const TagList = ({
-  tags,
-  chats,
+  tags = [],
+  chats = [],
   activeChatId,
   onSelectChat,
   onCreateTag,
@@ -94,9 +94,11 @@ const TagList = ({
           
           <div className="space-y-2 px-2">
             {tags.map(tag => {
-              const tagChats = chats.filter(chat => 
-                chat.tags?.some(chatTag => chatTag.id === tag.id)
-              );
+              const tagChats = chats.filter(chat => {
+                // For now, we'll assume no tags are assigned to chats yet
+                // This will be handled when we implement the tag assignment functionality
+                return false;
+              });
 
               return (
                 <div key={tag.id} className="space-y-1">
@@ -151,7 +153,11 @@ const TagList = ({
                       {tagChats.map(chat => (
                         <TagItem
                           key={chat.id}
-                          chat={chat}
+                          chat={{
+                            ...chat,
+                            date: new Date(chat.updated_at).toLocaleDateString(),
+                            messages: []
+                          }}
                           isActive={chat.id === activeChatId}
                           onSelectChat={onSelectChat}
                         />

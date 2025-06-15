@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { v4 as uuidv4 } from 'uuid';
@@ -36,12 +37,6 @@ const Index = () => {
     updateFolder,
     deleteFolder,
     assignChatToFolder,
-    tags,
-    isLoadingTags,
-    createTag,
-    updateTag,
-    deleteTag,
-    assignTagToChat,
   } = useChat();
 
   const messages: Message[] = dbMessages;
@@ -60,6 +55,9 @@ const Index = () => {
 
   const [input, setInput] = useState("");
   const isDarkMode = profile?.theme !== 'light'; // Default to dark theme
+
+  // Mock tag data for now - will be replaced with real data later
+  const [tags] = useState([]);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -172,6 +170,7 @@ const Index = () => {
     ...chat,
     date: formatDistanceToNow(new Date(chat.updated_at), { addSuffix: true }),
     messages: [], // Not needed for sidebar
+    tags: [], // Will be populated when tag functionality is implemented
   }));
 
   const handleSelectChat = (chat: { id: string }) => {
@@ -186,14 +185,21 @@ const Index = () => {
     }
   };
 
+  // Mock tag functions for now
   const handleAssignTagToChat = (tagId: string) => {
-    if (activeChatId) {
-      assignTagToChat({ chatId: activeChatId, tagId });
-    }
+    console.log('Assign tag to chat:', tagId, activeChatId);
   };
 
   const handleCreateTag = (name: string, color?: string) => {
-    createTag(name, color);
+    console.log('Create tag:', name, color);
+  };
+
+  const handleUpdateTag = (args: { tagId: string; name: string; color?: string }) => {
+    console.log('Update tag:', args);
+  };
+
+  const handleDeleteTag = (tagId: string) => {
+    console.log('Delete tag:', tagId);
   };
 
   const isLoading = isLoadingChats || isLoadingMessages || isLoadingFolders;
@@ -219,9 +225,8 @@ const Index = () => {
         deleteFolder={deleteFolder}
         tags={tags}
         createTag={handleCreateTag}
-        updateTag={updateTag}
-        deleteTag={deleteTag}
-        onAssignTagToChat={handleAssignTagToChat}
+        updateTag={handleUpdateTag}
+        deleteTag={handleDeleteTag}
       />
       <SidebarInset>
         <div className="min-h-screen bg-background text-foreground h-screen flex flex-col">
@@ -243,7 +248,7 @@ const Index = () => {
                 activeChat={activeChat}
                 onAssignChatToFolder={handleAssignChatToFolder}
                 tags={tags}
-                isLoadingTags={isLoadingTags}
+                isLoadingTags={false}
                 onAssignTagToChat={handleAssignTagToChat}
                 onCreateFolder={createFolder}
                 onCreateTag={handleCreateTag}

@@ -7,7 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
-import type { Tag as TagType, Chat } from "@/services/chatService";
+import type { Tag as TagType } from "@/services/chatService";
+
+interface Chat {
+  id: string;
+  title: string;
+  tags?: TagType[];
+}
 
 interface TagDropdownProps {
   tags: TagType[];
@@ -18,7 +24,7 @@ interface TagDropdownProps {
 }
 
 const TagDropdown = ({
-  tags,
+  tags = [],
   activeChat,
   onAssignTagToChat,
   onCreateTag,

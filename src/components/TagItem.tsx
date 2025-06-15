@@ -2,7 +2,13 @@
 import { MessageSquare } from "lucide-react";
 import { SidebarMenuItem } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import type { Chat } from "@/services/chatService";
+
+interface Chat {
+  id: string;
+  title: string;
+  date: string;
+  messages: unknown[];
+}
 
 interface TagItemProps {
   chat: Chat;

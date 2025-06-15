@@ -4,6 +4,7 @@ import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 export type Chat = Tables<'chats'>;
 export type Message = Tables<'chat_messages'>;
 export type Folder = Tables<'folders'>;
+export type Tag = Tables<'tags'>;
 export type NewMessage = Omit<TablesInsert<'chat_messages'>, 'id' | 'created_at' | 'user_id'>;
 
 export const getChats = async (): Promise<Chat[]> => {
@@ -61,6 +62,24 @@ export const getMessages = async (chatId: string): Promise<Message[]> => {
   return data || [];
 };
 
+export const getTags = async (): Promise<Tag[]> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  const { data, error } = await supabase
+    .from('tags')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching tags:', error);
+    throw new Error('Failed to fetch tags');
+  }
+
+  return data || [];
+};
+
 export const createChat = async (title: string): Promise<Chat> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
@@ -98,6 +117,24 @@ export const createFolder = async (name: string): Promise<Folder> => {
     }
 
     return data;
+};
+
+export const createTag = async (name: string, color?: string): Promise<Tag> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  const { data, error } = await supabase
+    .from('tags')
+    .insert({ name, color, user_id: user.id })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating tag:', error);
+    throw new Error('Failed to create tag');
+  }
+
+  return data;
 };
 
 export const addMessage = async (message: NewMessage): Promise<Message> => {
@@ -176,6 +213,65 @@ export const updateFolder = async (folderId: string, name: string): Promise<void
     }
 };
 
+export const updateTag = async (tagId: string, name: string, color?: string): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  const { error } = await supabase
+    .from('tags')
+    .update({ name, color })
+    .eq('id', tagId)
+    .eq('user_id', user.id);
+
+  if (error) {
+    console.error('Error updating tag:', error);
+    throw new Error('Failed to update tag');
+  }
+};
+
+export const assignTagToChat = async (chatId: string, tagId: string): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  // Check if the relationship already exists
+  const { data: existing } = await supabase
+    .from('chat_tags')
+    .select('*')
+    .eq('chat_id', chatId)
+    .eq('tag_id', tagId)
+    .eq('user_id', user.id)
+    .single();
+
+  if (existing) {
+    // If it exists, remove it (toggle behavior)
+    const { error } = await supabase
+      .from('chat_tags')
+      .delete()
+      .eq('chat_id', chatId)
+      .eq('tag_id', tagId)
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Error removing tag from chat:', error);
+      throw new Error('Failed to remove tag from chat');
+    }
+  } else {
+    // If it doesn't exist, add it
+    const { error } = await supabase
+      .from('chat_tags')
+      .insert({
+        chat_id: chatId,
+        tag_id: tagId,
+        user_id: user.id,
+      });
+
+    if (error) {
+      console.error('Error assigning tag to chat:', error);
+      throw new Error('Failed to assign tag to chat');
+    }
+  }
+};
+
 export const deleteChat = async (chatId: string): Promise<void> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
@@ -235,4 +331,33 @@ export const deleteFolder = async (folderId: string): Promise<void> => {
         console.error('Error deleting folder:', error);
         throw new Error('Failed to delete folder');
     }
+};
+
+export const deleteTag = async (tagId: string): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  // First delete all chat_tags relationships
+  const { error: chatTagsError } = await supabase
+    .from('chat_tags')
+    .delete()
+    .eq('tag_id', tagId)
+    .eq('user_id', user.id);
+
+  if (chatTagsError) {
+    console.error('Error deleting chat tags:', chatTagsError);
+    throw new Error('Failed to delete chat tags');
+  }
+
+  // Then delete the tag
+  const { error } = await supabase
+    .from('tags')
+    .delete()
+    .eq('id', tagId)
+    .eq('user_id', user.id);
+
+  if (error) {
+    console.error('Error deleting tag:', error);
+    throw new Error('Failed to delete tag');
+  }
 };
