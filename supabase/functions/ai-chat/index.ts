@@ -64,12 +64,23 @@ serve(async (req) => {
       apiKey: guestApiKey 
     } = await req.json() as ChatRequest;
 
+    console.log(`Processing request for provider: ${provider}`);
+    
     let apiKey: string;
     const supabaseClient = getSupabaseClient(req);
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+
+    if (userError) {
+      console.error('Error getting user:', userError);
+    }
+
+    console.log('User authentication status:', user ? 'authenticated' : 'not authenticated');
+    console.log('Guest API key provided:', !!guestApiKey);
 
     if (user) {
       // Authenticated user path
+      console.log('Fetching API key for authenticated user:', user.id);
+      
       const { data: apiKeyData, error: apiKeyError } = await supabaseClient
         .from('api_keys')
         .select('api_key')
@@ -77,19 +88,32 @@ serve(async (req) => {
         .eq('user_id', user.id)
         .single();
 
-      if (apiKeyError || !apiKeyData) {
+      console.log('API key query result:', { data: !!apiKeyData, error: apiKeyError });
+
+      if (apiKeyError) {
         console.error('API key error for user:', user.id, apiKeyError);
-        throw new Error(`No API key found for provider: ${provider}`);
+        if (apiKeyError.code === 'PGRST116') {
+          throw new Error(`No API key found for provider: ${provider}. Please add your API key in the settings.`);
+        }
+        throw new Error(`Failed to fetch API key: ${apiKeyError.message}`);
       }
+      
+      if (!apiKeyData) {
+        throw new Error(`No API key found for provider: ${provider}. Please add your API key in the settings.`);
+      }
+      
       apiKey = apiKeyData.api_key;
+      console.log('Successfully retrieved API key for user');
     } else if (guestApiKey) {
       // Guest user path
+      console.log('Using guest API key');
       apiKey = guestApiKey;
     } else {
-      throw new Error('Authentication error: No API key or user session provided.');
+      console.error('Authentication failed: No user session and no guest API key provided');
+      throw new Error('Authentication error: Please sign in or provide an API key to use this feature.');
     }
     
-    console.log(`Processing request for provider: ${provider}`);
+    console.log(`Sending request to ${provider} with model: ${model || 'default'}`);
     let response: NormalizedResponse;
 
     switch (provider) {
@@ -112,6 +136,7 @@ serve(async (req) => {
         throw new Error(`Unsupported provider: ${provider}`);
     }
 
+    console.log(`Successfully processed request for ${provider}`);
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
