@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { User, MessageSquare, Settings, Plus, Search, Trash2, LogIn, Pin, PinOff, Pencil } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, SidebarSeparator } from "@/components/ui/sidebar";
@@ -137,14 +138,12 @@ const AppSidebar = ({
             <SidebarGroupContent>
               <SidebarMenu>
                 {filteredChats.map(chat => (
-                  <SidebarMenuItem key={chat.id} className="group/item relative" data-active={chat.id === activeChatId}>
-                    <SidebarMenuButton 
-                      onClick={() => editingChatId !== chat.id && onSelectChat(chat)} 
-                      data-active={chat.id === activeChatId} 
-                      className="group/button w-full justify-start h-auto p-2.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-primary data-[active=true]:text-primary-foreground px-[5px] py-[5px] pr-24"
+                  <SidebarMenuItem key={chat.id} className="group/item" data-active={chat.id === activeChatId}>
+                    <div
+                      onClick={() => editingChatId !== chat.id && onSelectChat(chat)}
+                      data-active={chat.id === activeChatId}
+                      className="w-full text-left rounded-md cursor-pointer transition-colors p-2.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-primary data-[active=true]:text-primary-foreground"
                     >
-                      {chat.is_pinned && <Pin className="w-3 h-3 mr-2 flex-shrink-0 text-amber-500" />}
-                      <MessageSquare className="w-4 h-4 mr-2 flex-shrink-0" />
                       {editingChatId === chat.id ? (
                         <Input
                           value={newChatTitle}
@@ -152,44 +151,50 @@ const AppSidebar = ({
                           onBlur={() => handleTitleUpdate(chat.id)}
                           onKeyDown={(e) => handleTitleKeyDown(e, chat.id)}
                           onClick={(e) => e.stopPropagation()}
-                          className="h-7 text-sm flex-1"
+                          className="h-7 text-sm flex-1 bg-transparent border-0 border-b border-current focus-visible:ring-0 focus-visible:ring-offset-0"
                           autoFocus
                         />
                       ) : (
-                        <div className="flex-1 min-w-0">
-                          <div className="truncate text-sm font-medium">{chat.title}</div>
-                          <div className="text-xs text-muted-foreground group-data-[active=true]/button:text-primary-foreground/70">{chat.date}</div>
-                        </div>
+                        <>
+                          <div className="flex items-start">
+                            {chat.is_pinned && <Pin className="w-3 h-3 mr-2 mt-1 flex-shrink-0 text-amber-500" />}
+                            <div className="flex-1 min-w-0">
+                              <div className="truncate text-sm font-medium">{chat.title}</div>
+                              <div className="text-xs text-muted-foreground group-data-[active=true]/item:text-primary-foreground/70">{chat.date}</div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-end gap-0.5 overflow-hidden max-h-0 opacity-0 group-hover/item:opacity-100 group-hover/item:max-h-7 group-hover/item:mt-2 transition-all duration-200 ease-in-out group-data-[active=true]/item:opacity-100 group-data-[active=true]/item:max-h-7 group-data-[active=true]/item:mt-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground group-data-[active=true]/item:text-primary-foreground group-data-[active=true]/item:hover:bg-primary/80"
+                              onClick={e => handleEditClick(e, chat.id, chat.title)}
+                              aria-label={`Edit chat title: ${chat.title}`}
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground group-data-[active=true]/item:text-primary-foreground group-data-[active=true]/item:hover:bg-primary/80"
+                              onClick={e => handlePinChat(e, chat.id, chat.is_pinned)}
+                              aria-label={chat.is_pinned ? `Unpin chat: ${chat.title}` : `Pin chat: ${chat.title}`}
+                            >
+                              {chat.is_pinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground group-data-[active=true]/item:text-primary-foreground group-data-[active=true]/item:hover:bg-primary/80"
+                              onClick={e => handleDeleteChat(e, chat.id)} 
+                              aria-label={`Delete chat: ${chat.title}`}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </>
                       )}
-                    </SidebarMenuButton>
-                    <div className="absolute top-1/2 right-1.5 -translate-y-1/2 flex items-center gap-0.5 opacity-0 transition-opacity group-hover/item:opacity-100 group-data-[active=true]/item:opacity-100">
-                       <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-muted-foreground hover:text-foreground group-data-[active=true]/item:text-primary-foreground group-data-[active=true]/item:hover:bg-primary/80"
-                        onClick={e => handleEditClick(e, chat.id, chat.title)}
-                        aria-label={`Edit chat title: ${chat.title}`}
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-muted-foreground hover:text-foreground group-data-[active=true]/item:text-primary-foreground group-data-[active=true]/item:hover:bg-primary/80"
-                        onClick={e => handlePinChat(e, chat.id, chat.is_pinned)}
-                        aria-label={chat.is_pinned ? `Unpin chat: ${chat.title}` : `Pin chat: ${chat.title}`}
-                      >
-                        {chat.is_pinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-muted-foreground hover:text-foreground group-data-[active=true]/item:text-primary-foreground group-data-[active=true]/item:hover:bg-primary/80"
-                        onClick={e => handleDeleteChat(e, chat.id)} 
-                        aria-label={`Delete chat: ${chat.title}`}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
                     </div>
                   </SidebarMenuItem>
                 ))}
