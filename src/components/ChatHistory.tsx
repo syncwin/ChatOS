@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { Search } from "lucide-react";
 import { SidebarGroup, SidebarGroupContent, SidebarMenu } from "@/components/ui/sidebar";
@@ -7,7 +6,12 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { FolderList } from "./FolderList";
 import { UncategorizedChatList } from "./UncategorizedChatList";
 import { TagList } from "./TagList";
-import type { Folder, Tag, Chat } from "@/services/chatService";
+import type { Folder, Tag, Chat as DbChat } from "@/services/chatService";
+
+interface Chat extends DbChat {
+  tags: Tag[];
+  date: string;
+}
 
 interface ChatHistoryProps {
   chats: Chat[];

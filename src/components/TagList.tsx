@@ -6,7 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from "@/components/ui/sidebar";
 import { TagItem } from './TagItem';
-import type { Tag, Chat } from "@/services/chatService";
+import type { Tag, Chat as DbChat } from "@/services/chatService";
+
+interface Chat extends DbChat {
+    tags: Tag[];
+    date: string;
+}
 
 interface TagWithChats extends Tag {
     chats: Chat[];

@@ -3,10 +3,15 @@ import { Tag as TagIcon } from "lucide-react";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { SidebarMenu } from "@/components/ui/sidebar";
 import ChatItem from "./ChatItem";
-import type { Tag, Chat as ChatType } from "@/services/chatService";
+import type { Tag, Chat as DbChat } from "@/services/chatService";
+
+interface Chat extends DbChat {
+    tags: Tag[];
+    date: string;
+}
 
 interface TagWithChats extends Tag {
-    chats: ChatType[];
+    chats: Chat[];
 }
 
 interface TagItemProps {
@@ -15,7 +20,7 @@ interface TagItemProps {
     activeChatId: string | null;
     editingChatId: string | null;
     newChatTitle: string;
-    onSelectChat: (chat: ChatType) => void;
+    onSelectChat: (chat: Chat) => void;
     onStartEdit: (chatId: string, currentTitle: string) => void;
     onPinChat: (e: React.MouseEvent, chatId: string, isPinned: boolean) => void;
     onDeleteChat: (e: React.MouseEvent, chatId: string) => void;
