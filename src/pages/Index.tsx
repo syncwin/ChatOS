@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { v4 as uuidv4 } from 'uuid';
@@ -37,7 +36,17 @@ const Index = () => {
 
   const messages: Message[] = dbMessages;
 
-  const { streamMessage, isAiResponding, selectedProvider, selectedModel } = useAIProvider();
+  const {
+    streamMessage,
+    isAiResponding,
+    selectedProvider,
+    selectedModel,
+    availableProviders,
+    availableModels,
+    switchProvider,
+    switchModel,
+    isLoadingProviders,
+  } = useAIProvider();
 
   const [input, setInput] = useState("");
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -212,7 +221,17 @@ const Index = () => {
           <div className="container mx-auto max-w-4xl h-screen flex flex-col">
             <header className="flex items-center gap-2 py-4">
               <SidebarTrigger className="text-muted-foreground hover:text-foreground" aria-label="Toggle sidebar" />
-              <Header isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+              <Header
+                isDarkMode={isDarkMode}
+                toggleDarkMode={toggleDarkMode}
+                availableProviders={availableProviders}
+                selectedProvider={selectedProvider}
+                onSelectProvider={switchProvider}
+                availableModels={availableModels}
+                selectedModel={selectedModel}
+                onSelectModel={switchModel}
+                isLoadingProviders={isLoadingProviders}
+              />
             </header>
 
             <main className="flex-1 flex flex-col overflow-hidden">

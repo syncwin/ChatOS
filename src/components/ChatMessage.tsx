@@ -50,7 +50,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
                   const { children, className, node, ...rest } = props;
                   const match = /language-(\w+)/.exec(className || '');
                   return match ? (
-                    <pre className="bg-gray-900 text-gray-100 rounded-md p-4 my-2 overflow-x-auto">
+                    <pre className="bg-muted/50 dark:bg-muted/20 text-foreground rounded-md p-4 my-2 overflow-x-auto">
                       <code className="text-sm font-mono">
                         {String(children).replace(/\n$/, '')}
                       </code>
@@ -110,8 +110,15 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
             <span className="inline-block w-2 h-4 bg-current ml-1 animate-pulse" />
           )}
         </div>
-        <div className="text-xs opacity-70 mt-2">
-          {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        <div className="flex justify-between items-end text-xs mt-2">
+          <div className="opacity-50">
+            {message.role === 'assistant' && !message.isStreaming && message.provider && (
+              <span>{message.provider}/{message.model}</span>
+            )}
+          </div>
+          <div className="opacity-70">
+            {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </div>
         </div>
         {message.role === 'assistant' && !message.isStreaming && message.content && (
           <Button
