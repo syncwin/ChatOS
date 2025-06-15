@@ -1,4 +1,3 @@
-
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import TextareaAutosize from 'react-textarea-autosize';
@@ -36,7 +35,7 @@ const InputArea = ({ input, setInput, onSubmit, isLoading }: InputAreaProps) => 
             type="submit"
             size="icon"
             disabled={!input.trim() || isLoading}
-            className="absolute right-2 bottom-2 h-8 w-8 bg-primary hover:bg-primary/90 transition-all"
+            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 bg-primary hover:bg-primary/90 transition-all"
           >
             <Send className="w-4 h-4" />
           </Button>
