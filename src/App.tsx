@@ -21,7 +21,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <SidebarProvider>
-            <div className="min-h-screen flex w-full">
+            <div className="min-h-screen flex w-full overflow-hidden">
               <Routes>
                 <Route path="/auth" element={<Auth />} />
                 <Route element={<ProtectedRoute />}>

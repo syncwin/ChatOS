@@ -40,7 +40,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
             : "bg-card border"
         }`}
       >
-        <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+        <p className="text-sm leading-relaxed whitespace-pre-wrap break-all">
           {message.content}
           {message.isStreaming && (
             <span className="inline-block w-2 h-4 bg-current ml-1 animate-pulse" />
