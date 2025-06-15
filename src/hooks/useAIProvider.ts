@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { 
   sendChatMessage, 
@@ -26,7 +26,7 @@ export const useAIProvider = () => {
   });
 
   // Auto-select first provider when available
-  useState(() => {
+  useEffect(() => {
     if (availableProviders.length > 0 && !selectedProvider) {
       const firstProvider = availableProviders[0];
       setSelectedProvider(firstProvider);
