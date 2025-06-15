@@ -1,6 +1,7 @@
+
 import { useState } from "react";
 import { Settings, Plus } from "lucide-react";
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarFooter, SidebarSeparator } from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarFooter, SidebarSeparator, useSidebar } from "@/components/ui/sidebar";
 import SettingsDialog from "./SettingsDialog";
 import UserProfileDialog from "./UserProfileDialog";
 import { useAuth } from "@/hooks/useAuth";
@@ -39,6 +40,8 @@ const AppSidebar = ({
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [newChatTitle, setNewChatTitle] = useState("");
+  const { state } = useSidebar();
+  const isCollapsed = state === 'collapsed';
 
   const handleDeleteChat = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
@@ -82,11 +85,11 @@ const AppSidebar = ({
 
   return (
     <>
-      <Sidebar collapsible="icon" variant="inset" className={`${isDarkMode ? 'dark bg-black' : 'bg-sidebar'} border-sidebar-border`}>
+      <Sidebar collapsible="icon" variant="inset" className={`${isDarkMode ? 'dark bg-black' : 'bg-sidebar'}`}>
         <SidebarHeader className="p-4">
           <SidebarMenuButton onClick={onNewChat} tooltip="New Chat" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
             <Plus className="w-4 h-4" />
-            <span>New Chat</span>
+            {!isCollapsed && <span>New Chat</span>}
           </SidebarMenuButton>
         </SidebarHeader>
 
@@ -122,7 +125,7 @@ const AppSidebar = ({
                     aria-label="Open settings"
                   >
                     <Settings className="w-4 h-4" />
-                    <span>Settings</span>
+                    {!isCollapsed && <span>Settings</span>}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
