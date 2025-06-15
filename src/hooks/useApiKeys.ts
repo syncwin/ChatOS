@@ -48,6 +48,7 @@ export const useApiKeys = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["apiKeys", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["availableProviders", user?.id] });
     },
     onError: (error) => {
       toast.error("Failed to save API key: " + error.message);
@@ -66,6 +67,7 @@ export const useApiKeys = () => {
     onSuccess: (_, provider) => {
       toast.success(`API key for ${provider} deleted successfully!`);
       queryClient.invalidateQueries({ queryKey: ["apiKeys", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["availableProviders", user?.id] });
     },
     onError: (error) => {
       toast.error("Failed to delete API key: " + error.message);
@@ -79,4 +81,3 @@ export const useApiKeys = () => {
     deleteMutation,
   };
 };
-

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ChatMessage {
@@ -46,7 +45,9 @@ export const getAvailableProviders = async (): Promise<string[]> => {
     throw new Error('Failed to fetch available providers');
   }
 
-  return data.map(item => item.provider);
+  // Ensure unique providers are returned
+  const providers = data.map(item => item.provider);
+  return [...new Set(providers)];
 };
 
 // Default models for each provider
