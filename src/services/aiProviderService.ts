@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ChatMessage {
@@ -13,6 +12,7 @@ export interface ChatRequest {
   temperature?: number;
   max_tokens?: number;
   apiKey?: string; // For guest users
+  stream?: boolean;
 }
 
 export interface NormalizedResponse {
@@ -36,6 +36,54 @@ export const sendChatMessage = async (request: ChatRequest): Promise<NormalizedR
   }
 
   return data;
+};
+
+export const streamChatMessage = async (
+  request: ChatRequest,
+  onDelta: (chunk: string) => void,
+  onError: (error: Error) => void
+): Promise<void> => {
+  const { auth: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY!,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  try {
+    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ ...request, stream: true }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to stream chat message');
+    }
+
+    if (!response.body) {
+      throw new Error('Response body is null');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      const chunk = decoder.decode(value, { stream: true });
+      onDelta(chunk);
+    }
+  } catch (error) {
+    onError(error as Error);
+  }
 };
 
 export const getAvailableProviders = async (): Promise<string[]> => {

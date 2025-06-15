@@ -1,4 +1,7 @@
+
 import { useState, useRef, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { v4 as uuidv4 } from 'uuid';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import Header from "@/components/Header";
@@ -10,12 +13,13 @@ import { useChat } from "@/hooks/useChat";
 import { useAIProvider } from "@/hooks/useAIProvider";
 import { useAuth } from "@/hooks/useAuth";
 import type { ChatMessage as CoreChatMessage } from "@/services/aiProviderService";
-import type { NewMessage } from "@/services/chatService";
+import type { NewMessage, Message } from "@/services/chatService";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 
 const Index = () => {
   const { user, isGuest } = useAuth();
+  const queryClient = useQueryClient();
   const {
     chats,
     isLoadingChats,
@@ -24,12 +28,12 @@ const Index = () => {
     messages,
     isLoadingMessages,
     createChatAsync,
-    addMessage,
+    addMessage: addMessageMutation,
     updateChatTitle,
     deleteChat,
   } = useChat();
 
-  const { sendMessage, isAiResponding } = useAIProvider();
+  const { streamMessage, isAiResponding, selectedProvider } = useAIProvider();
 
   const [input, setInput] = useState("");
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -49,7 +53,7 @@ const Index = () => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isAiResponding]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,26 +86,66 @@ const Index = () => {
       content: trimmedInput,
       role: 'user',
     };
-    addMessage(userMessage);
+    addMessageMutation(userMessage);
 
     const historyForAI: CoreChatMessage[] = [
       ...messages.map(m => ({ role: m.role, content: m.content })),
       { role: 'user', content: trimmedInput }
     ];
 
-    const aiResponse = await sendMessage(historyForAI);
+    const assistantId = uuidv4();
+    const assistantPlaceholder: Message = {
+      id: assistantId,
+      chat_id: currentChatId,
+      content: '',
+      role: 'assistant',
+      created_at: new Date().toISOString(),
+      isStreaming: true,
+      user_id: user?.id || '',
+    };
+    
+    // Optimistically add placeholder
+    queryClient.setQueryData(['messages', currentChatId], (oldData: Message[] = []) => [
+      ...oldData,
+      assistantPlaceholder
+    ]);
+    scrollToBottom();
 
-    if (aiResponse && currentChatId) {
-      const assistantMessage: NewMessage = {
-        chat_id: currentChatId,
-        content: aiResponse.content,
-        role: 'assistant',
-        provider: aiResponse.provider,
-        model: aiResponse.model,
-        usage: aiResponse.usage,
-      };
-      addMessage(assistantMessage);
-    }
+    let finalContent = "";
+
+    await streamMessage(
+      historyForAI,
+      (delta) => { // onDelta
+        finalContent += delta;
+        queryClient.setQueryData(['messages', currentChatId], (oldData: Message[] = []) =>
+          oldData.map(msg => 
+            msg.id === assistantId ? { ...msg, content: finalContent } : msg
+          )
+        );
+        scrollToBottom();
+      },
+      () => { // onComplete
+        const finalAssistantMessage: NewMessage = {
+          chat_id: currentChatId!,
+          content: finalContent,
+          role: 'assistant',
+          provider: selectedProvider,
+        };
+        // Replace placeholder with final message from DB
+        addMessageMutation(finalAssistantMessage, {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['messages', currentChatId] });
+          }
+        });
+      },
+      (error) => { // onError
+        toast.error(`Error from AI: ${error.message}`);
+        // Remove placeholder on error
+        queryClient.setQueryData(['messages', currentChatId], (oldData: Message[] = []) =>
+          oldData.filter(msg => msg.id !== assistantId)
+        );
+      }
+    );
   };
   
   const handleNewChat = () => {

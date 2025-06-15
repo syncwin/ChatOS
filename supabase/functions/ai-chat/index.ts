@@ -19,6 +19,7 @@ interface ChatRequest {
   temperature?: number;
   max_tokens?: number;
   apiKey?: string; // For guest users
+  stream?: boolean; // To request a streaming response
 }
 
 interface NormalizedResponse {
@@ -49,6 +50,37 @@ const getSupabaseClient = (req: Request): SupabaseClient => {
   );
 };
 
+const createOpenAINormalizer = () => {
+  const decoder = new TextDecoder();
+  let buffer = '';
+  return new TransformStream({
+    transform(chunk, controller) {
+      buffer += decoder.decode(chunk, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const jsonStr = line.substring(6).trim();
+          if (jsonStr === '[DONE]') {
+            controller.terminate();
+            return;
+          }
+          try {
+            const data = JSON.parse(jsonStr);
+            const content = data.choices?.[0]?.delta?.content;
+            if (content) {
+              controller.enqueue(new TextEncoder().encode(content));
+            }
+          } catch (e) {
+            // Ignore parsing errors for now
+          }
+        }
+      }
+    },
+  });
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -61,10 +93,11 @@ serve(async (req) => {
       messages, 
       temperature = 0.7, 
       max_tokens = 1000, 
-      apiKey: guestApiKey 
+      apiKey: guestApiKey,
+      stream = false
     } = await req.json() as ChatRequest;
 
-    console.log(`[ai-chat] Provider: ${provider} | Model: ${model} | Guest?: ${!!guestApiKey}`);
+    console.log(`[ai-chat] Provider: ${provider} | Model: ${model} | Guest?: ${!!guestApiKey} | Stream?: ${stream}`);
 
     let apiKey: string | undefined;
     const supabaseClient = getSupabaseClient(req);
@@ -133,7 +166,25 @@ serve(async (req) => {
       throw new Error('Internal error: Could not resolve an API key to use.');
     }
 
-    // 6. Proceed to provider-specific handler
+    // Handle streaming case for supported providers
+    if (stream) {
+      if (provider === 'OpenAI') {
+        const streamResponse = await handleOpenAI(apiKey, model || 'gpt-4o-mini', messages, temperature, max_tokens, true);
+        if (streamResponse instanceof ReadableStream) {
+          const normalizedStream = streamResponse.pipeThrough(createOpenAINormalizer());
+          return new Response(normalizedStream, {
+            headers: { ...corsHeaders, 'Content-Type': 'text/plain; charset=utf-8' },
+          });
+        }
+      } else {
+        return new Response(JSON.stringify({ error: `Streaming is not supported for ${provider} yet.` }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    // 6. Proceed to provider-specific handler (non-streaming)
     let response: NormalizedResponse;
     try {
       switch (provider) {
@@ -185,7 +236,7 @@ serve(async (req) => {
   }
 });
 
-async function handleOpenAI(apiKey: string, model: string, messages: ChatMessage[], temperature: number, max_tokens: number): Promise<NormalizedResponse> {
+async function handleOpenAI(apiKey: string, model: string, messages: ChatMessage[], temperature: number, max_tokens: number, stream: boolean = false): Promise<NormalizedResponse | ReadableStream> {
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -197,12 +248,17 @@ async function handleOpenAI(apiKey: string, model: string, messages: ChatMessage
       messages,
       temperature,
       max_tokens,
+      stream,
     }),
   });
 
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`OpenAI API error: ${error}`);
+  }
+
+  if (stream) {
+    return response.body!;
   }
 
   const data = await response.json();
