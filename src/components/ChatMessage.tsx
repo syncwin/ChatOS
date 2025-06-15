@@ -47,20 +47,21 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
           {message.role === "assistant" ? (
             <ReactMarkdown
               components={{
-                code({ node, inline, className, children, ...props }) {
+                code(props) {
+                  const { children, className, ...rest } = props;
                   const match = /language-(\w+)/.exec(className || '');
-                  return !inline && match ? (
+                  return match ? (
                     <SyntaxHighlighter
-                      style={oneDark}
+                      style={oneDark as any}
                       language={match[1]}
                       PreTag="div"
                       className="rounded-md my-2"
-                      {...props}
+                      {...rest}
                     >
                       {String(children).replace(/\n$/, '')}
                     </SyntaxHighlighter>
                   ) : (
-                    <code className="bg-muted px-1 py-0.5 rounded text-sm font-mono" {...props}>
+                    <code className="bg-muted px-1 py-0.5 rounded text-sm font-mono" {...rest}>
                       {children}
                     </code>
                   );
