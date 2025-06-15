@@ -43,7 +43,7 @@ export const streamChatMessage = async (
   onDelta: (chunk: string) => void,
   onError: (error: Error) => void
 ): Promise<void> => {
-  const { auth: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
   
   const headers: HeadersInit = {

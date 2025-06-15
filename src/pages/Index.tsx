@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { v4 as uuidv4 } from 'uuid';
@@ -13,9 +12,11 @@ import { useChat } from "@/hooks/useChat";
 import { useAIProvider } from "@/hooks/useAIProvider";
 import { useAuth } from "@/hooks/useAuth";
 import type { ChatMessage as CoreChatMessage } from "@/services/aiProviderService";
-import type { NewMessage, Message } from "@/services/chatService";
+import type { NewMessage, Message as DbMessage } from "@/services/chatService";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+
+type Message = DbMessage & { isStreaming?: boolean };
 
 const Index = () => {
   const { user, isGuest } = useAuth();
@@ -25,13 +26,15 @@ const Index = () => {
     isLoadingChats,
     activeChatId,
     setActiveChatId,
-    messages,
+    messages: dbMessages,
     isLoadingMessages,
     createChatAsync,
     addMessage: addMessageMutation,
     updateChatTitle,
     deleteChat,
   } = useChat();
+
+  const messages: Message[] = dbMessages;
 
   const { streamMessage, isAiResponding, selectedProvider } = useAIProvider();
 
@@ -105,7 +108,7 @@ const Index = () => {
     };
     
     // Optimistically add placeholder
-    queryClient.setQueryData(['messages', currentChatId], (oldData: Message[] = []) => [
+    queryClient.setQueryData<Message[]>(['messages', currentChatId], (oldData: Message[] = []) => [
       ...oldData,
       assistantPlaceholder
     ]);
@@ -117,7 +120,7 @@ const Index = () => {
       historyForAI,
       (delta) => { // onDelta
         finalContent += delta;
-        queryClient.setQueryData(['messages', currentChatId], (oldData: Message[] = []) =>
+        queryClient.setQueryData<Message[]>(['messages', currentChatId], (oldData: Message[] = []) =>
           oldData.map(msg => 
             msg.id === assistantId ? { ...msg, content: finalContent } : msg
           )
@@ -141,7 +144,7 @@ const Index = () => {
       (error) => { // onError
         toast.error(`Error from AI: ${error.message}`);
         // Remove placeholder on error
-        queryClient.setQueryData(['messages', currentChatId], (oldData: Message[] = []) =>
+        queryClient.setQueryData<Message[]>(['messages', currentChatId], (oldData: Message[] = []) =>
           oldData.filter(msg => msg.id !== assistantId)
         );
       }
