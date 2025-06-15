@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ChatMessage {
@@ -48,22 +49,29 @@ export const streamChatMessage = async (
   
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
-    'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY!,
+    'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqam13aGtqbmt4dG16dnBxbmlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5ODUyNDYsImV4cCI6MjA2NTU2MTI0Nn0.EiOR2sXfGi_YnUcm_hEsyG0yRF6vqhWGH3KFrV0stl8',
   };
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
   try {
-    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`, {
+    const response = await fetch(`https://ejjmwhkjnkxtmzvpqnig.supabase.co/functions/v1/ai-chat`, {
       method: 'POST',
       headers,
       body: JSON.stringify({ ...request, stream: true }),
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to stream chat message');
+      const errorText = await response.text();
+      let errorMessage = 'Failed to stream chat message';
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.error || errorMessage;
+      } catch {
+        errorMessage = errorText || errorMessage;
+      }
+      throw new Error(errorMessage);
     }
 
     if (!response.body) {
@@ -82,6 +90,7 @@ export const streamChatMessage = async (
       onDelta(chunk);
     }
   } catch (error) {
+    console.error('Streaming error:', error);
     onError(error as Error);
   }
 };
@@ -92,7 +101,8 @@ export const getAvailableProviders = async (): Promise<string[]> => {
     .select('provider');
 
   if (error) {
-    throw new Error('Failed to fetch available providers');
+    console.error('Error fetching providers:', error);
+    return [];
   }
 
   // Ensure unique providers are returned

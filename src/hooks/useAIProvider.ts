@@ -89,15 +89,8 @@ export const useAIProvider = () => {
     onComplete: () => void,
     onError: (error: Error) => void,
   ) => {
-    if (selectedProvider !== 'OpenAI') {
-      toast.error('Streaming is only supported for the OpenAI provider at the moment.');
-      const fallbackResponse = await sendMessage(messages);
-      if (fallbackResponse) {
-        onDelta(fallbackResponse.content);
-        onComplete();
-      } else {
-        onError(new Error("Fallback to non-streaming failed."));
-      }
+    if (!selectedProvider) {
+      onError(new Error('Please select an AI provider first'));
       return;
     }
 
@@ -120,11 +113,34 @@ export const useAIProvider = () => {
         throw new Error('Please sign in to use AI features');
       }
 
-      await streamChatMessage(request, onDelta, onError);
-      onComplete();
+      // Try streaming first, but gracefully fallback to non-streaming
+      if (selectedProvider === 'OpenAI') {
+        try {
+          await streamChatMessage(request, onDelta, onError);
+          onComplete();
+        } catch (streamError) {
+          console.warn('Streaming failed, falling back to non-streaming:', streamError);
+          // Fallback to non-streaming
+          const fallbackResponse = await sendChatMessage(request);
+          if (fallbackResponse) {
+            onDelta(fallbackResponse.content);
+            onComplete();
+          } else {
+            onError(new Error("Both streaming and non-streaming failed."));
+          }
+        }
+      } else {
+        // For non-OpenAI providers, use non-streaming directly
+        const fallbackResponse = await sendChatMessage(request);
+        if (fallbackResponse) {
+          onDelta(fallbackResponse.content);
+          onComplete();
+        } else {
+          onError(new Error("Non-streaming request failed."));
+        }
+      }
     } catch (error) {
-      console.error('Error streaming message:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to stream message');
+      console.error('Error in streamMessage:', error);
       onError(error as Error);
     } finally {
       setIsAiResponding(false);
