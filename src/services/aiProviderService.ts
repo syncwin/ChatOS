@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ChatMessage {
@@ -11,6 +12,7 @@ export interface ChatRequest {
   messages: ChatMessage[];
   temperature?: number;
   max_tokens?: number;
+  apiKey?: string; // For guest users
 }
 
 export interface NormalizedResponse {

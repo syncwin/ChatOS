@@ -1,7 +1,6 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -19,6 +18,7 @@ interface ChatRequest {
   messages: ChatMessage[];
   temperature?: number;
   max_tokens?: number;
+  apiKey?: string; // For guest users
 }
 
 interface NormalizedResponse {
@@ -32,43 +32,64 @@ interface NormalizedResponse {
   provider: string;
 }
 
+const getSupabaseClient = (req: Request): SupabaseClient => {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    // Return a client without auth for guest or non-authed operations
+    return createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    );
+  }
+  // Return a client with the user's auth context
+  return createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+    { global: { headers: { Authorization: authHeader } } }
+  );
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    );
+    const { 
+      provider, 
+      model, 
+      messages, 
+      temperature = 0.7, 
+      max_tokens = 1000, 
+      apiKey: guestApiKey 
+    } = await req.json() as ChatRequest;
 
-    // Get the authorization header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('No authorization header');
+    let apiKey: string;
+    const supabaseClient = getSupabaseClient(req);
+    const { data: { user } } = await supabaseClient.auth.getUser();
+
+    if (user) {
+      // Authenticated user path
+      const { data: apiKeyData, error: apiKeyError } = await supabaseClient
+        .from('api_keys')
+        .select('api_key')
+        .eq('provider', provider)
+        .eq('user_id', user.id)
+        .single();
+
+      if (apiKeyError || !apiKeyData) {
+        console.error('API key error for user:', user.id, apiKeyError);
+        throw new Error(`No API key found for provider: ${provider}`);
+      }
+      apiKey = apiKeyData.api_key;
+    } else if (guestApiKey) {
+      // Guest user path
+      apiKey = guestApiKey;
+    } else {
+      throw new Error('Authentication error: No API key or user session provided.');
     }
-
-    // Set the auth header for the client
-    supabaseClient.auth.setAuth(authHeader.replace('Bearer ', ''));
-
-    const { provider, model, messages, temperature = 0.7, max_tokens = 1000 } = await req.json() as ChatRequest;
-
+    
     console.log(`Processing request for provider: ${provider}`);
-
-    // Get user's API key for the selected provider
-    const { data: apiKeyData, error: apiKeyError } = await supabaseClient
-      .from('api_keys')
-      .select('api_key')
-      .eq('provider', provider)
-      .single();
-
-    if (apiKeyError || !apiKeyData) {
-      console.error('API key error:', apiKeyError);
-      throw new Error(`No API key found for provider: ${provider}`);
-    }
-
-    const apiKey = apiKeyData.api_key;
     let response: NormalizedResponse;
 
     switch (provider) {

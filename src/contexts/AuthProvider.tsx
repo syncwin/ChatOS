@@ -1,7 +1,11 @@
-
 import { createContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
+
+interface GuestApiKey {
+  provider: string;
+  api_key: string;
+}
 
 interface AuthContextType {
   session: Session | null;
@@ -10,6 +14,9 @@ interface AuthContextType {
   isGuest: boolean;
   guestAccess: boolean;
   setGuestAccess: (enabled: boolean) => void;
+  guestApiKeys: GuestApiKey[];
+  addGuestApiKey: (key: GuestApiKey) => void;
+  deleteGuestApiKey: (provider: string) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,10 +26,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [guestAccess, setGuestAccess] = useState(() => sessionStorage.getItem('guestAccess') === 'true');
+  const [guestApiKeys, setGuestApiKeys] = useState<GuestApiKey[]>(() => {
+    const savedKeys = sessionStorage.getItem('guestApiKeys');
+    return savedKeys ? JSON.parse(savedKeys) : [];
+  });
 
   useEffect(() => {
     sessionStorage.setItem('guestAccess', String(guestAccess));
+    if (!guestAccess) {
+      sessionStorage.removeItem('guestApiKeys');
+      setGuestApiKeys([]);
+    }
   }, [guestAccess]);
+
+  useEffect(() => {
+    if (guestAccess) {
+      sessionStorage.setItem('guestApiKeys', JSON.stringify(guestApiKeys));
+    }
+  }, [guestApiKeys, guestAccess]);
 
   useEffect(() => {
     setLoading(true);
@@ -51,13 +72,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
+  const addGuestApiKey = (key: GuestApiKey) => {
+    setGuestApiKeys(prev => {
+      const existing = prev.find(k => k.provider === key.provider);
+      if (existing) {
+        return prev.map(k => k.provider === key.provider ? key : k);
+      }
+      return [...prev, key];
+    });
+  };
+
+  const deleteGuestApiKey = (provider: string) => {
+    setGuestApiKeys(prev => prev.filter(k => k.provider !== provider));
+  };
+
   const value = {
     session,
     user,
     loading,
-    isGuest: !user,
+    isGuest: guestAccess && !user,
     guestAccess,
     setGuestAccess,
+    guestApiKeys,
+    addGuestApiKey,
+    deleteGuestApiKey,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

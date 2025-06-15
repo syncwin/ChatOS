@@ -16,8 +16,41 @@ export const apiKeySchema = z.object({
 export type ApiKeyFormValues = z.infer<typeof apiKeySchema>;
 
 export const useApiKeys = () => {
-  const { user } = useAuth();
+  const { user, isGuest, guestApiKeys, addGuestApiKey, deleteGuestApiKey } = useAuth();
   const queryClient = useQueryClient();
+
+  if (isGuest) {
+    const saveGuestKeyMutation = useMutation({
+      mutationFn: async (values: ApiKeyFormValues) => {
+        addGuestApiKey(values);
+      },
+      onSuccess: (_, values) => {
+        toast.success(`API key for ${values.provider} saved for this session.`);
+      },
+      onError: (error) => {
+        toast.error("Failed to save API key for session: " + error.message);
+      },
+    });
+
+    const deleteGuestKeyMutation = useMutation({
+      mutationFn: async (provider: ApiKeyFormValues['provider']) => {
+        deleteGuestApiKey(provider);
+      },
+      onSuccess: (_, provider) => {
+        toast.success(`API key for ${provider} deleted for this session.`);
+      },
+      onError: (error) => {
+        toast.error("Failed to delete API key for session: " + error.message);
+      },
+    });
+
+    return {
+      savedKeys: guestApiKeys.map(k => ({ provider: k.provider })),
+      isLoadingKeys: false,
+      saveMutation: saveGuestKeyMutation,
+      deleteMutation: deleteGuestKeyMutation,
+    };
+  }
 
   const { data: savedKeys, isLoading: isLoadingKeys } = useQuery({
     queryKey: ["apiKeys", user?.id],

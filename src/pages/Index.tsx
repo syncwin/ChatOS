@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -16,7 +15,7 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 
 const Index = () => {
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
   const {
     chats,
     isLoadingChats,
@@ -30,7 +29,7 @@ const Index = () => {
     deleteChat,
   } = useChat();
 
-  const { sendMessage, isLoading: isAiResponding } = useAIProvider();
+  const { sendMessage, isAiResponding } = useAIProvider();
 
   const [input, setInput] = useState("");
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -55,7 +54,8 @@ const Index = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedInput = input.trim();
-    if (!trimmedInput || isAiResponding || !user) return;
+    if (!trimmedInput || isAiResponding) return;
+    if (!user && !isGuest) return;
 
     setInput("");
 
@@ -71,7 +71,8 @@ const Index = () => {
         return;
       }
     } else if (messages.length === 0) {
-      updateChatTitle({ chatId: currentChatId, title: trimmedInput.length > 30 ? trimmedInput.substring(0, 27) + "..." : trimmedInput });
+      const title = trimmedInput.length > 30 ? trimmedInput.substring(0, 27) + "..." : trimmedInput;
+      updateChatTitle({ chatId: currentChatId, title: title });
     }
 
     if (!currentChatId) return;
@@ -111,26 +112,36 @@ const Index = () => {
   // We'll map string IDs to numeric indices for the sidebar and back.
   const sidebarChats = chats.map((chat, index) => ({
     ...chat,
-    id: index, // Use index as the numeric ID
+    id: isGuest ? chat.id : index, // Use real ID for guests, index for users
     date: formatDistanceToNow(new Date(chat.updated_at), { addSuffix: true }),
     messages: [], // Not needed for sidebar
   }));
 
   const activeSidebarChatIndex = activeChatId
-    ? chats.findIndex((c) => c.id === activeChatId)
+    ? isGuest
+      ? activeChatId
+      : chats.findIndex((c) => c.id === activeChatId)
     : -1;
 
-  const handleSelectChat = (chat: { id: number }) => {
-    const realChat = chats[chat.id];
-    if (realChat) {
-      setActiveChatId(realChat.id);
+  const handleSelectChat = (chat: { id: number | string }) => {
+    if (isGuest) {
+      setActiveChatId(chat.id as string);
+    } else {
+      const realChat = chats[chat.id as number];
+      if (realChat) {
+        setActiveChatId(realChat.id);
+      }
     }
   };
 
-  const handleDeleteChat = (chatId: number) => {
-    const realChat = chats[chatId];
-    if (realChat) {
-      deleteChat(realChat.id);
+  const handleDeleteChat = (chatId: number | string) => {
+    if (isGuest) {
+      deleteChat(chatId as string);
+    } else {
+      const realChat = chats[chatId as number];
+      if (realChat) {
+        deleteChat(realChat.id);
+      }
     }
   };
 
