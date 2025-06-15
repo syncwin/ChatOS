@@ -1,10 +1,9 @@
+
 import { Bot, User, Copy, Check } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import ReactMarkdown from 'react-markdown';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import type { Tables } from "@/integrations/supabase/types";
 
 type Message = Tables<'chat_messages'> & {
@@ -50,14 +49,11 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
                   const { children, className, node, ...rest } = props;
                   const match = /language-(\w+)/.exec(className || '');
                   return match ? (
-                    <SyntaxHighlighter
-                      style={oneDark as any}
-                      language={match[1]}
-                      PreTag="div"
-                      className="rounded-md my-2"
-                    >
-                      {String(children).replace(/\n$/, '')}
-                    </SyntaxHighlighter>
+                    <pre className="bg-gray-900 text-gray-100 rounded-md p-4 my-2 overflow-x-auto">
+                      <code className="text-sm font-mono">
+                        {String(children).replace(/\n$/, '')}
+                      </code>
+                    </pre>
                   ) : (
                     <code className="bg-muted px-1 py-0.5 rounded text-sm font-mono" {...rest}>
                       {children}
