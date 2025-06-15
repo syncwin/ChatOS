@@ -1,69 +1,35 @@
 
-import React from "react";
+import React from 'react';
 
-// Cat chat bubble with "OS" inside, for use as the logo/icon everywhere.
 interface ChatOsIconProps extends React.SVGProps<SVGSVGElement> {}
 
+/**
+ * Chat bubble with OS centered inside.
+ */
 const ChatOsIcon = (props: ChatOsIconProps) => (
   <svg
-    viewBox="0 0 48 48"
-    width={props.width || 40}
-    height={props.height || 40}
+    width={36}
+    height={36}
+    viewBox="0 0 36 36"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
     {...props}
-    aria-label="ChatOS Logo"
   >
-    {/* Cat bubble with cat ears */}
-    <path
-      d="M12 12 Q10 4 17 7 Q19 2 24 7 Q29 2 31 7 Q38 4 36 12"
-      stroke="currentColor"
-      strokeWidth="2"
-      fill="none"
-    />
-    {/* Chat bubble */}
-    <ellipse
-      cx="24"
-      cy="28"
-      rx="16"
-      ry="13"
-      fill="currentColor"
-      fillOpacity={props.fillOpacity ?? 0.14}
-      stroke="currentColor"
-      strokeWidth="2"
-    />
-    <ellipse
-      cx="24"
-      cy="26"
-      rx="14"
-      ry="11"
-      fill="white"
-      stroke="currentColor"
-      strokeWidth="1"
-    />
-    {/* Cat face/eyes, optional (can be commented if distraction) */}
-    {/* <circle cx="18" cy="26" r="1.2" fill="currentColor" />
-    <circle cx="30" cy="26" r="1.2" fill="currentColor" />
-    <path
-      d="M21 30 Q24 33 27 30"
-      stroke="currentColor"
-      strokeWidth="1"
-      fill="none"
-    /> */}
-    {/* "OS" text centered inside the chat bubble */}
+    {/* Chat bubble shape */}
+    <rect x="3" y="4" width="30" height="22" rx="6" fill="#6366F1" />
+    {/* Bubble tip */}
+    <polygon points="10,26 14,26 12,32" fill="#6366F1"/>
+    {/* "OS" label in center */}
     <text
-      x="24"
-      y="30"
+      x="50%"
+      y="56%"
       textAnchor="middle"
-      fontSize="10"
-      fontWeight="bold"
-      fill="currentColor"
-      fontFamily="Inter, Arial, sans-serif"
       dominantBaseline="middle"
-      letterSpacing="2"
-    >
-      OS
-    </text>
+      fontFamily="Inter, Arial, sans-serif"
+      fontWeight="bold"
+      fontSize="12"
+      fill="white"
+    >OS</text>
   </svg>
 );
 
