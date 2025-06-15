@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { v4 as uuidv4 } from 'uuid';
@@ -206,9 +207,9 @@ const Index = () => {
         onSelectChat={handleSelectChat}
       />
       <SidebarInset>
-        <div className="min-h-screen bg-background text-foreground">
-          <div className="container mx-auto max-w-4xl h-screen flex flex-col">
-            <header className="flex items-center gap-2 py-4">
+        <div className="min-h-screen bg-background text-foreground h-screen flex flex-col">
+          <header className="py-4">
+            <div className="container mx-auto max-w-4xl flex items-center gap-2">
               <SidebarTrigger className="text-muted-foreground hover:text-foreground" aria-label="Toggle sidebar" />
               <Header
                 isDarkMode={isDarkMode}
@@ -221,10 +222,12 @@ const Index = () => {
                 onSelectModel={switchModel}
                 isLoadingProviders={isLoadingProviders}
               />
-            </header>
+            </div>
+          </header>
 
-            <main className="flex-1 flex flex-col overflow-hidden">
-              {messages.length === 0 && !isLoading ? (
+          <main className="flex-1 flex flex-col overflow-hidden">
+            {messages.length === 0 && !isLoading ? (
+              <div className="container mx-auto max-w-4xl flex-1 flex">
                 <WelcomeScreen 
                   suggestedQuestions={suggestedQuestions}
                   onQuestionSelect={(question) => {
@@ -234,8 +237,10 @@ const Index = () => {
                     setInput(question);
                   }}
                 />
-              ) : (
-                <ScrollArea className="flex-1 py-4">
+              </div>
+            ) : (
+              <ScrollArea className="flex-1">
+                <div className="container mx-auto max-w-4xl py-4">
                   <div className="space-y-6">
                     {messages.map((message) => (
                       <ChatMessage 
@@ -245,17 +250,19 @@ const Index = () => {
                     ))}
                     <div ref={messagesEndRef} />
                   </div>
-                </ScrollArea>
-              )}
+                </div>
+              </ScrollArea>
+            )}
 
+            <div className="container mx-auto max-w-4xl">
               <InputArea 
                 input={input}
                 setInput={setInput}
                 onSubmit={handleSubmit}
                 isLoading={isLoading}
               />
-            </main>
-          </div>
+            </div>
+          </main>
         </div>
       </SidebarInset>
     </>
