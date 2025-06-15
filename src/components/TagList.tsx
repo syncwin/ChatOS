@@ -18,7 +18,16 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import TagItem from "./TagItem";
-import type { Tag, Chat } from "@/services/chatService";
+import type { Tag } from "@/services/chatService";
+
+interface Chat {
+  id: string;
+  title: string;
+  date: string;
+  messages: unknown[];
+  is_pinned: boolean;
+  folder_id: string | null;
+}
 
 interface TagListProps {
   tags: Tag[];
@@ -153,11 +162,7 @@ const TagList = ({
                       {tagChats.map(chat => (
                         <TagItem
                           key={chat.id}
-                          chat={{
-                            ...chat,
-                            date: new Date(chat.updated_at).toLocaleDateString(),
-                            messages: []
-                          }}
+                          chat={chat}
                           isActive={chat.id === activeChatId}
                           onSelectChat={onSelectChat}
                         />

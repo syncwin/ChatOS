@@ -13,22 +13,18 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import ChatOsIcon from "@/components/icons/ChatOsIcon";
-import type { Folder, Tag } from "@/services/chatService";
+import type { Folder, Tag, Chat as DatabaseChat } from "@/services/chatService";
 
-interface Chat {
-  id: string;
-  title: string;
+// UI Chat interface that extends the database Chat
+interface Chat extends Omit<DatabaseChat, 'created_at' | 'updated_at'> {
   date: string;
   messages: unknown[];
-  is_pinned: boolean;
-  folder_id: string | null;
-  tags?: Tag[];
 }
 
 interface AppSidebarProps {
   isDarkMode: boolean;
   toggleDarkMode: () => void;
-  chats: Chat[];
+  chats: DatabaseChat[];
   folders: Folder[];
   activeChatId: string | null;
   onNewChat: () => void;
@@ -48,7 +44,7 @@ interface AppSidebarProps {
 const AppSidebar = ({
   isDarkMode,
   toggleDarkMode,
-  chats,
+  chats: dbChats,
   folders,
   activeChatId,
   onNewChat,
@@ -61,6 +57,13 @@ const AppSidebar = ({
   updateTag,
   deleteTag,
 }: AppSidebarProps) => {
+  // Transform database chats to UI chats
+  const chats: Chat[] = dbChats.map(chat => ({
+    ...chat,
+    date: new Date(chat.updated_at).toLocaleDateString(),
+    messages: []
+  }));
+
   const {
     user,
     isGuest
