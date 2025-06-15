@@ -104,14 +104,23 @@ export const useChat = () => {
   // Effect to manage activeChatId for authenticated user
   useEffect(() => {
     if (isGuest || isLoadingChats) return;
+
     if (chats.length > 0) {
-      if (!activeChatId || !chats.find(c => c.id === activeChatId)) {
+      // If there's no active chat, or the active chat is no longer in the list (e.g. deleted),
+      // set the first chat in the list as active.
+      // This runs on initial load and when the chats list changes.
+      if (!activeChatId || !chats.find((c) => c.id === activeChatId)) {
         setActiveChatId(chats[0].id);
       }
     } else {
+      // If there are no chats, there's no active chat.
       setActiveChatId(null);
     }
-  }, [chats, activeChatId, isGuest, isLoadingChats]);
+    // We've intentionally removed `activeChatId` from the dependency array.
+    // This effect should only run when the list of chats changes, not when the
+    // user manually changes the active chat (e.g., by clicking "New Chat").
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chats, isGuest, isLoadingChats, setActiveChatId]);
 
   // Effect to load guest data from session storage
   useEffect(() => {
