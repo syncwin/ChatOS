@@ -1,3 +1,4 @@
+
 import { Bot, User, Copy, Check } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -54,6 +55,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
             variant="ghost"
             className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={handleCopy}
+            aria-label={copied ? "Message copied" : "Copy message"}
           >
             {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
           </Button>

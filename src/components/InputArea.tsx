@@ -1,3 +1,4 @@
+
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import TextareaAutosize from 'react-textarea-autosize';
@@ -21,7 +22,9 @@ const InputArea = ({ input, setInput, onSubmit, isLoading }: InputAreaProps) => 
     <div className="p-4 border-t border-border bg-background/90 backdrop-blur-sm">
       <form onSubmit={onSubmit} className="flex gap-2 items-end">
         <div className="flex-1 relative">
+          <label htmlFor="chat-input" className="sr-only">Type your message</label>
           <TextareaAutosize
+            id="chat-input"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -36,12 +39,13 @@ const InputArea = ({ input, setInput, onSubmit, isLoading }: InputAreaProps) => 
             size="icon"
             disabled={!input.trim() || isLoading}
             className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 bg-primary hover:bg-primary/90 transition-all"
+            aria-label="Send message"
           >
             <Send className="w-4 h-4" />
           </Button>
         </div>
       </form>
-      <p className="text-xs mt-2 text-center text-muted-foreground">
+      <p className="text-xs mt-2 text-center text-muted-foreground" aria-live="polite">
         InsightSeeker can make mistakes. Please verify important information.
       </p>
     </div>

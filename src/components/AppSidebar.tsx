@@ -78,8 +78,10 @@ const AppSidebar = ({
           <SidebarGroup>
             <SidebarGroupContent>
               <div className="relative px-2">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <label htmlFor="search-chats" className="sr-only">Search chats</label>
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
                 <input 
+                  id="search-chats"
                   type="text" 
                   placeholder="Search chats..." 
                   value={searchTerm} 
@@ -116,6 +118,7 @@ const AppSidebar = ({
                       onClick={e => handleDeleteChat(e, chat.id)} 
                       showOnHover 
                       className="text-muted-foreground peer-hover/menu-button:text-primary-foreground peer-data-[active=true]/menu-button:text-primary-foreground"
+                      aria-label={`Delete chat: ${chat.title}`}
                     >
                       <Trash2 />
                     </SidebarMenuAction>
@@ -138,6 +141,7 @@ const AppSidebar = ({
                   <SidebarMenuButton 
                     onClick={() => setIsSettingsOpen(true)} 
                     className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    aria-label="Open settings"
                   >
                     <Settings className="w-4 h-4" />
                     <span>Settings</span>
@@ -170,9 +174,10 @@ const AppSidebar = ({
               </div>
             </div>
           ) : (
-            <div 
+            <button 
               onClick={() => setIsProfileOpen(true)} 
-              className="flex items-center gap-3 p-3 rounded-lg transition-colors cursor-pointer bg-sidebar-accent hover:bg-sidebar-accent/80 text-sidebar-accent-foreground"
+              aria-label="Open user profile"
+              className="flex items-center gap-3 p-3 rounded-lg transition-colors cursor-pointer bg-sidebar-accent hover:bg-sidebar-accent/80 text-sidebar-accent-foreground w-full text-left"
             >
               <Avatar className="w-8 h-8">
                 <AvatarFallback className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm">
@@ -184,7 +189,7 @@ const AppSidebar = ({
                 <div className="text-xs text-muted-foreground">Signed in</div>
               </div>
               <User className="w-4 h-4 text-muted-foreground" />
-            </div>
+            </button>
           )}
         </SidebarFooter>
       </Sidebar>

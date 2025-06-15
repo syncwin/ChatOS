@@ -159,12 +159,12 @@ const Index = () => {
       <SidebarInset>
         <div className="min-h-screen bg-background text-foreground">
           <div className="container mx-auto max-w-4xl h-screen flex flex-col">
-            <div className="flex items-center gap-2 p-4">
-              <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
+            <header className="flex items-center gap-2 p-4">
+              <SidebarTrigger className="text-muted-foreground hover:text-foreground" aria-label="Toggle sidebar" />
               <Header isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
-            </div>
+            </header>
 
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <main className="flex-1 flex flex-col overflow-hidden">
               {messages.length === 0 && !isLoading ? (
                 <WelcomeScreen 
                   suggestedQuestions={suggestedQuestions}
@@ -195,7 +195,7 @@ const Index = () => {
                 onSubmit={handleSubmit}
                 isLoading={isLoading}
               />
-            </div>
+            </main>
           </div>
         </div>
       </SidebarInset>
