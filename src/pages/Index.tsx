@@ -32,6 +32,7 @@ const Index = () => {
     addMessage: addMessageMutation,
     updateChatTitle,
     deleteChat,
+    updateChatPinStatus,
   } = useChat();
 
   const messages: Message[] = dbMessages;
@@ -194,6 +195,13 @@ const Index = () => {
     }
   };
 
+  const handlePinChat = (chatId: number) => {
+    const realChat = chats[chatId];
+    if (realChat) {
+      updateChatPinStatus({ chatId: realChat.id, is_pinned: !realChat.is_pinned });
+    }
+  };
+
   const isLoading = isLoadingChats || isLoadingMessages || isAiResponding;
 
   const suggestedQuestions = [
@@ -215,6 +223,7 @@ const Index = () => {
         onNewChat={handleNewChat}
         onSelectChat={handleSelectChat}
         onDeleteChat={handleDeleteChat}
+        onPinChat={handlePinChat}
       />
       <SidebarInset>
         <div className="min-h-screen bg-background text-foreground">

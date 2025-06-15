@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 import {
@@ -8,6 +7,7 @@ import {
   addMessage,
   updateChatTitle,
   deleteChat,
+  updateChatPinStatus,
   type Chat,
   type Message,
   type NewMessage,
@@ -89,6 +89,18 @@ export const useChat = () => {
     }
   });
 
+  const updateChatPinStatusMutation = useMutation({
+    mutationFn: ({ chatId, is_pinned }: { chatId: string; is_pinned: boolean }) =>
+      updateChatPinStatus(chatId, is_pinned),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chats', user?.id] });
+      toast.success('Chat pin status updated.');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
   // Effect to manage activeChatId for authenticated user
   useEffect(() => {
     if (isGuest || isLoadingChats) return;
@@ -135,6 +147,7 @@ export const useChat = () => {
       addMessage: (message: NewMessage) => addGuestMessage(message, setGuestChats),
       updateChatTitle: (args: { chatId: string, title: string }) => updateGuestChatTitleLogic(args, setGuestChats),
       deleteChat: (chatId: string) => deleteGuestChatLogic(chatId, guestChats, setGuestChats, activeChatId, setActiveChatId),
+      updateChatPinStatus: () => { toast.info("Sign in to pin chats."); },
     };
   }
 
@@ -150,5 +163,6 @@ export const useChat = () => {
     addMessage: addMessageMutation.mutate,
     updateChatTitle: updateChatTitleMutation.mutate,
     deleteChat: deleteChatMutation.mutate,
+    updateChatPinStatus: updateChatPinStatusMutation.mutate,
   };
 };

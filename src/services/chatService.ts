@@ -10,6 +10,7 @@ export const getChats = async (): Promise<Chat[]> => {
   const { data, error } = await supabase
     .from('chats')
     .select('*')
+    .order('is_pinned', { ascending: false })
     .order('updated_at', { ascending: false });
 
   if (error) {
@@ -81,6 +82,21 @@ export const updateChatTitle = async (chatId: string, title: string): Promise<Ch
   if (error) {
     console.error('Error updating chat title:', error);
     throw new Error('Failed to update chat title.');
+  }
+  return data;
+};
+
+export const updateChatPinStatus = async (chatId: string, is_pinned: boolean): Promise<Chat> => {
+  const { data, error } = await supabase
+    .from('chats')
+    .update({ is_pinned })
+    .eq('id', chatId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating chat pin status:', error);
+    throw new Error('Failed to update chat pin status.');
   }
   return data;
 };
