@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,7 +24,8 @@ import {
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2, ArrowLeft } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const authSchema = z.object({
   email: z.string().email(),
@@ -33,7 +34,15 @@ const authSchema = z.object({
 
 const Auth = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+
+  // Redirect to main app if already authenticated
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const form = useForm<z.infer<typeof authSchema>>({
     resolver: zodResolver(authSchema),
@@ -86,6 +95,12 @@ const Auth = () => {
             <h1 className="text-2xl font-semibold">InsightSeeker</h1>
           </div>
         </div>
+        <div className="flex justify-center mb-4">
+          <Button variant="ghost" onClick={() => navigate('/')} className="flex items-center gap-2">
+            <ArrowLeft className="w-4 h-4" />
+            Continue as Guest
+          </Button>
+        </div>
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="signin">Sign In</TabsTrigger>
           <TabsTrigger value="signup">Sign Up</TabsTrigger>
@@ -95,7 +110,7 @@ const Auth = () => {
             <CardHeader>
               <CardTitle>Sign In</CardTitle>
               <CardDescription>
-                Enter your credentials to access your account.
+                Enter your credentials to access your saved chats and settings.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -141,7 +156,7 @@ const Auth = () => {
             <CardHeader>
               <CardTitle>Sign Up</CardTitle>
               <CardDescription>
-                Create an account to get started.
+                Create an account to save your chats and sync across devices.
               </CardDescription>
             </CardHeader>
             <CardContent>

@@ -7,6 +7,7 @@ interface AuthContextType {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  isGuest: boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,7 +40,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     session,
     user,
     loading,
+    isGuest: !user,
   };
 
-  return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

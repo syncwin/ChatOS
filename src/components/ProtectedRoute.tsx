@@ -1,10 +1,10 @@
 
 import { useAuth } from '@/hooks/useAuth';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 
 const ProtectedRoute = () => {
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
 
   if (loading) {
     return (
@@ -14,10 +14,7 @@ const ProtectedRoute = () => {
     );
   }
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
+  // Allow access regardless of authentication status
   return <Outlet />;
 };
 
