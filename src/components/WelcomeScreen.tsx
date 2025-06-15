@@ -1,5 +1,5 @@
 
-import ChatOsIcon from "./icons/ChatOsIcon";
+import { Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface WelcomeScreenProps {
@@ -12,11 +12,10 @@ const WelcomeScreen = ({ suggestedQuestions, onQuestionSelect }: WelcomeScreenPr
     <div className="flex-1 flex items-center justify-center">
       <div className="text-center max-w-md p-4">
         <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center mx-auto mb-4">
-          <ChatOsIcon className="w-10 h-10 text-primary-foreground" />
+          <Bot className="w-8 h-8 text-primary-foreground" />
         </div>
-        <h2 className="text-2xl font-bold mb-2 text-foreground flex justify-center items-center gap-2">
-          <span>Chat</span>
-          <ChatOsIcon className="w-7 h-7 text-primary" />
+        <h2 className="text-2xl font-bold mb-2 text-foreground">
+          Welcome to ChatOS
         </h2>
         <p className="mb-6 text-muted-foreground">
           Start a new conversation by typing a message below or selecting a suggestion.

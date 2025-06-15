@@ -1,6 +1,7 @@
 
+import { Sun, Moon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import ChatOsIcon from "./icons/ChatOsIcon";
 import {
   Select,
   SelectContent,
@@ -8,8 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import ChatOsIcon from "./icons/ChatOsIcon";
 
 interface HeaderProps {
   isDarkMode: boolean;
@@ -35,44 +34,59 @@ const Header = ({
   isLoadingProviders,
 }: HeaderProps) => {
   return (
-    <div className="flex items-center gap-3 w-full">
-      <div className="flex items-center gap-2 select-none">
-        <span className="text-xl font-semibold tracking-tight">Chat</span>
+    <div className="flex items-center justify-between w-full gap-4">
+      <div className="flex items-center gap-2">
         <ChatOsIcon className="w-8 h-8 text-primary" />
+        <h1 className="text-xl font-semibold shrink-0">ChatOS</h1>
       </div>
-      <div className="flex-1 flex justify-end gap-3 items-center">
-        {availableProviders.length > 1 && (
-          <Select value={selectedProvider} onValueChange={onSelectProvider} disabled={isLoadingProviders}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select AI Provider" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableProviders.map((provider) => (
-                <SelectItem key={provider} value={provider}>
-                  {provider}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-        {availableModels.length > 1 && (
-          <Select value={selectedModel} onValueChange={onSelectModel}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select AI Model" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableModels.map((model) => (
-                <SelectItem key={model} value={model}>
-                  {model}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-        <Separator orientation="vertical" />
-        <div className="flex items-center space-x-2">
-          <Switch id="dark-mode" checked={isDarkMode} onCheckedChange={toggleDarkMode} />
-          <Label htmlFor="dark-mode">Dark Mode</Label>
+      <div className="hidden sm:flex items-center justify-center gap-2">
+        <Select
+          onValueChange={onSelectProvider}
+          value={selectedProvider}
+          disabled={isLoadingProviders || availableProviders.length === 0}
+        >
+          <SelectTrigger className="w-[140px] truncate">
+            <SelectValue placeholder="Provider" />
+          </SelectTrigger>
+          <SelectContent>
+            {availableProviders.map((provider) => (
+              <SelectItem key={provider} value={provider}>
+                {provider}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          onValueChange={onSelectModel}
+          value={selectedModel}
+          disabled={!selectedProvider || availableModels.length === 0}
+        >
+          <SelectTrigger className="w-[220px] truncate">
+            <SelectValue placeholder="Model" />
+          </SelectTrigger>
+          <SelectContent>
+            {availableModels.map((model) => (
+              <SelectItem key={model} value={model}>
+                {model}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <Sun
+            className={`w-4 h-4 ${
+              !isDarkMode ? "text-yellow-500" : "text-muted-foreground"
+            }`}
+          />
+          <Switch checked={isDarkMode} onCheckedChange={toggleDarkMode} />
+          <Moon
+            className={`w-4 h-4 ${
+              isDarkMode ? "text-blue-400" : "text-muted-foreground"
+            }`}
+          />
         </div>
       </div>
     </div>
