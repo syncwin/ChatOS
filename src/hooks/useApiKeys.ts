@@ -45,7 +45,7 @@ export const useApiKeys = () => {
     });
 
     return {
-      savedKeys: guestApiKeys.map(k => ({ provider: k.provider })),
+      savedKeys: guestApiKeys.map(k => ({ provider: k.provider as ApiKeyFormValues['provider'] })),
       isLoadingKeys: false,
       saveMutation: saveGuestKeyMutation,
       deleteMutation: deleteGuestKeyMutation,
