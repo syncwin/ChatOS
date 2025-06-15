@@ -36,6 +36,10 @@ const Index = () => {
     updateFolder,
     deleteFolder,
     assignChatToFolder,
+    tags,
+    createTag,
+    assignTagToChat,
+    removeTagFromChat,
   } = useChat();
 
   const messages: Message[] = dbMessages;
@@ -165,7 +169,6 @@ const Index = () => {
   const sidebarChats = chats.map((chat) => ({
     ...chat,
     date: formatDistanceToNow(new Date(chat.updated_at), { addSuffix: true }),
-    messages: [], // Not needed for sidebar
   }));
 
   const handleSelectChat = (chat: { id: string }) => {
@@ -201,6 +204,10 @@ const Index = () => {
         createFolder={createFolder}
         updateFolder={updateFolder}
         deleteFolder={deleteFolder}
+        tags={tags}
+        createTag={createTag}
+        assignTagToChat={assignTagToChat}
+        removeTagFromChat={removeTagFromChat}
       />
       <SidebarInset>
         <div className="min-h-screen bg-background text-foreground h-screen flex flex-col">
@@ -221,6 +228,10 @@ const Index = () => {
                 isLoadingFolders={isLoadingFolders}
                 activeChat={activeChat}
                 onAssignChatToFolder={handleAssignChatToFolder}
+                tags={tags}
+                createTag={createTag}
+                assignTagToChat={assignTagToChat}
+                removeTagFromChat={removeTagFromChat}
               />
             </div>
           </header>

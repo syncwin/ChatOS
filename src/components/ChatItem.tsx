@@ -6,14 +6,16 @@ import { SidebarMenuItem } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+import type { Tag } from "@/services/chatService";
 
 interface Chat {
   id: string;
   title: string;
   date: string;
-  messages: unknown[];
   is_pinned: boolean;
   folder_id: string | null;
+  tags: Tag[];
 }
 
 interface ChatItemProps {
@@ -88,9 +90,14 @@ const ChatItem = ({
             {chat.is_pinned && <Pin className="w-3 h-3 mr-2 mt-1 flex-shrink-0 text-amber-500" />}
             <div className="flex-1 min-w-0">
               <div className="truncate text-sm font-medium">{chat.title}</div>
-              <div className="text-xs text-muted-foreground group-data-[active=true]/item:text-primary-foreground/70">{chat.date}</div>
             </div>
           </div>
+          <div className="flex flex-wrap gap-1 mt-1.5">
+            {chat.tags.map(tag => (
+                <Badge key={tag.id} variant="secondary" className="text-xs px-1.5 py-0.5">{tag.name}</Badge>
+            ))}
+          </div>
+          <div className="text-xs text-muted-foreground group-data-[active=true]/item:text-primary-foreground/70 mt-1.5">{chat.date}</div>
           
           <div className={cn(
             "items-center justify-start gap-0.5 mt-2 hidden",

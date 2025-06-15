@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Settings, Plus } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarFooter, SidebarSeparator, useSidebar } from "@/components/ui/sidebar";
@@ -11,15 +12,15 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import ChatOsIcon from "@/components/icons/ChatOsIcon";
-import type { Folder } from "@/services/chatService";
+import type { Folder, Tag } from "@/services/chatService";
 
 interface Chat {
   id: string;
   title: string;
   date: string;
-  messages: unknown[];
   is_pinned: boolean;
   folder_id: string | null;
+  tags: Tag[];
 }
 interface AppSidebarProps {
   isDarkMode: boolean;

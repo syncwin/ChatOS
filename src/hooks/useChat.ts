@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   getChats,
   getMessages,
@@ -13,10 +13,17 @@ import {
   updateFolder,
   deleteFolder,
   assignChatToFolder,
+  getTags,
+  createTag,
+  assignTagToChat,
+  removeTagFromChat,
+  getChatTags,
   type Chat,
   type Message,
   type Folder,
   type NewMessage,
+  type Tag,
+  type ChatTag,
 } from '@/services/chatService';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
@@ -51,11 +58,34 @@ export const useChat = () => {
     enabled: !!user && !isGuest,
   });
 
+  const { data: tags = [], isLoading: isLoadingTags } = useQuery<Tag[]>({
+    queryKey: ['tags', user?.id],
+    queryFn: getTags,
+    enabled: !!user && !isGuest,
+  });
+
+  const { data: chatTags = [], isLoading: isLoadingChatTags } = useQuery<ChatTag[]>({
+      queryKey: ['chat_tags', user?.id],
+      queryFn: getChatTags,
+      enabled: !!user && !isGuest,
+  });
+
   const { data: messages = [], isLoading: isLoadingMessages } = useQuery<Message[]>({
     queryKey: ['messages', activeChatId],
     queryFn: () => getMessages(activeChatId!),
     enabled: !!activeChatId && !isGuest,
   });
+
+  const chatsWithData = useMemo(() => {
+    if (isLoadingChats || isLoadingTags || isLoadingChatTags) return [];
+    return chats.map(chat => ({
+        ...chat,
+        tags: chatTags
+            .filter(ct => ct.chat_id === chat.id)
+            .map(ct => tags.find(t => t.id === ct.tag_id))
+            .filter((t): t is Tag => !!t)
+    }));
+  }, [chats, tags, chatTags, isLoadingChats, isLoadingTags, isLoadingChatTags]);
 
   const createChatMutation = useMutation({
     mutationFn: (title: string) => createChat(title),
@@ -157,6 +187,31 @@ export const useChat = () => {
     }
   });
 
+  const createTagMutation = useMutation({
+    mutationFn: (name: string) => createTag(name),
+    onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['tags', user?.id] });
+        toast.success('Tag created.');
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const assignTagToChatMutation = useMutation({
+      mutationFn: ({ chatId, tagId }: { chatId: string; tagId: string }) => assignTagToChat({ chatId, tagId }),
+      onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ['chat_tags', user?.id] });
+      },
+      onError: (error: Error) => toast.error(error.message),
+  });
+  
+  const removeTagFromChatMutation = useMutation({
+      mutationFn: ({ chatId, tagId }: { chatId: string; tagId: string }) => removeTagFromChat({ chatId, tagId }),
+      onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ['chat_tags', user?.id] });
+      },
+      onError: (error: Error) => toast.error(error.message),
+  });
+
   // Effect to manage activeChatId for authenticated user
   useEffect(() => {
     if (isGuest || isLoadingChats) return;
@@ -201,7 +256,7 @@ export const useChat = () => {
     };
     
     return {
-      chats: guestChats,
+      chats: guestChatsWithData,
       isLoadingChats: false,
       activeChatId,
       setActiveChatId,
@@ -219,12 +274,17 @@ export const useChat = () => {
       updateFolder: () => toast.info('Sign in to use folders.'),
       deleteFolder: () => toast.info('Sign in to use folders.'),
       assignChatToFolder: () => toast.info('Sign in to use folders.'),
+      tags: [],
+      isLoadingTags: false,
+      createTag: () => toast.info('Sign in to use tags.'),
+      assignTagToChat: () => toast.info('Sign in to use tags.'),
+      removeTagFromChat: () => toast.info('Sign in to use tags.'),
     };
   }
 
   return {
-    chats,
-    isLoadingChats,
+    chats: chatsWithData,
+    isLoadingChats: isLoadingChats || isLoadingTags || isLoadingChatTags,
     activeChatId,
     setActiveChatId,
     messages,
@@ -241,5 +301,9 @@ export const useChat = () => {
     updateFolder: updateFolderMutation.mutate,
     deleteFolder: deleteFolderMutation.mutate,
     assignChatToFolder: assignChatToFolderMutation.mutate,
+    tags,
+    createTag: createTagMutation.mutate,
+    assignTagToChat: assignTagToChatMutation.mutate,
+    removeTagFromChat: removeTagFromChatMutation.mutate,
   };
 };

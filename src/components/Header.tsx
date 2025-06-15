@@ -1,4 +1,3 @@
-
 import { Sun, Moon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import ChatOsIcon from "./icons/ChatOsIcon";
@@ -9,7 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Folder, Chat } from "@/services/chatService";
+import type { Folder, Chat, Tag } from "@/services/chatService";
+import TagSelector from "./TagSelector";
 
 interface HeaderProps {
   isDarkMode: boolean;
@@ -24,7 +24,11 @@ interface HeaderProps {
   folders: Folder[];
   isLoadingFolders: boolean;
   onAssignChatToFolder: (folderId: string) => void;
-  activeChat: Chat | undefined;
+  activeChat: (Chat & { tags: Tag[] }) | undefined;
+  tags: Tag[];
+  createTag: (name: string) => void;
+  assignTagToChat: (args: { chatId: string; tagId: string }) => void;
+  removeTagFromChat: (args: { chatId: string; tagId: string }) => void;
 }
 
 const Header = ({
@@ -41,6 +45,10 @@ const Header = ({
   isLoadingFolders,
   onAssignChatToFolder,
   activeChat,
+  tags,
+  createTag,
+  assignTagToChat,
+  removeTagFromChat,
 }: HeaderProps) => {
   return (
     <div className="flex items-center justify-between w-full gap-4">
@@ -54,7 +62,7 @@ const Header = ({
           value={selectedProvider}
           disabled={isLoadingProviders || availableProviders.length === 0}
         >
-          <SelectTrigger className="w-[140px] truncate">
+          <SelectTrigger className="w-[120px] truncate h-9">
             <SelectValue placeholder="Provider" />
           </SelectTrigger>
           <SelectContent>
@@ -71,7 +79,7 @@ const Header = ({
           value={selectedModel}
           disabled={!selectedProvider || availableModels.length === 0}
         >
-          <SelectTrigger className="w-[220px] truncate">
+          <SelectTrigger className="w-[200px] truncate h-9">
             <SelectValue placeholder="Model" />
           </SelectTrigger>
           <SelectContent>
@@ -88,7 +96,7 @@ const Header = ({
           value={activeChat?.folder_id || 'none'}
           disabled={!activeChat || isLoadingFolders}
         >
-          <SelectTrigger className="w-[180px] truncate">
+          <SelectTrigger className="w-[150px] truncate h-9">
             <SelectValue placeholder="Move to folder..." />
           </SelectTrigger>
           <SelectContent>
@@ -102,6 +110,13 @@ const Header = ({
             ))}
           </SelectContent>
         </Select>
+        <TagSelector
+          activeChat={activeChat}
+          tags={tags}
+          createTag={createTag}
+          assignTagToChat={assignTagToChat}
+          removeTagFromChat={removeTagFromChat}
+        />
       </div>
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">

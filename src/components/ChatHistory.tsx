@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Folder as FolderIcon, Plus, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Search, Folder as FolderIcon, FolderOpen, Plus, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu } from "@/components/ui/sidebar";
 import ChatItem from "./ChatItem";
 import { useSidebar } from "@/components/ui/sidebar";
@@ -17,15 +17,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import type { Folder } from "@/services/chatService";
+import type { Folder, Tag } from "@/services/chatService";
 
 interface Chat {
   id: string;
   title: string;
   date: string;
-  messages: unknown[];
   is_pinned: boolean;
   folder_id: string | null;
+  tags: Tag[];
 }
 
 interface ChatHistoryProps {
@@ -72,6 +72,7 @@ const ChatHistory = ({
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [editingFolderName, setEditingFolderName] = useState("");
   const [deletingFolder, setDeletingFolder] = useState<Folder | null>(null);
+  const [openFolders, setOpenFolders] = useState<string[]>(folders.map(f => f.id));
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -169,13 +170,15 @@ const ChatHistory = ({
               <Button size="sm" onClick={handleCreateFolder}>Create</Button>
             </div>
           )}
-          <Accordion type="multiple" className="w-full px-2" defaultValue={folders.map(f => f.id)}>
-            {chatsByFolder.map(folder => (
+          <Accordion type="multiple" className="w-full px-2" value={openFolders} onValueChange={setOpenFolders} defaultValue={folders.map(f => f.id)}>
+            {chatsByFolder.map(folder => {
+              const isOpen = openFolders.includes(folder.id);
+              return (
               <AccordionItem key={folder.id} value={folder.id} className="border-none">
-                <div className="flex items-center group/folder hover:bg-muted/50 rounded-md">
+                <div className="flex items-center group/folder hover:bg-muted rounded-md">
                     <AccordionTrigger className="flex-1 p-2 text-sm font-medium text-sidebar-foreground hover:no-underline">
                       <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                        <FolderIcon className="w-4 h-4" />
+                        {isOpen ? <FolderOpen className="w-4 h-4" /> : <FolderIcon className="w-4 h-4" />}
                         {editingFolderId === folder.id ? (
                            <Input
                            value={editingFolderName}
@@ -231,7 +234,7 @@ const ChatHistory = ({
                   </SidebarMenu>
                 </AccordionContent>
               </AccordionItem>
-            ))}
+            )})}
           </Accordion>
         </SidebarGroupContent>
       </SidebarGroup>
