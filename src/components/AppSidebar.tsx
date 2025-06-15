@@ -96,7 +96,7 @@ const AppSidebar = ({
     </Button>;
   const logo = <a href="/" className={cn("flex items-center gap-2", isCollapsed && "justify-center")}>
       <ChatOsIcon className="w-10 h-10 text-primary" />
-      {!isCollapsed && <span className="whitespace-nowrap text-2xl font-bold">ChatOS</span>}
+      {!isCollapsed && <span className="whitespace-nowrap text-3xl font-semibold">ChatOS</span>}
     </a>;
   return <>
       <Sidebar collapsible="icon" variant="inset">
