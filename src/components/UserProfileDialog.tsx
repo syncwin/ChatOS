@@ -5,15 +5,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "./ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import ProfileForm from "./ProfileForm";
 
 interface UserProfileDialogProps {
   isOpen: boolean;
@@ -25,7 +26,7 @@ const UserProfileDialog = ({ isOpen, onOpenChange, isDarkMode }: UserProfileDial
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const { data: profile } = useQuery({
+  const { data: profile, isLoading: isLoadingProfile } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       if (!user) return null;
@@ -34,8 +35,11 @@ const UserProfileDialog = ({ isOpen, onOpenChange, isDarkMode }: UserProfileDial
         .select('*')
         .eq('id', user.id)
         .single();
-      if (error) {
+      
+      // PGRST116: No rows found. This is okay for a new user.
+      if (error && error.code !== 'PGRST116') {
         console.error('Error fetching profile:', error);
+        toast.error('Failed to fetch profile.');
         return null;
       }
       return data;
@@ -54,35 +58,41 @@ const UserProfileDialog = ({ isOpen, onOpenChange, isDarkMode }: UserProfileDial
     }
   };
 
-  const getInitials = () => {
-    if (profile?.full_name) {
-      return profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase();
-    }
-    if (user?.email) {
-      return user.email[0].toUpperCase();
-    }
-    return "??";
-  }
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className={isDarkMode ? "dark" : ""}>
         <DialogHeader>
           <DialogTitle>User Profile</DialogTitle>
+          <DialogDescription>
+            View and edit your profile details. Your email is {user?.email}.
+          </DialogDescription>
         </DialogHeader>
-        <div className="py-4 flex flex-col items-center gap-4">
-          <Avatar className="w-24 h-24">
-            <AvatarFallback className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-4xl">
-              {getInitials()}
-            </AvatarFallback>
-          </Avatar>
-          <div className="text-center">
-            <div className="text-xl font-bold">{profile?.full_name || 'User'}</div>
-            <div className="text-muted-foreground">{user?.email}</div>
-          </div>
+        <div className="py-4">
+          {isLoadingProfile ? (
+            <div className="flex justify-center items-center h-48">
+              <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+          ) : profile ? (
+            <ProfileForm profile={profile} onSuccess={() => onOpenChange(false)} />
+          ) : user ? (
+            <ProfileForm 
+              profile={{ 
+                id: user.id, 
+                avatar_url: null, 
+                full_name: '', 
+                website: null, 
+                updated_at: null 
+              }} 
+              onSuccess={() => onOpenChange(false)} 
+            />
+          ) : (
+            <div className="text-center text-muted-foreground">
+              Could not load profile. Please try again.
+            </div>
+          )}
         </div>
         <DialogFooter>
-          <Button variant="destructive" onClick={handleSignOut}>
+          <Button variant="outline" onClick={handleSignOut}>
             <LogOut className="w-4 h-4 mr-2" />
             Sign Out
           </Button>
