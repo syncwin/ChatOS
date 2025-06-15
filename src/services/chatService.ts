@@ -4,8 +4,6 @@ import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 export type Chat = Tables<'chats'>;
 export type Message = Tables<'chat_messages'>;
 export type Folder = Tables<'folders'>;
-export type Tag = Tables<'tags'>;
-export type ChatTag = Tables<'chat_tags'>;
 export type NewMessage = Omit<TablesInsert<'chat_messages'>, 'id' | 'created_at' | 'user_id'>;
 
 export const getChats = async (): Promise<Chat[]> => {
@@ -63,41 +61,6 @@ export const getMessages = async (chatId: string): Promise<Message[]> => {
   return data || [];
 };
 
-export const getTags = async (): Promise<Tag[]> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('User not authenticated');
-
-  const { data, error } = await supabase
-    .from('tags')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('name', { ascending: true });
-
-  if (error) {
-    console.error('Error fetching tags:', error);
-    throw new Error('Failed to fetch tags');
-  }
-
-  return data || [];
-};
-
-export const getChatTags = async (): Promise<ChatTag[]> => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
-
-    const { data, error } = await supabase
-        .from('chat_tags')
-        .select('*')
-        .eq('user_id', user.id);
-
-    if (error) {
-        console.error('Error fetching chat-tag associations:', error);
-        throw new Error('Failed to fetch chat-tag associations');
-    }
-
-    return data || [];
-};
-
 export const createChat = async (title: string): Promise<Chat> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
@@ -132,24 +95,6 @@ export const createFolder = async (name: string): Promise<Folder> => {
     if (error) {
         console.error('Error creating folder:', error);
         throw new Error('Failed to create folder');
-    }
-
-    return data;
-};
-
-export const createTag = async (name: string): Promise<Tag> => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
-
-    const { data, error } = await supabase
-        .from('tags')
-        .insert({ name, user_id: user.id })
-        .select()
-        .single();
-    
-    if (error) {
-        console.error('Error creating tag:', error);
-        throw new Error('Failed to create tag');
     }
 
     return data;
@@ -196,41 +141,6 @@ export const assignChatToFolder = async (chatId: string, folderId: string | null
     if (error) {
         console.error('Error assigning chat to folder:', error);
         throw new Error('Failed to assign chat to folder');
-    }
-};
-
-export const assignTagToChat = async ({ chatId, tagId }: { chatId: string, tagId: string }): Promise<ChatTag> => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
-
-    const { data, error } = await supabase
-        .from('chat_tags')
-        .insert({ chat_id: chatId, tag_id: tagId, user_id: user.id })
-        .select()
-        .single();
-
-    if (error) {
-        console.error('Error assigning tag to chat:', error);
-        throw new Error('Failed to assign tag');
-    }
-
-    return data;
-};
-
-export const removeTagFromChat = async ({ chatId, tagId }: { chatId: string, tagId: string }): Promise<void> => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
-
-    const { error } = await supabase
-        .from('chat_tags')
-        .delete()
-        .eq('chat_id', chatId)
-        .eq('tag_id', tagId)
-        .eq('user_id', user.id);
-
-    if (error) {
-        console.error('Error removing tag from chat:', error);
-        throw new Error('Failed to remove tag');
     }
 };
 

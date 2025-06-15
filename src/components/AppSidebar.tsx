@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Settings, Plus } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarFooter, SidebarSeparator, useSidebar } from "@/components/ui/sidebar";
@@ -12,13 +11,16 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import ChatOsIcon from "@/components/icons/ChatOsIcon";
-import type { Folder, Tag, Chat as DbChat } from "@/services/chatService";
+import type { Folder } from "@/services/chatService";
 
-interface Chat extends DbChat {
-  tags: Tag[];
+interface Chat {
+  id: string;
+  title: string;
   date: string;
+  messages: unknown[];
+  is_pinned: boolean;
+  folder_id: string | null;
 }
-
 interface AppSidebarProps {
   isDarkMode: boolean;
   toggleDarkMode: () => void;
@@ -28,15 +30,8 @@ interface AppSidebarProps {
   onNewChat: () => void;
   onSelectChat: (chat: Chat) => void;
   createFolder: (name: string) => void;
-  updateFolder: (args: {
-    folderId: string;
-    name: string;
-  }) => void;
+  updateFolder: (args: { folderId: string; name: string; }) => void;
   deleteFolder: (folderId: string) => void;
-  tags: Tag[];
-  createTag: (name: string) => void;
-  assignTagToChat: (args: { chatId: string; tagId: string }) => void;
-  removeTagFromChat: (args: { chatId: string; tagId: string }) => void;
 }
 const AppSidebar = ({
   isDarkMode,
@@ -49,10 +44,6 @@ const AppSidebar = ({
   createFolder,
   updateFolder,
   deleteFolder,
-  tags,
-  createTag,
-  assignTagToChat,
-  removeTagFromChat,
 }: AppSidebarProps) => {
   const {
     user,
@@ -115,8 +106,8 @@ const AppSidebar = ({
       {!isCollapsed && <span>New Chat</span>}
     </Button>;
   const logo = <a href="/" className={cn("flex items-center gap-2", isCollapsed && "justify-center")}>
-      <ChatOsIcon className="w-8 h-8 text-primary" />
-      {!isCollapsed && <span className="whitespace-nowrap font-semibold text-2xl">ChatOS</span>}
+      <ChatOsIcon className="w-10 h-10 text-primary" />
+      {!isCollapsed && <span className="whitespace-nowrap text-3xl font-semibold">ChatOS</span>}
     </a>;
   return <>
       <Sidebar collapsible="icon" variant="inset">
@@ -137,8 +128,8 @@ const AppSidebar = ({
 
         <SidebarContent>
           <ChatHistory 
-            chats={chats} 
-            folders={folders} 
+            chats={chats}
+            folders={folders}
             activeChatId={activeChatId} 
             editingChatId={editingChatId} 
             newChatTitle={newChatTitle} 
@@ -148,14 +139,10 @@ const AppSidebar = ({
             onDeleteChat={handleDeleteChat} 
             onTitleChange={handleTitleChange} 
             onUpdateTitle={handleUpdateTitle} 
-            onTitleKeyDown={handleTitleKeyDown} 
-            createFolder={createFolder} 
-            updateFolder={updateFolder} 
+            onTitleKeyDown={handleTitleKeyDown}
+            createFolder={createFolder}
+            updateFolder={updateFolder}
             deleteFolder={deleteFolder}
-            tags={tags}
-            createTag={createTag}
-            assignTagToChat={assignTagToChat}
-            removeTagFromChat={removeTagFromChat}
           />
           
           <SidebarSeparator />

@@ -1,9 +1,9 @@
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from 'uuid';
-import type { Chat, Message, NewMessage, Tag } from '@/services/chatService';
+import type { Chat, Message, NewMessage } from '@/services/chatService';
 
 export type GuestMessage = Message;
-export type GuestChat = Chat & { messages: GuestMessage[], tags: Tag[] };
+export type GuestChat = Chat & { messages: GuestMessage[] };
 
 type GuestData = { chats: GuestChat[]; activeChatId: string | null };
 
@@ -30,7 +30,6 @@ export const createGuestChat = (
     is_pinned: false,
     folder_id: null,
     messages: [],
-    tags: [],
   };
   setGuestChats(prev => [newChat, ...prev]);
   setActiveChatId(newChat.id);

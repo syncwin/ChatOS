@@ -77,39 +77,6 @@ export type Database = {
           },
         ]
       }
-      chat_tags: {
-        Row: {
-          chat_id: string
-          tag_id: string
-          user_id: string
-        }
-        Insert: {
-          chat_id: string
-          tag_id: string
-          user_id: string
-        }
-        Update: {
-          chat_id?: string
-          tag_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "chat_tags_chat_id_fkey"
-            columns: ["chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "chat_tags_tag_id_fkey"
-            columns: ["tag_id"]
-            isOneToOne: false
-            referencedRelation: "tags"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       chats: {
         Row: {
           created_at: string
@@ -193,30 +160,6 @@ export type Database = {
           theme?: string
           updated_at?: string | null
           website?: string | null
-        }
-        Relationships: []
-      }
-      tags: {
-        Row: {
-          color: string | null
-          created_at: string
-          id: string
-          name: string
-          user_id: string
-        }
-        Insert: {
-          color?: string | null
-          created_at?: string
-          id?: string
-          name: string
-          user_id: string
-        }
-        Update: {
-          color?: string | null
-          created_at?: string
-          id?: string
-          name?: string
-          user_id?: string
         }
         Relationships: []
       }
