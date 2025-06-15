@@ -25,8 +25,6 @@ interface AppSidebarProps {
   activeChatId: string | null;
   onNewChat: () => void;
   onSelectChat: (chat: Chat) => void;
-  onDeleteChat: (chatId: string) => void;
-  onPinChat: (chatId: string, is_pinned: boolean) => void;
 }
 
 const AppSidebar = ({

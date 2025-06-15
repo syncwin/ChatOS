@@ -33,8 +33,6 @@ const Index = () => {
     createChatAsync,
     addMessage: addMessageMutation,
     updateChatTitle,
-    deleteChat,
-    updateChatPinStatus,
   } = useChat();
 
   const messages: Message[] = dbMessages;
@@ -171,37 +169,15 @@ const Index = () => {
     setActiveChatId(null);
   };
 
-  // The AppSidebar expects numeric IDs. We map string IDs to numeric indices.
-  const sidebarChats = chats.map((chat, index) => ({
+  // Format chats for the sidebar
+  const sidebarChats = chats.map((chat) => ({
     ...chat,
-    id: index,
     date: formatDistanceToNow(new Date(chat.updated_at), { addSuffix: true }),
     messages: [], // Not needed for sidebar
   }));
 
-  const activeSidebarChatIndex = activeChatId
-    ? chats.findIndex((c) => c.id === activeChatId)
-    : -1;
-
-  const handleSelectChat = (chat: { id: number }) => {
-    const realChat = chats[chat.id];
-    if (realChat) {
-      setActiveChatId(realChat.id);
-    }
-  };
-
-  const handleDeleteChat = (chatId: number) => {
-    const realChat = chats[chatId];
-    if (realChat) {
-      deleteChat(realChat.id);
-    }
-  };
-
-  const handlePinChat = (chatId: number) => {
-    const realChat = chats[chatId];
-    if (realChat) {
-      updateChatPinStatus({ chatId: realChat.id, is_pinned: !realChat.is_pinned });
-    }
+  const handleSelectChat = (chat: { id: string }) => {
+    setActiveChatId(chat.id);
   };
 
   const isLoading = isLoadingChats || isLoadingMessages || isAiResponding;
@@ -225,11 +201,9 @@ const Index = () => {
         isDarkMode={isDarkMode}
         toggleDarkMode={toggleDarkMode}
         chats={sidebarChats}
-        activeChatId={activeSidebarChatIndex > -1 ? activeSidebarChatIndex : null}
+        activeChatId={activeChatId}
         onNewChat={handleNewChat}
         onSelectChat={handleSelectChat}
-        onDeleteChat={handleDeleteChat}
-        onPinChat={handlePinChat}
       />
       <SidebarInset>
         <div className="min-h-screen bg-background text-foreground">
