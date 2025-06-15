@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { v4 as uuidv4 } from 'uuid';
@@ -36,7 +37,7 @@ const Index = () => {
 
   const messages: Message[] = dbMessages;
 
-  const { streamMessage, isAiResponding, selectedProvider } = useAIProvider();
+  const { streamMessage, isAiResponding, selectedProvider, selectedModel } = useAIProvider();
 
   const [input, setInput] = useState("");
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -105,6 +106,9 @@ const Index = () => {
       created_at: new Date().toISOString(),
       isStreaming: true,
       user_id: user?.id || '',
+      model: selectedModel,
+      provider: selectedProvider,
+      usage: null,
     };
     
     // Optimistically add placeholder
