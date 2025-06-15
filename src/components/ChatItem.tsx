@@ -73,7 +73,7 @@ const ChatItem = ({
             </div>
             
             <div className={cn(
-              "items-center justify-end gap-0.5 mt-2 hidden",
+              "items-center justify-start gap-0.5 mt-2 hidden",
               "group-hover/item:flex group-data-[active=true]/item:flex"
             )}>
               <Button
