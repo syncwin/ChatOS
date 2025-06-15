@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { User, MessageSquare, Settings, Plus, Search, Trash2, LogIn, Pin, PinOff } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, SidebarSeparator, SidebarMenuAction } from "@/components/ui/sidebar";
@@ -7,7 +8,6 @@ import { useNavigate } from "react-router-dom";
 import SettingsDialog from "./SettingsDialog";
 import UserProfileDialog from "./UserProfileDialog";
 import { useAuth } from "@/hooks/useAuth";
-import ChatOsIcon from "./icons/ChatOsIcon";
 
 interface Chat {
   id: number;
@@ -76,7 +76,7 @@ const AppSidebar = ({
       <Sidebar className={`${isDarkMode ? 'dark bg-black' : 'bg-sidebar'} border-sidebar-border`}>
         <SidebarHeader className="p-4">
           <Button onClick={onNewChat} className="w-full justify-start gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
-            <ChatOsIcon className="w-5 h-5" />
+            <Plus className="w-4 h-4" />
             New Chat
           </Button>
         </SidebarHeader>
