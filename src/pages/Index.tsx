@@ -1,14 +1,11 @@
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { v4 as uuidv4 } from 'uuid';
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import Header from "@/components/Header";
-import ChatMessage from "@/components/ChatMessage";
-import WelcomeScreen from "@/components/WelcomeScreen";
-import InputArea from "@/components/InputArea";
 import AppSidebar from "@/components/AppSidebar";
+import ChatView from "@/components/ChatView";
 import { useChat } from "@/hooks/useChat";
 import { useAIProvider } from "@/hooks/useAIProvider";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,7 +15,7 @@ import type { NewMessage, Message as DbMessage } from "@/services/chatService";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 
-type Message = DbMessage & { isStreaming?: boolean };
+export type Message = DbMessage & { isStreaming?: boolean };
 
 const Index = () => {
   const { user, isGuest } = useAuth();
@@ -52,7 +49,6 @@ const Index = () => {
 
   const [input, setInput] = useState("");
   const isDarkMode = profile?.theme !== 'light'; // Default to dark theme
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -61,14 +57,6 @@ const Index = () => {
       document.documentElement.classList.remove('dark');
     }
   }, [isDarkMode]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, isAiResponding]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,7 +115,6 @@ const Index = () => {
       ...oldData,
       assistantPlaceholder
     ]);
-    scrollToBottom();
 
     let finalContent = "";
 
@@ -140,7 +127,6 @@ const Index = () => {
             msg.id === assistantId ? { ...msg, content: finalContent } : msg
           )
         );
-        scrollToBottom();
       },
       () => { // onComplete
         const finalAssistantMessage: NewMessage = {
@@ -181,14 +167,7 @@ const Index = () => {
     setActiveChatId(chat.id);
   };
 
-  const isLoading = isLoadingChats || isLoadingMessages || isAiResponding;
-
-  const suggestedQuestions = [
-    "What is artificial intelligence?",
-    "How do large language models work?",
-    "Explain quantum computing",
-    "What are the latest trends in AI?"
-  ];
+  const isLoading = isLoadingChats || isLoadingMessages;
 
   const toggleDarkMode = () => {
     if (profile) {
@@ -225,44 +204,16 @@ const Index = () => {
             </div>
           </header>
 
-          <main className="flex-1 flex flex-col overflow-hidden">
-            {messages.length === 0 && !isLoading ? (
-              <div className="container mx-auto max-w-4xl flex-1 flex">
-                <WelcomeScreen 
-                  suggestedQuestions={suggestedQuestions}
-                  onQuestionSelect={(question) => {
-                    if (!activeChatId) {
-                      handleNewChat();
-                    }
-                    setInput(question);
-                  }}
-                />
-              </div>
-            ) : (
-              <ScrollArea className="flex-1">
-                <div className="container mx-auto max-w-4xl py-4">
-                  <div className="space-y-6">
-                    {messages.map((message) => (
-                      <ChatMessage 
-                        key={message.id} 
-                        message={message} 
-                      />
-                    ))}
-                    <div ref={messagesEndRef} />
-                  </div>
-                </div>
-              </ScrollArea>
-            )}
-
-            <div className="container mx-auto max-w-4xl">
-              <InputArea 
-                input={input}
-                setInput={setInput}
-                onSubmit={handleSubmit}
-                isLoading={isLoading}
-              />
-            </div>
-          </main>
+          <ChatView
+            messages={messages}
+            isLoading={isLoading}
+            isAiResponding={isAiResponding}
+            input={input}
+            setInput={setInput}
+            onSubmit={handleSubmit}
+            onNewChat={handleNewChat}
+            activeChatId={activeChatId}
+          />
         </div>
       </SidebarInset>
     </>
