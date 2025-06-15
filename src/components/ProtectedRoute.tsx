@@ -4,7 +4,7 @@ import { Outlet, Navigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 
 const ProtectedRoute = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, guestAccess } = useAuth();
 
   if (loading) {
     return (
@@ -14,7 +14,7 @@ const ProtectedRoute = () => {
     );
   }
 
-  if (!user) {
+  if (!user && !guestAccess) {
     return <Navigate to="/auth" replace />;
   }
 

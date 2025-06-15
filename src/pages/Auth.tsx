@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -34,7 +33,7 @@ const authSchema = z.object({
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, setGuestAccess } = useAuth();
   const [loading, setLoading] = useState(false);
 
   // Redirect to main app if already authenticated
@@ -84,6 +83,11 @@ const Auth = () => {
     setLoading(false);
   };
 
+  const handleGuest = () => {
+    setGuestAccess(true);
+    navigate('/');
+  };
+
   return (
     <div className="flex items-center justify-center w-full min-h-screen bg-background">
       <Tabs defaultValue="signin" className="w-[400px]">
@@ -96,7 +100,7 @@ const Auth = () => {
           </div>
         </div>
         <div className="flex justify-center mb-4">
-          <Button variant="ghost" onClick={() => navigate('/')} className="flex items-center gap-2">
+          <Button variant="ghost" onClick={handleGuest} className="flex items-center gap-2">
             <ArrowLeft className="w-4 h-4" />
             Continue as Guest
           </Button>

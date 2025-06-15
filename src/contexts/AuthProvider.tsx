@@ -8,6 +8,8 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   isGuest: boolean;
+  guestAccess: boolean;
+  setGuestAccess: (enabled: boolean) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -16,18 +18,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [guestAccess, setGuestAccess] = useState(() => sessionStorage.getItem('guestAccess') === 'true');
+
+  useEffect(() => {
+    sessionStorage.setItem('guestAccess', String(guestAccess));
+  }, [guestAccess]);
 
   useEffect(() => {
     setLoading(true);
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      setUser(session?.user ?? null);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      if (currentUser) {
+        setGuestAccess(false);
+      }
       setLoading(false);
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
         setSession(session);
-        setUser(session?.user ?? null);
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        if (currentUser) {
+          setGuestAccess(false);
+        }
         setLoading(false);
     });
 
@@ -41,6 +56,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     user,
     loading,
     isGuest: !user,
+    guestAccess,
+    setGuestAccess,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
