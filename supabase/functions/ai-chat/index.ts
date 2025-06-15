@@ -103,15 +103,17 @@ serve(async (req) => {
         { auth: { autoRefreshToken: false, persistSession: false } }
       );
 
-      // Create user client to get user info
+      // Create a stateless user client to get user info from token
       const userClient = createClient(
         Deno.env.get('SUPABASE_URL') ?? '',
         Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-        { global: { headers: { Authorization: authHeader } } }
+        { auth: { autoRefreshToken: false, persistSession: false } }
       );
+      
+      const token = authHeader.replace('Bearer ', '');
 
-      // Get user ID from the authenticated session
-      const { data: { user }, error: userError } = await userClient.auth.getUser();
+      // Get user ID from the provided token
+      const { data: { user }, error: userError } = await userClient.auth.getUser(token);
       
       if (userError || !user) {
         console.error('[ai-chat] Failed to get user from session:', userError);
