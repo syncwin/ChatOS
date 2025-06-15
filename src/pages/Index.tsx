@@ -107,12 +107,32 @@ const Index = () => {
     setActiveChatId(null);
   };
 
-  const mappedChats = chats.map(chat => ({
+  // The AppSidebar expects numeric IDs, but our DB uses string UUIDs.
+  // We'll map string IDs to numeric indices for the sidebar and back.
+  const sidebarChats = chats.map((chat, index) => ({
     ...chat,
-    id: chat.id, // Pass string id
+    id: index, // Use index as the numeric ID
     date: formatDistanceToNow(new Date(chat.updated_at), { addSuffix: true }),
     messages: [], // Not needed for sidebar
   }));
+
+  const activeSidebarChatIndex = activeChatId
+    ? chats.findIndex((c) => c.id === activeChatId)
+    : -1;
+
+  const handleSelectChat = (chat: { id: number }) => {
+    const realChat = chats[chat.id];
+    if (realChat) {
+      setActiveChatId(realChat.id);
+    }
+  };
+
+  const handleDeleteChat = (chatId: number) => {
+    const realChat = chats[chatId];
+    if (realChat) {
+      deleteChat(realChat.id);
+    }
+  };
 
   const isLoading = isLoadingChats || isLoadingMessages || isAiResponding;
 
@@ -130,11 +150,11 @@ const Index = () => {
       <AppSidebar 
         isDarkMode={isDarkMode}
         toggleDarkMode={toggleDarkMode}
-        chats={mappedChats}
-        activeChatId={activeChatId}
+        chats={sidebarChats}
+        activeChatId={activeSidebarChatIndex > -1 ? activeSidebarChatIndex : null}
         onNewChat={handleNewChat}
-        onSelectChat={(chat) => setActiveChatId(chat.id)}
-        onDeleteChat={deleteChat}
+        onSelectChat={handleSelectChat}
+        onDeleteChat={handleDeleteChat}
       />
       <SidebarInset>
         <div className="min-h-screen bg-background text-foreground">
