@@ -59,7 +59,7 @@ serve(async (req) => {
     // Get user's API key for the selected provider
     const { data: apiKeyData, error: apiKeyError } = await supabaseClient
       .from('api_keys')
-      .select('encrypted_api_key')
+      .select('api_key')
       .eq('provider', provider)
       .single();
 
@@ -68,7 +68,7 @@ serve(async (req) => {
       throw new Error(`No API key found for provider: ${provider}`);
     }
 
-    const apiKey = apiKeyData.encrypted_api_key;
+    const apiKey = apiKeyData.api_key;
     let response: NormalizedResponse;
 
     switch (provider) {
