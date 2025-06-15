@@ -1,4 +1,3 @@
-
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -38,35 +37,6 @@ const ProfileForm = ({ profile, onSuccess }: ProfileFormProps) => {
       full_name: profile.full_name || '',
     },
     mode: 'onChange',
-  });
-
-  const updateProfileMutation = useMutation({
-    mutationFn: async ({ fullName, avatarUrl }: { fullName: string, avatarUrl?: string }) => {
-      if (!user) throw new Error("User not found");
-      
-      const updates: Partial<Tables<'profiles'>> & { id: string } = {
-        id: user.id,
-        full_name: fullName,
-        updated_at: new Date().toISOString(),
-      };
-      
-      if (avatarUrl !== undefined) {
-        updates.avatar_url = avatarUrl;
-      }
-
-      const { error } = await supabase.from('profiles').upsert(updates);
-      if (error) throw error;
-      return { ...profile, ...updates };
-    },
-    onSuccess: (updatedProfile) => {
-      toast.success('Profile updated successfully!');
-      queryClient.setQueryData(['profile', user?.id], updatedProfile);
-      queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
-      if (onSuccess) onSuccess();
-    },
-    onError: (error) => {
-      toast.error(`Failed to update profile: ${error.message}`);
-    },
   });
 
   const handleAvatarUpload = async (file: File) => {
