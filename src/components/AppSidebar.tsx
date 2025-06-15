@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { Settings, Plus } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarFooter, SidebarSeparator } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
 import SettingsDialog from "./SettingsDialog";
 import UserProfileDialog from "./UserProfileDialog";
 import { useAuth } from "@/hooks/useAuth";
@@ -86,10 +85,10 @@ const AppSidebar = ({
     <>
       <Sidebar collapsible="icon" variant="inset" className={`${isDarkMode ? 'dark bg-black' : 'bg-sidebar'} border-sidebar-border`}>
         <SidebarHeader className="p-4">
-          <Button onClick={onNewChat} className="w-full justify-start gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
+          <SidebarMenuButton onClick={onNewChat} tooltip="New Chat" className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
             <Plus className="w-4 h-4" />
-            New Chat
-          </Button>
+            <span>New Chat</span>
+          </SidebarMenuButton>
         </SidebarHeader>
 
         <SidebarContent>
@@ -119,6 +118,7 @@ const AppSidebar = ({
                 <SidebarMenuItem>
                   <SidebarMenuButton 
                     onClick={() => setIsSettingsOpen(true)} 
+                    tooltip="Settings"
                     className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     aria-label="Open settings"
                   >

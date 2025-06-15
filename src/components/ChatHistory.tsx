@@ -1,8 +1,8 @@
-
 import { useState } from "react";
 import { Search } from "lucide-react";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu } from "@/components/ui/sidebar";
 import ChatItem from "./ChatItem";
+import { useSidebar } from "@/components/ui/sidebar";
 
 interface Chat {
   id: string;
@@ -40,6 +40,8 @@ const ChatHistory = ({
   onTitleKeyDown,
 }: ChatHistoryProps) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const { state } = useSidebar();
+  const isCollapsed = state === 'collapsed';
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -50,22 +52,24 @@ const ChatHistory = ({
   return (
     <>
       {/* Search */}
-      <SidebarGroup>
-        <SidebarGroupContent>
-          <div className="relative px-2">
-            <label htmlFor="search-chats" className="sr-only">Search chats</label>
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-            <input 
-              id="search-chats"
-              type="text" 
-              placeholder="Search chats..." 
-              value={searchTerm} 
-              onChange={handleSearchChange} 
-              className="w-full pl-10 pr-4 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-input border border-border text-foreground placeholder:text-muted-foreground" 
-            />
-          </div>
-        </SidebarGroupContent>
-      </SidebarGroup>
+      {!isCollapsed && (
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <div className="relative px-2">
+              <label htmlFor="search-chats" className="sr-only">Search chats</label>
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+              <input 
+                id="search-chats"
+                type="text" 
+                placeholder="Search chats..." 
+                value={searchTerm} 
+                onChange={handleSearchChange} 
+                className="w-full pl-10 pr-4 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-input border border-border text-foreground placeholder:text-muted-foreground" 
+              />
+            </div>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      )}
 
       {/* Recent Chats */}
       <SidebarGroup>
