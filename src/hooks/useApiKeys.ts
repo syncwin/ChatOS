@@ -19,39 +19,32 @@ export const useApiKeys = () => {
   const { user, isGuest, guestApiKeys, addGuestApiKey, deleteGuestApiKey } = useAuth();
   const queryClient = useQueryClient();
 
-  if (isGuest) {
-    const saveGuestKeyMutation = useMutation<void, Error, ApiKeyFormValues>({
-      mutationFn: async (values) => {
-        addGuestApiKey(values);
-      },
-      onSuccess: (_, values) => {
-        toast.success(`API key for ${values.provider} saved for this session.`);
-      },
-      onError: (error) => {
-        toast.error("Failed to save API key for session: " + error.message);
-      },
-    });
+  // --- Guest Mutations ---
+  const saveGuestKeyMutation = useMutation<void, Error, ApiKeyFormValues>({
+    mutationFn: async (values) => {
+      addGuestApiKey(values);
+    },
+    onSuccess: (_, values) => {
+      toast.success(`API key for ${values.provider} saved for this session.`);
+    },
+    onError: (error) => {
+      toast.error("Failed to save API key for session: " + error.message);
+    },
+  });
 
-    const deleteGuestKeyMutation = useMutation<void, Error, ApiKeyFormValues['provider']>({
-      mutationFn: async (provider) => {
-        deleteGuestApiKey(provider);
-      },
-      onSuccess: (_, provider) => {
-        toast.success(`API key for ${provider} deleted for this session.`);
-      },
-      onError: (error) => {
-        toast.error("Failed to delete API key for session: " + error.message);
-      },
-    });
+  const deleteGuestKeyMutation = useMutation<void, Error, ApiKeyFormValues['provider']>({
+    mutationFn: async (provider) => {
+      deleteGuestApiKey(provider);
+    },
+    onSuccess: (_, provider) => {
+      toast.success(`API key for ${provider} deleted for this session.`);
+    },
+    onError: (error) => {
+      toast.error("Failed to delete API key for session: " + error.message);
+    },
+  });
 
-    return {
-      savedKeys: guestApiKeys.map(k => ({ provider: k.provider as ApiKeyFormValues['provider'] })),
-      isLoadingKeys: false,
-      saveMutation: saveGuestKeyMutation,
-      deleteMutation: deleteGuestKeyMutation,
-    };
-  }
-
+  // --- Authenticated User Query and Mutations ---
   const { data: savedKeys, isLoading: isLoadingKeys } = useQuery({
     queryKey: ["apiKeys", user?.id],
     queryFn: async (): Promise<{ provider: ApiKeyFormValues['provider'] }[]> => {
@@ -66,10 +59,10 @@ export const useApiKeys = () => {
       }
       return data as { provider: ApiKeyFormValues['provider'] }[];
     },
-    enabled: !!user,
+    enabled: !!user && !isGuest,
   });
 
-  const saveMutation = useMutation({
+  const saveAuthKeyMutation = useMutation({
     mutationFn: async (values: ApiKeyFormValues) => {
       if (!user) throw new Error("User not authenticated");
       const { error } = await supabase.from("api_keys").upsert({
@@ -88,7 +81,7 @@ export const useApiKeys = () => {
     },
   });
 
-  const deleteMutation = useMutation({
+  const deleteAuthKeyMutation = useMutation({
     mutationFn: async (provider: ApiKeyFormValues['provider']) => {
       if (!user) throw new Error("User not authenticated");
       const { error } = await supabase
@@ -107,10 +100,19 @@ export const useApiKeys = () => {
     },
   });
 
+  if (isGuest) {
+    return {
+      savedKeys: guestApiKeys.map(k => ({ provider: k.provider as ApiKeyFormValues['provider'] })),
+      isLoadingKeys: false,
+      saveMutation: saveGuestKeyMutation,
+      deleteMutation: deleteGuestKeyMutation,
+    };
+  }
+
   return {
     savedKeys: savedKeys || [],
     isLoadingKeys,
-    saveMutation,
-    deleteMutation,
+    saveMutation: saveAuthKeyMutation,
+    deleteMutation: deleteAuthKeyMutation,
   };
 };
