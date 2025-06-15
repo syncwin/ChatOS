@@ -46,7 +46,7 @@ const InputArea = ({ input, setInput, onSubmit, isLoading }: InputAreaProps) => 
         </div>
       </form>
       <p className="text-xs mt-2 text-center text-muted-foreground" aria-live="polite">
-        InsightSeeker can make mistakes. Please verify important information.
+        OS Chat can make mistakes. Please verify important information.
       </p>
     </div>
   );

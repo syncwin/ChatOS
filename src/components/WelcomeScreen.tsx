@@ -15,10 +15,10 @@ const WelcomeScreen = ({ suggestedQuestions, onQuestionSelect }: WelcomeScreenPr
           <Bot className="w-8 h-8 text-primary-foreground" />
         </div>
         <h2 className="text-2xl font-bold mb-2 text-foreground">
-          Welcome to InsightSeeker
+          Welcome to OS Chat
         </h2>
         <p className="mb-6 text-muted-foreground">
-          Your intelligent research companion. Ask me anything and I'll provide detailed, insightful answers.
+          Start a new conversation by typing a message below or selecting a suggestion.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {suggestedQuestions.map((question, index) => (
