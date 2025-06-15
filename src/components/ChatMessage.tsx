@@ -1,16 +1,12 @@
-
 import { Bot, User, Copy, Check } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import type { Tables } from "@/integrations/supabase/types";
 
-interface Message {
-  id: string;
-  content: string;
-  role: "user" | "assistant";
-  timestamp: Date;
+type Message = Tables<'chat_messages'> & {
   isStreaming?: boolean;
-}
+};
 
 interface ChatMessageProps {
   message: Message;
@@ -50,7 +46,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
           )}
         </p>
         <div className="text-xs opacity-70 mt-2">
-          {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </div>
         {message.role === 'assistant' && !message.isStreaming && message.content && (
           <Button

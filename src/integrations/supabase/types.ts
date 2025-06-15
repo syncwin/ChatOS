@@ -33,6 +33,74 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_messages: {
+        Row: {
+          chat_id: string
+          content: string
+          created_at: string
+          id: string
+          model: string | null
+          provider: string | null
+          role: Database["public"]["Enums"]["message_role"]
+          usage: Json | null
+          user_id: string
+        }
+        Insert: {
+          chat_id: string
+          content: string
+          created_at?: string
+          id?: string
+          model?: string | null
+          provider?: string | null
+          role: Database["public"]["Enums"]["message_role"]
+          usage?: Json | null
+          user_id: string
+        }
+        Update: {
+          chat_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          model?: string | null
+          provider?: string | null
+          role?: Database["public"]["Enums"]["message_role"]
+          usage?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chats: {
+        Row: {
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -71,6 +139,7 @@ export type Database = {
         | "Google Gemini"
         | "Mistral"
         | "OpenRouter"
+      message_role: "user" | "assistant"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -193,6 +262,7 @@ export const Constants = {
         "Mistral",
         "OpenRouter",
       ],
+      message_role: ["user", "assistant"],
     },
   },
 } as const
