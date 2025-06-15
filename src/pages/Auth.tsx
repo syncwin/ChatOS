@@ -31,23 +31,35 @@ const authSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters long'),
 });
 
+const forgotPasswordSchema = z.object({
+  email: z.string().email('Please enter a valid email address.'),
+});
+
 const Auth = () => {
   const navigate = useNavigate();
   const { user, setGuestAccess } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [view, setView] = useState<'tabs' | 'forgot_password'>('tabs');
 
   // Redirect to main app if already authenticated
   useEffect(() => {
-    if (user) {
+    if (user && view === 'tabs') {
       navigate('/');
     }
-  }, [user, navigate]);
+  }, [user, navigate, view]);
 
   const form = useForm<z.infer<typeof authSchema>>({
     resolver: zodResolver(authSchema),
     defaultValues: {
       email: '',
       password: '',
+    },
+  });
+
+  const forgotPasswordForm = useForm<z.infer<typeof forgotPasswordSchema>>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: '',
     },
   });
 
@@ -83,10 +95,65 @@ const Auth = () => {
     setLoading(false);
   };
 
+  const handlePasswordReset = async (values: z.infer<typeof forgotPasswordSchema>) => {
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+      redirectTo: `${window.location.origin}/update-password`,
+    });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.info('Check your email for the password reset link.');
+      setView('tabs');
+    }
+    setLoading(false);
+  };
+
   const handleGuest = () => {
     setGuestAccess(true);
     navigate('/');
   };
+
+  if (view === 'forgot_password') {
+    return (
+      <div className="flex items-center justify-center w-full min-h-screen bg-background">
+        <Card className="w-[400px]">
+          <CardHeader>
+            <CardTitle>Reset Password</CardTitle>
+            <CardDescription>
+              Enter your email to receive a password reset link.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...forgotPasswordForm}>
+              <form onSubmit={forgotPasswordForm.handleSubmit(handlePasswordReset)} className="space-y-4">
+                <FormField
+                  control={forgotPasswordForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input placeholder="you@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Send Reset Link
+                </Button>
+                <Button variant="ghost" className="w-full" onClick={() => setView('tabs')}>
+                  Back to Sign In
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center w-full min-h-screen bg-background">
@@ -150,6 +217,16 @@ const Auth = () => {
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Sign In
                   </Button>
+                  <div className="text-sm text-center">
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="p-0 h-auto font-normal"
+                      onClick={() => setView('forgot_password')}
+                    >
+                      Forgot your password?
+                    </Button>
+                  </div>
                 </form>
               </Form>
             </CardContent>

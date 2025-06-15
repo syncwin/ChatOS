@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthProvider";
 import Auth from "./pages/Auth";
 import ProtectedRoute from "./components/ProtectedRoute";
+import UpdatePassword from "./pages/UpdatePassword";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
             <div className="min-h-screen flex w-full overflow-hidden">
               <Routes>
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/update-password" element={<UpdatePassword />} />
                 <Route element={<ProtectedRoute />}>
                   <Route path="/" element={<Index />} />
                 </Route>
