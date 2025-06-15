@@ -9,7 +9,7 @@ import { useChat } from "@/hooks/useChat";
 import { useAIProvider } from "@/hooks/useAIProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
-import type { CoreChatMessage } from "@/services/aiProviderService";
+import type { ChatMessage } from "@/services/aiProviderService";
 import type { NewMessage, Message as DbMessage, Chat } from "@/services/chatService";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -96,7 +96,7 @@ const Index = () => {
     };
     addMessageMutation(userMessage);
 
-    const historyForAI: CoreChatMessage[] = [
+    const historyForAI: ChatMessage[] = [
       ...messages.map(m => ({ role: m.role, content: m.content })),
       { role: 'user', content: trimmedInput }
     ];

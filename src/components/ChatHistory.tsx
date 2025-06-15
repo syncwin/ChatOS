@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Search, Folder as FolderIcon, Plus, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu } from "@/components/ui/sidebar";
@@ -213,7 +212,20 @@ const ChatHistory = ({
                 <AccordionContent className="pb-0 pl-2">
                   <SidebarMenu>
                     {folder.chats.map(chat => (
-                      <ChatItem key={chat.id} {...{chat, activeChatId, editingChatId, newChatTitle, onSelectChat, onStartEdit, onPinChat, onDeleteChat, onTitleChange, onUpdateTitle, onTitleKeyDown}} />
+                      <ChatItem
+                        key={chat.id}
+                        chat={chat}
+                        isActive={chat.id === activeChatId}
+                        isEditing={chat.id === editingChatId}
+                        newChatTitle={newChatTitle}
+                        onSelectChat={onSelectChat}
+                        onStartEdit={onStartEdit}
+                        onPinChat={onPinChat}
+                        onDeleteChat={onDeleteChat}
+                        onTitleChange={onTitleChange}
+                        onUpdateTitle={onUpdateTitle}
+                        onTitleKeyDown={onTitleKeyDown}
+                      />
                     ))}
                     {folder.chats.length === 0 && searchTerm === '' && <div className="text-xs text-muted-foreground p-2 text-center">Empty folder.</div>}
                   </SidebarMenu>
@@ -232,7 +244,20 @@ const ChatHistory = ({
         <SidebarGroupContent>
           <SidebarMenu className="px-2">
             {chatsWithoutFolder.map(chat => (
-              <ChatItem key={chat.id} {...{chat, activeChatId, editingChatId, newChatTitle, onSelectChat, onStartEdit, onPinChat, onDeleteChat, onTitleChange, onUpdateTitle, onTitleKeyDown}} />
+              <ChatItem
+                key={chat.id}
+                chat={chat}
+                isActive={chat.id === activeChatId}
+                isEditing={chat.id === editingChatId}
+                newChatTitle={newChatTitle}
+                onSelectChat={onSelectChat}
+                onStartEdit={onStartEdit}
+                onPinChat={onPinChat}
+                onDeleteChat={onDeleteChat}
+                onTitleChange={onTitleChange}
+                onUpdateTitle={onUpdateTitle}
+                onTitleKeyDown={onTitleKeyDown}
+              />
             ))}
           </SidebarMenu>
         </SidebarGroupContent>

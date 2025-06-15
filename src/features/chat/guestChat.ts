@@ -28,6 +28,7 @@ export const createGuestChat = (
     updated_at: new Date().toISOString(),
     user_id: '',
     is_pinned: false,
+    folder_id: null,
     messages: [],
   };
   setGuestChats(prev => [newChat, ...prev]);
