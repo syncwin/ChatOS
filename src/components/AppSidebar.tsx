@@ -113,7 +113,7 @@ const AppSidebar = ({
                     <SidebarMenuButton 
                       onClick={() => onSelectChat(chat)} 
                       data-active={chat.id === activeChatId} 
-                      className="group/button w-full justify-start h-auto p-2.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-primary data-[active=true]:text-primary-foreground px-[5px] py-[5px]"
+                      className="group/button w-full justify-start h-auto p-2.5 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-primary data-[active=true]:text-primary-foreground px-[5px] py-[5px] pr-20"
                     >
                       {chat.is_pinned && <Pin className="w-3 h-3 mr-2 flex-shrink-0 text-amber-500" />}
                       <MessageSquare className="w-4 h-4 flex-shrink-0" />
