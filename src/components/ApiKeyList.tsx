@@ -6,7 +6,7 @@ import { ApiKeyFormValues } from "@/hooks/useApiKeys";
 
 interface ApiKeyListProps {
   isLoading: boolean;
-  savedKeys: { provider: string }[] | undefined;
+  savedKeys: { provider: ApiKeyFormValues['provider'] }[] | undefined;
   deleteMutation: UseMutationResult<void, Error, ApiKeyFormValues['provider'], unknown>;
 }
 
@@ -48,4 +48,3 @@ const ApiKeyList = ({ isLoading, savedKeys, deleteMutation }: ApiKeyListProps) =
 };
 
 export default ApiKeyList;
-
