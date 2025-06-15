@@ -9,8 +9,8 @@ interface WelcomeScreenProps {
 
 const WelcomeScreen = ({ suggestedQuestions, onQuestionSelect }: WelcomeScreenProps) => {
   return (
-    <div className="flex-1 flex items-center justify-center p-8">
-      <div className="text-center max-w-md">
+    <div className="flex-1 flex items-center justify-center">
+      <div className="text-center max-w-md p-4">
         <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center mx-auto mb-4">
           <Bot className="w-8 h-8 text-primary-foreground" />
         </div>

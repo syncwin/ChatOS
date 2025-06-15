@@ -159,7 +159,7 @@ const Index = () => {
       <SidebarInset>
         <div className="min-h-screen bg-background text-foreground">
           <div className="container mx-auto max-w-4xl h-screen flex flex-col">
-            <header className="flex items-center gap-2 p-4">
+            <header className="flex items-center gap-2 py-4">
               <SidebarTrigger className="text-muted-foreground hover:text-foreground" aria-label="Toggle sidebar" />
               <Header isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
             </header>
@@ -176,7 +176,7 @@ const Index = () => {
                   }}
                 />
               ) : (
-                <ScrollArea className="flex-1 p-4">
+                <ScrollArea className="flex-1 py-4">
                   <div className="space-y-6">
                     {messages.map((message) => (
                       <ChatMessage 

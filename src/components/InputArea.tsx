@@ -19,7 +19,7 @@ const InputArea = ({ input, setInput, onSubmit, isLoading }: InputAreaProps) => 
   };
 
   return (
-    <div className="p-4 border-t border-border bg-background/90 backdrop-blur-sm">
+    <div className="py-4 border-t border-border bg-background/90 backdrop-blur-sm">
       <form onSubmit={onSubmit} className="flex gap-2 items-end">
         <div className="flex-1 relative">
           <label htmlFor="chat-input" className="sr-only">Type your message</label>
