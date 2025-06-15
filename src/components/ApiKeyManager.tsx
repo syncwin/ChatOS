@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -68,7 +67,7 @@ const ApiKeyManager = () => {
       const { error } = await supabase.from("api_keys").upsert({
         user_id: user.id,
         provider: values.provider,
-        encrypted_api_key: values.api_key,
+        api_key: values.api_key,
       }, { onConflict: 'user_id, provider' });
       if (error) throw error;
     },

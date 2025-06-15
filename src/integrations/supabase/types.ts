@@ -11,22 +11,22 @@ export type Database = {
     Tables: {
       api_keys: {
         Row: {
+          api_key: string
           created_at: string
-          encrypted_api_key: string
           id: string
           provider: Database["public"]["Enums"]["api_provider"]
           user_id: string
         }
         Insert: {
+          api_key: string
           created_at?: string
-          encrypted_api_key: string
           id?: string
           provider: Database["public"]["Enums"]["api_provider"]
           user_id: string
         }
         Update: {
+          api_key?: string
           created_at?: string
-          encrypted_api_key?: string
           id?: string
           provider?: Database["public"]["Enums"]["api_provider"]
           user_id?: string
