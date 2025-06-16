@@ -1,11 +1,12 @@
 
 import { User, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { useProfile } from "@/hooks/useProfile";
 
 interface UserFooterProps {
   isGuest: boolean;
@@ -16,13 +17,21 @@ interface UserFooterProps {
 const UserFooter = ({ isGuest, user, onOpenProfile }: UserFooterProps) => {
   const navigate = useNavigate();
   const { state } = useSidebar();
+  const { profile } = useProfile();
   const isCollapsed = state === 'collapsed';
 
   const getInitials = () => {
+    if (profile?.full_name) {
+      return profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase();
+    }
     if (user?.email) {
       return user.email[0].toUpperCase();
     }
     return "G";
+  };
+
+  const getDisplayName = () => {
+    return profile?.full_name || user?.email || "Guest";
   };
 
   if (isGuest) {
@@ -74,6 +83,7 @@ const UserFooter = ({ isGuest, user, onOpenProfile }: UserFooterProps) => {
       )}
     >
       <Avatar className="w-8 h-8">
+        <AvatarImage src={profile?.avatar_url || undefined} alt="User avatar" />
         <AvatarFallback className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm">
           {getInitials()}
         </AvatarFallback>
@@ -81,7 +91,7 @@ const UserFooter = ({ isGuest, user, onOpenProfile }: UserFooterProps) => {
       {!isCollapsed && (
         <>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium truncate">{user?.email}</div>
+            <div className="text-sm font-medium truncate">{getDisplayName()}</div>
             <div className="text-xs text-muted-foreground">Signed in</div>
           </div>
           <User className="w-4 h-4 text-muted-foreground" />
@@ -96,7 +106,7 @@ const UserFooter = ({ isGuest, user, onOpenProfile }: UserFooterProps) => {
         <Tooltip>
           <TooltipTrigger asChild>{userProfileButton}</TooltipTrigger>
           <TooltipContent side="right">
-            <p>{user?.email}</p>
+            <p>{getDisplayName()}</p>
           </TooltipContent>
         </Tooltip>
       ) : userProfileButton}
