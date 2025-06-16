@@ -28,8 +28,10 @@ interface HeaderProps {
   onAssignChatToFolder: (folderId: string) => void;
   activeChat: Chat | undefined;
   tags: Tag[];
+  chatTags: Tag[];
   isLoadingTags: boolean;
   onAssignTagToChat: (tagId: string) => void;
+  onRemoveTagFromChat: (tagId: string) => void;
   onCreateFolder: (name: string) => void;
   onCreateTag: (name: string, color?: string) => void;
 }
@@ -49,8 +51,10 @@ const Header = ({
   onAssignChatToFolder,
   activeChat,
   tags,
+  chatTags,
   isLoadingTags,
   onAssignTagToChat,
+  onRemoveTagFromChat,
   onCreateFolder,
   onCreateTag,
 }: HeaderProps) => {
@@ -105,8 +109,10 @@ const Header = ({
 
         <TagDropdown
           tags={tags}
+          chatTags={chatTags}
           activeChat={activeChat}
           onAssignTagToChat={onAssignTagToChat}
+          onRemoveTagFromChat={onRemoveTagFromChat}
           onCreateTag={onCreateTag}
           isLoading={isLoadingTags}
         />

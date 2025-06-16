@@ -27,6 +27,7 @@ interface Chat {
   messages: unknown[];
   is_pinned: boolean;
   folder_id: string | null;
+  tags?: Tag[];
 }
 
 interface TagListProps {
@@ -103,11 +104,10 @@ const TagList = ({
           
           <div className="space-y-2 px-2">
             {tags.map(tag => {
-              const tagChats = chats.filter(chat => {
-                // For now, we'll assume no tags are assigned to chats yet
-                // This will be handled when we implement the tag assignment functionality
-                return false;
-              });
+              // Filter chats that have this specific tag
+              const tagChats = chats.filter(chat => 
+                chat.tags && chat.tags.some(chatTag => chatTag.id === tag.id)
+              );
 
               return (
                 <div key={tag.id} className="space-y-1">

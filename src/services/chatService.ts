@@ -1,11 +1,85 @@
-import { supabase } from '@/integrations/supabase/client';
-import type { Tables, TablesInsert } from '@/integrations/supabase/types';
+import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '@/supabase';
 
-export type Chat = Tables<'chats'>;
-export type Message = Tables<'chat_messages'>;
-export type Folder = Tables<'folders'>;
-export type Tag = Tables<'tags'>;
-export type NewMessage = Omit<TablesInsert<'chat_messages'>, 'id' | 'created_at' | 'user_id'>;
+export interface UserProfile {
+  id: string;
+  email: string;
+  name?: string;
+  avatar_url?: string;
+  theme?: 'light' | 'dark';
+}
+
+export interface Chat {
+  id: string;
+  title: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  is_pinned: boolean;
+  folder_id: string | null;
+}
+
+export interface Message {
+  id: string;
+  chat_id: string;
+  user_id: string;
+  created_at: string;
+  role: 'user' | 'assistant';
+  content: string;
+  provider?: string;
+  model?: string;
+  usage: any;
+}
+
+export interface NewMessage {
+  chat_id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  provider?: string;
+  model?: string;
+  usage?: any;
+}
+
+export interface Folder {
+  id: string;
+  name: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  color?: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export const getProfile = async (): Promise<UserProfile | null> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select(`id, email, name, avatar_url, theme`)
+    .eq('id', user.id)
+    .single();
+
+  return profile;
+};
+
+export const updateProfile = async (updates: { name?: string; avatar_url?: string; theme?: 'light' | 'dark' }) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  const { error } = await supabase.from('profiles').update(updates).eq('id', user.id);
+
+  if (error) {
+    throw error;
+  }
+};
 
 export const getChats = async (): Promise<Chat[]> => {
   const { data: { user } } = await supabase.auth.getUser();
@@ -13,33 +87,11 @@ export const getChats = async (): Promise<Chat[]> => {
 
   const { data, error } = await supabase
     .from('chats')
-    .select('*')
+    .select(`id, title, user_id, created_at, updated_at, is_pinned, folder_id`)
     .eq('user_id', user.id)
     .order('updated_at', { ascending: false });
 
-  if (error) {
-    console.error('Error fetching chats:', error);
-    throw new Error('Failed to fetch chats');
-  }
-
-  return data || [];
-};
-
-export const getFolders = async (): Promise<Folder[]> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('User not authenticated');
-
-  const { data, error } = await supabase
-    .from('folders')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('name', { ascending: true });
-
-  if (error) {
-    console.error('Error fetching folders:', error);
-    throw new Error('Failed to fetch folders');
-  }
-
+  if (error) throw error;
   return data || [];
 };
 
@@ -48,35 +100,12 @@ export const getMessages = async (chatId: string): Promise<Message[]> => {
   if (!user) throw new Error('User not authenticated');
 
   const { data, error } = await supabase
-    .from('chat_messages')
-    .select('*')
+    .from('messages')
+    .select(`id, chat_id, user_id, created_at, role, content, provider, model, usage`)
     .eq('chat_id', chatId)
-    .eq('user_id', user.id)
     .order('created_at', { ascending: true });
 
-  if (error) {
-    console.error('Error fetching messages:', error);
-    throw new Error('Failed to fetch messages');
-  }
-
-  return data || [];
-};
-
-export const getTags = async (): Promise<Tag[]> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('User not authenticated');
-
-  const { data, error } = await supabase
-    .from('tags')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('name', { ascending: true });
-
-  if (error) {
-    console.error('Error fetching tags:', error);
-    throw new Error('Failed to fetch tags');
-  }
-
+  if (error) throw error;
   return data || [];
 };
 
@@ -84,101 +113,67 @@ export const createChat = async (title: string): Promise<Chat> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
-  const { data, error } = await supabase
-    .from('chats')
-    .insert({
-      title,
+  const newChatId = uuidv4();
+
+  const { error } = await supabase.from('chats').insert([
+    {
+      id: newChatId,
+      title: title,
       user_id: user.id,
-    })
-    .select()
-    .single();
+    },
+  ]);
 
-  if (error) {
-    console.error('Error creating chat:', error);
-    throw new Error('Failed to create chat');
-  }
+  if (error) throw error;
 
-  return data;
-};
-
-export const createFolder = async (name: string): Promise<Folder> => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
-
-    const { data, error } = await supabase
-        .from('folders')
-        .insert({ name, user_id: user.id })
-        .select()
-        .single();
-
-    if (error) {
-        console.error('Error creating folder:', error);
-        throw new Error('Failed to create folder');
-    }
-
-    return data;
-};
-
-export const createTag = async (name: string, color?: string): Promise<Tag> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('User not authenticated');
-
-  const { data, error } = await supabase
-    .from('tags')
-    .insert({ name, color, user_id: user.id })
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error creating tag:', error);
-    throw new Error('Failed to create tag');
-  }
-
-  return data;
+  return {
+    id: newChatId,
+    title: title,
+    user_id: user.id,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    is_pinned: false,
+    folder_id: null,
+  };
 };
 
 export const addMessage = async (message: NewMessage): Promise<Message> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
-  const { data, error } = await supabase
-    .from('chat_messages')
-    .insert({
-      ...message,
+  const newMessageId = uuidv4();
+
+  const { error } = await supabase.from('messages').insert([
+    {
+      id: newMessageId,
+      chat_id: message.chat_id,
       user_id: user.id,
-    })
-    .select()
-    .single();
+      role: message.role,
+      content: message.content,
+      provider: message.provider,
+      model: message.model,
+      usage: message.usage,
+    },
+  ]);
 
-  if (error) {
-    console.error('Error adding message:', error);
-    throw new Error('Failed to add message');
-  }
+  if (error) throw error;
 
-  // Update chat's updated_at timestamp
+  // Update the chat's updated_at timestamp
   await supabase
     .from('chats')
     .update({ updated_at: new Date().toISOString() })
-    .eq('id', message.chat_id)
-    .eq('user_id', user.id);
+    .eq('id', message.chat_id);
 
-  return data;
-};
-
-export const assignChatToFolder = async (chatId: string, folderId: string | null): Promise<void> => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
-
-    const { error } = await supabase
-        .from('chats')
-        .update({ folder_id: folderId })
-        .eq('id', chatId)
-        .eq('user_id', user.id);
-
-    if (error) {
-        console.error('Error assigning chat to folder:', error);
-        throw new Error('Failed to assign chat to folder');
-    }
+  return {
+    id: newMessageId,
+    chat_id: message.chat_id,
+    user_id: user.id,
+    created_at: new Date().toISOString(),
+    role: message.role,
+    content: message.content,
+    provider: message.provider,
+    model: message.model,
+    usage: message.usage,
+  };
 };
 
 export const updateChatTitle = async (chatId: string, title: string): Promise<void> => {
@@ -191,114 +186,16 @@ export const updateChatTitle = async (chatId: string, title: string): Promise<vo
     .eq('id', chatId)
     .eq('user_id', user.id);
 
-  if (error) {
-    console.error('Error updating chat title:', error);
-    throw new Error('Failed to update chat title');
-  }
-};
-
-export const updateFolder = async (folderId: string, name: string): Promise<void> => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
-
-    const { error } = await supabase
-        .from('folders')
-        .update({ name })
-        .eq('id', folderId)
-        .eq('user_id', user.id);
-
-    if (error) {
-        console.error('Error updating folder name:', error);
-        throw new Error('Failed to update folder name');
-    }
-};
-
-export const updateTag = async (tagId: string, name: string, color?: string): Promise<void> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('User not authenticated');
-
-  const { error } = await supabase
-    .from('tags')
-    .update({ name, color })
-    .eq('id', tagId)
-    .eq('user_id', user.id);
-
-  if (error) {
-    console.error('Error updating tag:', error);
-    throw new Error('Failed to update tag');
-  }
-};
-
-export const assignTagToChat = async (chatId: string, tagId: string): Promise<void> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('User not authenticated');
-
-  // Check if the relationship already exists
-  const { data: existing } = await supabase
-    .from('chat_tags')
-    .select('*')
-    .eq('chat_id', chatId)
-    .eq('tag_id', tagId)
-    .eq('user_id', user.id)
-    .single();
-
-  if (existing) {
-    // If it exists, remove it (toggle behavior)
-    const { error } = await supabase
-      .from('chat_tags')
-      .delete()
-      .eq('chat_id', chatId)
-      .eq('tag_id', tagId)
-      .eq('user_id', user.id);
-
-    if (error) {
-      console.error('Error removing tag from chat:', error);
-      throw new Error('Failed to remove tag from chat');
-    }
-  } else {
-    // If it doesn't exist, add it
-    const { error } = await supabase
-      .from('chat_tags')
-      .insert({
-        chat_id: chatId,
-        tag_id: tagId,
-        user_id: user.id,
-      });
-
-    if (error) {
-      console.error('Error assigning tag to chat:', error);
-      throw new Error('Failed to assign tag to chat');
-    }
-  }
+  if (error) throw error;
 };
 
 export const deleteChat = async (chatId: string): Promise<void> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
-  // Delete messages first
-  const { error: messagesError } = await supabase
-    .from('chat_messages')
-    .delete()
-    .eq('chat_id', chatId)
-    .eq('user_id', user.id);
+  const { error } = await supabase.from('chats').delete().eq('id', chatId).eq('user_id', user.id);
 
-  if (messagesError) {
-    console.error('Error deleting messages:', messagesError);
-    throw new Error('Failed to delete chat messages');
-  }
-
-  // Then delete the chat
-  const { error: chatError } = await supabase
-    .from('chats')
-    .delete()
-    .eq('id', chatId)
-    .eq('user_id', user.id);
-
-  if (chatError) {
-    console.error('Error deleting chat:', chatError);
-    throw new Error('Failed to delete chat');
-  }
+  if (error) throw error;
 };
 
 export const updateChatPinStatus = async (chatId: string, is_pinned: boolean): Promise<void> => {
@@ -311,53 +208,218 @@ export const updateChatPinStatus = async (chatId: string, is_pinned: boolean): P
     .eq('id', chatId)
     .eq('user_id', user.id);
 
-  if (error) {
-    console.error('Error updating chat pin status:', error);
-    throw new Error('Failed to update chat pin status');
-  }
+  if (error) throw error;
+};
+
+export const getFolders = async (): Promise<Folder[]> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  const { data, error } = await supabase
+    .from('folders')
+    .select(`id, name, user_id, created_at, updated_at`)
+    .eq('user_id', user.id)
+    .order('name', { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+};
+
+export const createFolder = async (name: string): Promise<Folder> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  const newFolderId = uuidv4();
+
+  const { error } = await supabase.from('folders').insert([
+    {
+      id: newFolderId,
+      name: name,
+      user_id: user.id,
+    },
+  ]);
+
+  if (error) throw error;
+
+  return {
+    id: newFolderId,
+    name: name,
+    user_id: user.id,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+};
+
+export const updateFolder = async (folderId: string, name: string): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  const { error } = await supabase
+    .from('folders')
+    .update({ name })
+    .eq('id', folderId)
+    .eq('user_id', user.id);
+
+  if (error) throw error;
 };
 
 export const deleteFolder = async (folderId: string): Promise<void> => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
 
-    const { error } = await supabase
-        .from('folders')
-        .delete()
-        .eq('id', folderId)
-        .eq('user_id', user.id);
+  const { error } = await supabase.from('folders').delete().eq('id', folderId).eq('user_id', user.id);
 
-    if (error) {
-        console.error('Error deleting folder:', error);
-        throw new Error('Failed to delete folder');
-    }
+  if (error) throw error;
+
+  // Also set all chats in this folder to folder_id = null
+  await supabase
+    .from('chats')
+    .update({ folder_id: null })
+    .eq('folder_id', folderId)
+    .eq('user_id', user.id);
+};
+
+export const assignChatToFolder = async (chatId: string, folderId: string | null): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  const { error } = await supabase
+    .from('chats')
+    .update({ folder_id: folderId })
+    .eq('id', chatId)
+    .eq('user_id', user.id);
+
+  if (error) throw error;
+};
+
+export const getTags = async (): Promise<Tag[]> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  const { data, error } = await supabase
+    .from('tags')
+    .select(`id, name, color, user_id, created_at, updated_at`)
+    .eq('user_id', user.id)
+    .order('name', { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+};
+
+export const createTag = async (name: string, color?: string): Promise<Tag> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  const newTagId = uuidv4();
+
+  const { error } = await supabase.from('tags').insert([
+    {
+      id: newTagId,
+      name: name,
+      color: color,
+      user_id: user.id,
+    },
+  ]);
+
+  if (error) throw error;
+
+  return {
+    id: newTagId,
+    name: name,
+    color: color,
+    user_id: user.id,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+};
+
+export const updateTag = async (tagId: string, name: string, color?: string): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  const { error } = await supabase
+    .from('tags')
+    .update({ name, color })
+    .eq('id', tagId)
+    .eq('user_id', user.id);
+
+  if (error) throw error;
 };
 
 export const deleteTag = async (tagId: string): Promise<void> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
-  // First delete all chat_tags relationships
-  const { error: chatTagsError } = await supabase
+  const { error } = await supabase.from('tags').delete().eq('id', tagId).eq('user_id', user.id);
+
+  if (error) throw error;
+
+  // Also remove all chat_tags with this tag_id
+  await supabase
     .from('chat_tags')
     .delete()
     .eq('tag_id', tagId)
     .eq('user_id', user.id);
+};
 
-  if (chatTagsError) {
-    console.error('Error deleting chat tags:', chatTagsError);
-    throw new Error('Failed to delete chat tags');
+export const assignTagToChat = async (chatId: string, tagId: string): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  // Check if the tag assignment already exists
+  const { data: existing } = await supabase
+    .from('chat_tags')
+    .select('*')
+    .eq('chat_id', chatId)
+    .eq('tag_id', tagId)
+    .single();
+
+  if (!existing) {
+    const { error } = await supabase
+      .from('chat_tags')
+      .insert([{
+        chat_id: chatId,
+        tag_id: tagId,
+        user_id: user.id
+      }]);
+
+    if (error) throw error;
   }
+};
 
-  // Then delete the tag
+export const removeTagFromChat = async (chatId: string, tagId: string): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
   const { error } = await supabase
-    .from('tags')
+    .from('chat_tags')
     .delete()
-    .eq('id', tagId)
+    .eq('chat_id', chatId)
+    .eq('tag_id', tagId)
     .eq('user_id', user.id);
 
-  if (error) {
-    console.error('Error deleting tag:', error);
-    throw new Error('Failed to delete tag');
-  }
+  if (error) throw error;
+};
+
+export const getChatTags = async (chatId: string): Promise<Tag[]> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  const { data, error } = await supabase
+    .from('chat_tags')
+    .select(`
+      tags!inner (
+        id,
+        name,
+        color,
+        user_id,
+        created_at,
+        updated_at
+      )
+    `)
+    .eq('chat_id', chatId)
+    .eq('user_id', user.id);
+
+  if (error) throw error;
+  return data?.map(item => item.tags) || [];
 };

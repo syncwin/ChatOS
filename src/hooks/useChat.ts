@@ -13,9 +13,17 @@ import {
   updateFolder,
   deleteFolder,
   assignChatToFolder,
+  getTags,
+  createTag,
+  updateTag,
+  deleteTag,
+  assignTagToChat,
+  removeTagFromChat,
+  getChatTags,
   type Chat,
   type Message,
   type Folder,
+  type Tag,
   type NewMessage,
 } from '@/services/chatService';
 import { useAuth } from './useAuth';
@@ -51,9 +59,21 @@ export const useChat = () => {
     enabled: !!user && !isGuest,
   });
 
+  const { data: tags = [], isLoading: isLoadingTags } = useQuery<Tag[]>({
+    queryKey: ['tags', user?.id],
+    queryFn: getTags,
+    enabled: !!user && !isGuest,
+  });
+
   const { data: messages = [], isLoading: isLoadingMessages } = useQuery<Message[]>({
     queryKey: ['messages', activeChatId],
     queryFn: () => getMessages(activeChatId!),
+    enabled: !!activeChatId && !isGuest,
+  });
+
+  const { data: chatTags = [] } = useQuery<Tag[]>({
+    queryKey: ['chatTags', activeChatId],
+    queryFn: () => getChatTags(activeChatId!),
     enabled: !!activeChatId && !isGuest,
   });
 
@@ -157,6 +177,62 @@ export const useChat = () => {
     }
   });
 
+  const createTagMutation = useMutation({
+    mutationFn: ({ name, color }: { name: string; color?: string }) => createTag(name, color),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tags', user?.id] });
+      toast.success('Tag created.');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
+  });
+
+  const updateTagMutation = useMutation({
+    mutationFn: ({ tagId, name, color }: { tagId: string; name: string; color?: string }) => updateTag(tagId, name, color),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tags', user?.id] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
+  });
+
+  const deleteTagMutation = useMutation({
+    mutationFn: (tagId: string) => deleteTag(tagId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tags', user?.id] });
+      toast.success('Tag deleted.');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
+  });
+
+  const assignTagToChatMutation = useMutation({
+    mutationFn: ({ chatId, tagId }: { chatId: string; tagId: string }) => assignTagToChat(chatId, tagId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chatTags', activeChatId] });
+      queryClient.invalidateQueries({ queryKey: ['chats', user?.id] });
+      toast.success('Tag assigned.');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
+  });
+
+  const removeTagFromChatMutation = useMutation({
+    mutationFn: ({ chatId, tagId }: { chatId: string; tagId: string }) => removeTagFromChat(chatId, tagId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chatTags', activeChatId] });
+      queryClient.invalidateQueries({ queryKey: ['chats', user?.id] });
+      toast.success('Tag removed.');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
+  });
+
   // Effect to manage activeChatId for authenticated user
   useEffect(() => {
     if (isGuest || isLoadingChats) return;
@@ -219,6 +295,14 @@ export const useChat = () => {
       updateFolder: () => toast.info('Sign in to use folders.'),
       deleteFolder: () => toast.info('Sign in to use folders.'),
       assignChatToFolder: () => toast.info('Sign in to use folders.'),
+      tags: [],
+      isLoadingTags: false,
+      chatTags: [],
+      createTag: () => toast.info('Sign in to use tags.'),
+      updateTag: () => toast.info('Sign in to use tags.'),
+      deleteTag: () => toast.info('Sign in to use tags.'),
+      assignTagToChat: () => toast.info('Sign in to use tags.'),
+      removeTagFromChat: () => toast.info('Sign in to use tags.'),
     };
   }
 
@@ -241,5 +325,13 @@ export const useChat = () => {
     updateFolder: updateFolderMutation.mutate,
     deleteFolder: deleteFolderMutation.mutate,
     assignChatToFolder: assignChatToFolderMutation.mutate,
+    tags,
+    isLoadingTags,
+    chatTags,
+    createTag: (name: string, color?: string) => createTagMutation.mutate({ name, color }),
+    updateTag: updateTagMutation.mutate,
+    deleteTag: deleteTagMutation.mutate,
+    assignTagToChat: assignTagToChatMutation.mutate,
+    removeTagFromChat: removeTagFromChatMutation.mutate,
   };
 };

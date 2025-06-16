@@ -11,7 +11,7 @@ import { useAIProvider } from "@/hooks/useAIProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import type { ChatMessage } from "@/services/aiProviderService";
-import type { NewMessage, Message as DbMessage, Chat } from "@/services/chatService";
+import type { NewMessage, Message as DbMessage } from "@/services/chatService";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 
@@ -26,6 +26,9 @@ const Index = () => {
     isLoadingChats,
     folders,
     isLoadingFolders,
+    tags,
+    isLoadingTags,
+    chatTags,
     activeChatId,
     setActiveChatId,
     messages: dbMessages,
@@ -37,6 +40,11 @@ const Index = () => {
     updateFolder,
     deleteFolder,
     assignChatToFolder,
+    createTag,
+    updateTag,
+    deleteTag,
+    assignTagToChat,
+    removeTagFromChat,
   } = useChat();
 
   const messages: Message[] = dbMessages;
@@ -55,9 +63,6 @@ const Index = () => {
 
   const [input, setInput] = useState("");
   const isDarkMode = profile?.theme !== 'light'; // Default to dark theme
-
-  // Mock tag data for now - will be replaced with real data later
-  const [tags] = useState([]);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -165,12 +170,12 @@ const Index = () => {
     setActiveChatId(null);
   };
 
-  // Format chats for the sidebar
+  // Format chats for the sidebar - include tag information
   const sidebarChats = chats.map((chat) => ({
     ...chat,
     date: formatDistanceToNow(new Date(chat.updated_at), { addSuffix: true }),
     messages: [], // Not needed for sidebar
-    tags: [], // Will be populated when tag functionality is implemented
+    tags: [], // Tags will be loaded separately per chat when needed
   }));
 
   const handleSelectChat = (chat: { id: string }) => {
@@ -185,21 +190,16 @@ const Index = () => {
     }
   };
 
-  // Mock tag functions for now
   const handleAssignTagToChat = (tagId: string) => {
-    console.log('Assign tag to chat:', tagId, activeChatId);
+    if (activeChatId) {
+      assignTagToChat({ chatId: activeChatId, tagId });
+    }
   };
 
-  const handleCreateTag = (name: string, color?: string) => {
-    console.log('Create tag:', name, color);
-  };
-
-  const handleUpdateTag = (args: { tagId: string; name: string; color?: string }) => {
-    console.log('Update tag:', args);
-  };
-
-  const handleDeleteTag = (tagId: string) => {
-    console.log('Delete tag:', tagId);
+  const handleRemoveTagFromChat = (tagId: string) => {
+    if (activeChatId) {
+      removeTagFromChat({ chatId: activeChatId, tagId });
+    }
   };
 
   const isLoading = isLoadingChats || isLoadingMessages || isLoadingFolders;
@@ -224,9 +224,9 @@ const Index = () => {
         updateFolder={updateFolder}
         deleteFolder={deleteFolder}
         tags={tags}
-        createTag={handleCreateTag}
-        updateTag={handleUpdateTag}
-        deleteTag={handleDeleteTag}
+        createTag={createTag}
+        updateTag={updateTag}
+        deleteTag={deleteTag}
       />
       <SidebarInset>
         <div className="min-h-screen bg-background text-foreground h-screen flex flex-col">
@@ -248,10 +248,12 @@ const Index = () => {
                 activeChat={activeChat}
                 onAssignChatToFolder={handleAssignChatToFolder}
                 tags={tags}
-                isLoadingTags={false}
+                chatTags={chatTags}
+                isLoadingTags={isLoadingTags}
                 onAssignTagToChat={handleAssignTagToChat}
+                onRemoveTagFromChat={handleRemoveTagFromChat}
                 onCreateFolder={createFolder}
-                onCreateTag={handleCreateTag}
+                onCreateTag={createTag}
               />
             </div>
           </header>
