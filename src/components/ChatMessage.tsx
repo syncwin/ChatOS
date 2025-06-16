@@ -1,14 +1,23 @@
+
 import { User, Copy, Check } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import ReactMarkdown from 'react-markdown';
-import type { Tables } from "@/integrations/supabase/types";
 import ChatOsIcon from "./icons/ChatOsIcon";
 
-type Message = Tables<'chat_messages'> & {
+interface Message {
+  id: string;
+  chat_id: string;
+  user_id: string;
+  created_at: string;
+  role: 'user' | 'assistant';
+  content: string;
+  provider?: string;
+  model?: string;
+  usage?: any;
   isStreaming?: boolean;
-};
+}
 
 interface ChatMessageProps {
   message: Message;
