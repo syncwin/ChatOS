@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import ChatOsIcon from "@/components/icons/ChatOsIcon";
+import { Search } from "lucide-react";
 import type { Folder, Tag, Chat as DatabaseChat } from "@/services/chatService";
 
 // UI Chat interface that extends the database Chat
@@ -77,10 +78,12 @@ const AppSidebar = ({
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [newChatTitle, setNewChatTitle] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const {
     state
   } = useSidebar();
   const isCollapsed = state === 'collapsed';
+
   const handleDeleteChat = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
     deleteChat(chatId);
@@ -120,6 +123,11 @@ const AppSidebar = ({
   const handleOpenProfile = () => {
     setIsProfileOpen(true);
   };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
   const newChatButton = <Button onClick={onNewChat} size={isCollapsed ? "icon" : "default"} className={cn("bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white", !isCollapsed && "w-full")}>
       <Plus className="w-4 h-4" />
       {!isCollapsed && <span>New Chat</span>}
@@ -146,10 +154,51 @@ const AppSidebar = ({
         <SidebarSeparator />
 
         <SidebarContent>
-          <ChatHistory chats={chats} folders={folders} activeChatId={activeChatId} editingChatId={editingChatId} newChatTitle={newChatTitle} onSelectChat={onSelectChat} onStartEdit={handleStartEdit} onPinChat={handlePinChat} onDeleteChat={handleDeleteChat} onTitleChange={handleTitleChange} onUpdateTitle={handleUpdateTitle} onTitleKeyDown={handleTitleKeyDown} createFolder={createFolder} updateFolder={updateFolder} deleteFolder={deleteFolder} />
+          {/* Search Bar */}
+          {!isCollapsed && (
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <div className="relative px-2">
+                  <label htmlFor="search-chats" className="sr-only">Search chats</label>
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+                  <input 
+                    id="search-chats"
+                    type="text" 
+                    placeholder="Search chats..." 
+                    value={searchTerm} 
+                    onChange={handleSearchChange} 
+                    className="w-full pl-10 pr-4 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-input border border-border text-foreground placeholder:text-muted-foreground" 
+                  />
+                </div>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
+
+          <SidebarSeparator />
+
+          {/* Chat History */}
+          <ChatHistory 
+            chats={chats} 
+            folders={folders} 
+            activeChatId={activeChatId} 
+            editingChatId={editingChatId} 
+            newChatTitle={newChatTitle} 
+            onSelectChat={onSelectChat} 
+            onStartEdit={handleStartEdit} 
+            onPinChat={handlePinChat} 
+            onDeleteChat={handleDeleteChat} 
+            onTitleChange={handleTitleChange} 
+            onUpdateTitle={handleUpdateTitle} 
+            onTitleKeyDown={handleTitleKeyDown} 
+            createFolder={createFolder} 
+            updateFolder={updateFolder} 
+            deleteFolder={deleteFolder}
+            searchTerm={searchTerm}
+          />
           
           <SidebarSeparator />
 
+          {/* Tags */}
           <TagList
             tags={tags}
             chats={chats}
@@ -158,6 +207,7 @@ const AppSidebar = ({
             onCreateTag={createTag}
             onUpdateTag={updateTag}
             onDeleteTag={deleteTag}
+            searchTerm={searchTerm}
           />
           
           <SidebarSeparator />

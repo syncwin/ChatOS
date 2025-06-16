@@ -1,5 +1,6 @@
+
 import { useState } from "react";
-import { Search, Folder as FolderIcon, Plus, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Folder as FolderIcon, Plus, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu } from "@/components/ui/sidebar";
 import ChatItem from "./ChatItem";
 import { useSidebar } from "@/components/ui/sidebar";
@@ -44,6 +45,7 @@ interface ChatHistoryProps {
   createFolder: (name: string) => void;
   updateFolder: (args: { folderId: string; name: string }) => void;
   deleteFolder: (folderId: string) => void;
+  searchTerm: string;
 }
 
 const ChatHistory = ({
@@ -62,8 +64,8 @@ const ChatHistory = ({
   createFolder,
   updateFolder,
   deleteFolder,
+  searchTerm,
 }: ChatHistoryProps) => {
-  const [searchTerm, setSearchTerm] = useState("");
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
 
@@ -72,10 +74,6 @@ const ChatHistory = ({
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [editingFolderName, setEditingFolderName] = useState("");
   const [deletingFolder, setDeletingFolder] = useState<Folder | null>(null);
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
 
   const handleCreateFolder = () => {
     if (newFolderName.trim()) {
@@ -129,24 +127,6 @@ const ChatHistory = ({
 
   return (
     <>
-      {/* Search */}
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <div className="relative px-2">
-              <label htmlFor="search-chats" className="sr-only">Search chats</label>
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-              <input 
-                id="search-chats"
-                type="text" 
-                placeholder="Search chats..." 
-                value={searchTerm} 
-                onChange={handleSearchChange} 
-                className="w-full pl-10 pr-4 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-input border border-border text-foreground placeholder:text-muted-foreground" 
-              />
-            </div>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
       {/* Folders */}
       <SidebarGroup>
         <SidebarGroupLabel className="flex justify-between items-center text-xs font-medium text-muted-foreground px-2">

@@ -38,6 +38,7 @@ interface TagListProps {
   onCreateTag: (name: string, color?: string) => void;
   onUpdateTag: (args: { tagId: string; name: string; color?: string }) => void;
   onDeleteTag: (tagId: string) => void;
+  searchTerm: string;
 }
 
 const TagList = ({
@@ -48,6 +49,7 @@ const TagList = ({
   onCreateTag,
   onUpdateTag,
   onDeleteTag,
+  searchTerm,
 }: TagListProps) => {
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
@@ -73,6 +75,11 @@ const TagList = ({
     setEditingTagId(null);
     setEditingTagName("");
   };
+
+  // Filter chats based on search term
+  const filteredChats = chats.filter(chat => 
+    chat.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (isCollapsed) {
     return null; // Don't show tags in collapsed mode for simplicity
@@ -104,8 +111,8 @@ const TagList = ({
           
           <div className="space-y-2 px-2">
             {tags.map(tag => {
-              // Filter chats that have this specific tag
-              const tagChats = chats.filter(chat => 
+              // Filter chats that have this specific tag AND match the search term
+              const tagChats = filteredChats.filter(chat => 
                 chat.tags && chat.tags.some(chatTag => chatTag.id === tag.id)
               );
 
