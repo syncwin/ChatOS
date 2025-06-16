@@ -14,6 +14,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import ChatOsIcon from "@/components/icons/ChatOsIcon";
 import { Search } from "lucide-react";
+import CollapsibleSidebarSection from "./CollapsibleSidebarSection";
+import { useSidebarSections } from "@/hooks/useSidebarSections";
 import type { Folder, Tag, Chat as DatabaseChat } from "@/services/chatService";
 
 // UI Chat interface that extends the database Chat
@@ -40,6 +42,7 @@ interface AppSidebarProps {
   createTag: (name: string, color?: string) => void;
   updateTag: (args: { tagId: string; name: string; color?: string }) => void;
   deleteTag: (tagId: string) => void;
+  onOpenSettings: () => void;
 }
 
 const AppSidebar = ({
@@ -57,6 +60,7 @@ const AppSidebar = ({
   createTag,
   updateTag,
   deleteTag,
+  onOpenSettings,
 }: AppSidebarProps) => {
   // Transform database chats to UI chats
   const chats: Chat[] = dbChats.map(chat => ({
@@ -83,6 +87,8 @@ const AppSidebar = ({
     state
   } = useSidebar();
   const isCollapsed = state === 'collapsed';
+
+  const { sections, toggleSection, togglePin } = useSidebarSections();
 
   const handleDeleteChat = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
@@ -126,6 +132,11 @@ const AppSidebar = ({
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
+  };
+
+  const handleOpenSettings = () => {
+    setIsSettingsOpen(true);
+    onOpenSettings();
   };
 
   const newChatButton = <Button onClick={onNewChat} size={isCollapsed ? "icon" : "default"} className={cn("bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white", !isCollapsed && "w-full")}>
@@ -177,38 +188,122 @@ const AppSidebar = ({
           <SidebarSeparator />
 
           {/* Chat History */}
-          <ChatHistory 
-            chats={chats} 
-            folders={folders} 
-            activeChatId={activeChatId} 
-            editingChatId={editingChatId} 
-            newChatTitle={newChatTitle} 
-            onSelectChat={onSelectChat} 
-            onStartEdit={handleStartEdit} 
-            onPinChat={handlePinChat} 
-            onDeleteChat={handleDeleteChat} 
-            onTitleChange={handleTitleChange} 
-            onUpdateTitle={handleUpdateTitle} 
-            onTitleKeyDown={handleTitleKeyDown} 
-            createFolder={createFolder} 
-            updateFolder={updateFolder} 
-            deleteFolder={deleteFolder}
-            searchTerm={searchTerm}
-          />
+          {!isCollapsed && (
+            <SidebarGroup>
+              <CollapsibleSidebarSection
+                title="Chat History"
+                isCollapsed={sections.chatHistory.isCollapsed}
+                isPinned={sections.chatHistory.isPinned}
+                onToggle={() => toggleSection('chatHistory')}
+                onTogglePin={() => togglePin('chatHistory')}
+              >
+                <ChatHistory 
+                  chats={chats} 
+                  folders={folders} 
+                  activeChatId={activeChatId} 
+                  editingChatId={editingChatId} 
+                  newChatTitle={newChatTitle} 
+                  onSelectChat={onSelectChat} 
+                  onStartEdit={handleStartEdit} 
+                  onPinChat={handlePinChat} 
+                  onDeleteChat={handleDeleteChat} 
+                  onTitleChange={handleTitleChange} 
+                  onUpdateTitle={handleUpdateTitle} 
+                  onTitleKeyDown={handleTitleKeyDown} 
+                  createFolder={createFolder} 
+                  updateFolder={updateFolder} 
+                  deleteFolder={deleteFolder}
+                  searchTerm={searchTerm}
+                />
+              </CollapsibleSidebarSection>
+            </SidebarGroup>
+          )}
+
+          {/* Folders */}
+          {!isCollapsed && (
+            <SidebarGroup>
+              <CollapsibleSidebarSection
+                title="Folders"
+                isCollapsed={sections.folders.isCollapsed}
+                isPinned={sections.folders.isPinned}
+                onToggle={() => toggleSection('folders')}
+                onTogglePin={() => togglePin('folders')}
+                rightElement={
+                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => createFolder("New Folder")}>
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                }
+              >
+                <div className="px-2">
+                  {/* Folder content will be integrated here */}
+                  <p className="text-xs text-muted-foreground">Folders integration coming soon</p>
+                </div>
+              </CollapsibleSidebarSection>
+            </SidebarGroup>
+          )}
           
           <SidebarSeparator />
 
           {/* Tags */}
-          <TagList
-            tags={tags}
-            chats={chats}
-            activeChatId={activeChatId}
-            onSelectChat={onSelectChat}
-            onCreateTag={createTag}
-            onUpdateTag={updateTag}
-            onDeleteTag={deleteTag}
-            searchTerm={searchTerm}
-          />
+          {!isCollapsed && (
+            <SidebarGroup>
+              <CollapsibleSidebarSection
+                title="Tags"
+                isCollapsed={sections.tags.isCollapsed}
+                isPinned={sections.tags.isPinned}
+                onToggle={() => toggleSection('tags')}
+                onTogglePin={() => togglePin('tags')}
+              >
+                <TagList
+                  tags={tags}
+                  chats={chats}
+                  activeChatId={activeChatId}
+                  onSelectChat={onSelectChat}
+                  onCreateTag={createTag}
+                  onUpdateTag={updateTag}
+                  onDeleteTag={deleteTag}
+                  searchTerm={searchTerm}
+                />
+              </CollapsibleSidebarSection>
+            </SidebarGroup>
+          )}
+
+          {/* Show regular sections when collapsed */}
+          {isCollapsed && (
+            <>
+              <ChatHistory 
+                chats={chats} 
+                folders={folders} 
+                activeChatId={activeChatId} 
+                editingChatId={editingChatId} 
+                newChatTitle={newChatTitle} 
+                onSelectChat={onSelectChat} 
+                onStartEdit={handleStartEdit} 
+                onPinChat={handlePinChat} 
+                onDeleteChat={handleDeleteChat} 
+                onTitleChange={handleTitleChange} 
+                onUpdateTitle={handleUpdateTitle} 
+                onTitleKeyDown={handleTitleKeyDown} 
+                createFolder={createFolder} 
+                updateFolder={updateFolder} 
+                deleteFolder={deleteFolder}
+                searchTerm={searchTerm}
+              />
+              
+              <SidebarSeparator />
+
+              <TagList
+                tags={tags}
+                chats={chats}
+                activeChatId={activeChatId}
+                onSelectChat={onSelectChat}
+                onCreateTag={createTag}
+                onUpdateTag={updateTag}
+                onDeleteTag={deleteTag}
+                searchTerm={searchTerm}
+              />
+            </>
+          )}
           
           <SidebarSeparator />
 
@@ -220,7 +315,7 @@ const AppSidebar = ({
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton onClick={() => setIsSettingsOpen(true)} tooltip="Settings" className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" aria-label="Open settings">
+                  <SidebarMenuButton onClick={handleOpenSettings} tooltip="Settings" className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" aria-label="Open settings">
                     <Settings className="w-4 h-4" />
                     {!isCollapsed && <span>Settings</span>}
                   </SidebarMenuButton>

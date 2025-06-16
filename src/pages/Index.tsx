@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { v4 as uuidv4 } from 'uuid';
@@ -62,6 +61,7 @@ const Index = () => {
   } = useAIProvider();
 
   const [input, setInput] = useState("");
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const isDarkMode = profile?.theme !== 'light'; // Default to dark theme
 
   useEffect(() => {
@@ -170,6 +170,10 @@ const Index = () => {
     setActiveChatId(null);
   };
 
+  const handleOpenSettings = () => {
+    setIsSettingsOpen(true);
+  };
+
   // Format chats for the sidebar - include tag information
   const sidebarChats = chats.map((chat) => ({
     ...chat,
@@ -227,6 +231,7 @@ const Index = () => {
         createTag={createTag}
         updateTag={updateTag}
         deleteTag={deleteTag}
+        onOpenSettings={handleOpenSettings}
       />
       <SidebarInset>
         <div className="min-h-screen bg-background text-foreground h-screen flex flex-col">
@@ -254,6 +259,7 @@ const Index = () => {
                 onRemoveTagFromChat={handleRemoveTagFromChat}
                 onCreateFolder={createFolder}
                 onCreateTag={createTag}
+                onOpenSettings={handleOpenSettings}
               />
             </div>
           </header>

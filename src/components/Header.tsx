@@ -1,7 +1,8 @@
 
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, Settings } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import ChatOsIcon from "./icons/ChatOsIcon";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -34,6 +35,7 @@ interface HeaderProps {
   onRemoveTagFromChat: (tagId: string) => void;
   onCreateFolder: (name: string) => void;
   onCreateTag: (name: string, color?: string) => void;
+  onOpenSettings: () => void;
 }
 
 const Header = ({
@@ -57,6 +59,7 @@ const Header = ({
   onRemoveTagFromChat,
   onCreateFolder,
   onCreateTag,
+  onOpenSettings,
 }: HeaderProps) => {
   return (
     <div className="flex items-center justify-between w-full gap-4">
@@ -131,6 +134,9 @@ const Header = ({
             }`}
           />
         </div>
+        <Button variant="ghost" size="icon" onClick={onOpenSettings} aria-label="Open settings">
+          <Settings className="w-5 h-5" />
+        </Button>
       </div>
     </div>
   );
