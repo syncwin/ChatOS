@@ -1,19 +1,26 @@
-# Welcome to your Lovable project
+# ChatOS
 
-## Project info
+ChatOS is an open-source, extensible AI chatbot platform that empowers anyone to deploy, customize, and manage multi-provider AI chat experiences on their own infrastructure. With ChatOS, users can integrate their own API keys from leading AI providers like OpenAI, Anthropic, Gemini, Mistral, OpenRouter, and more—while organizing and managing conversations in a fully self-hosted environment.
 
-**URL**: https://lovable.dev/projects/f8b647d2-0906-49f0-a9d4-757b9a504a8c
+---
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- **Multi-Provider API Support**  
+  Connect your own API keys for OpenAI, Anthropic, Gemini, Mistral, OpenRouter, and others. Switch providers per chat session.
 
-**Use Lovable**
+- **Folders & Tags**  
+  Organize chats with folders and tags, accessible from both the header and sidebar with a unified, icon-based UI.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/f8b647d2-0906-49f0-a9d4-757b9a504a8c) and start prompting.
+- **Accessibility**  
+  Modern UI/UX, high-contrast modes, screen reader support, and keyboard navigation.
 
-Changes made via Lovable will be committed automatically to this repo.
+- **Security & Compliance**  
+  Encrypted API key storage, GDPR/SOC2/ISO27001 features, and audit trails.
 
+---
+
+## Quick Start
 **Use your preferred IDE**
 
 If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
@@ -24,10 +31,10 @@ Follow these steps:
 
 ```sh
 # Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+git clone https://github.com/your-org/chatos.git
 
 # Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+cd chatos
 
 # Step 3: Install the necessary dependencies.
 npm i
@@ -60,14 +67,20 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
+## Contributing
 
-Simply open [Lovable](https://lovable.dev/projects/f8b647d2-0906-49f0-a9d4-757b9a504a8c) and click on Share -> Publish.
+We welcome contributions! Please read [CONTRIBUTING.md](CONTRIBUTING.md) and follow our [Code of Conduct](CODE_OF_CONDUCT.md).  
+- Use structured code and checklists for all features and pull requests.
+- Ask clarifying questions if requirements are unclear before submitting code.
 
-## Can I connect a custom domain to my Lovable project?
+---
 
-Yes, you can!
+## License
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+MIT License. See [LICENSE](LICENSE) for details.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+---
+
+## Credits
+
+ChatOS is developed and maintained by the open-source community, inspired by the best features of Perplexity, DeepSeek, and ChatGPT with a focus on modularity, security, and user empowerment.
