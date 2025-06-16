@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -45,7 +46,7 @@ export interface Folder {
   name: string;
   user_id: string;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
 }
 
 export interface Tag {
@@ -54,7 +55,7 @@ export interface Tag {
   color?: string;
   user_id: string;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
 }
 
 export const getProfile = async (): Promise<UserProfile | null> => {
@@ -63,18 +64,31 @@ export const getProfile = async (): Promise<UserProfile | null> => {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select(`id, email, name, avatar_url, theme`)
+    .select(`id, full_name, avatar_url, theme`)
     .eq('id', user.id)
     .single();
 
-  return profile;
+  if (!profile) return null;
+
+  return {
+    id: profile.id,
+    email: user.email || '',
+    name: profile.full_name || undefined,
+    avatar_url: profile.avatar_url || undefined,
+    theme: profile.theme as 'light' | 'dark' || 'dark'
+  };
 };
 
 export const updateProfile = async (updates: { name?: string; avatar_url?: string; theme?: 'light' | 'dark' }) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
-  const { error } = await supabase.from('profiles').update(updates).eq('id', user.id);
+  const profileUpdates: any = {};
+  if (updates.name !== undefined) profileUpdates.full_name = updates.name;
+  if (updates.avatar_url !== undefined) profileUpdates.avatar_url = updates.avatar_url;
+  if (updates.theme !== undefined) profileUpdates.theme = updates.theme;
+
+  const { error } = await supabase.from('profiles').update(profileUpdates).eq('id', user.id);
 
   if (error) {
     throw error;
@@ -100,7 +114,7 @@ export const getMessages = async (chatId: string): Promise<Message[]> => {
   if (!user) throw new Error('User not authenticated');
 
   const { data, error } = await supabase
-    .from('messages')
+    .from('chat_messages')
     .select(`id, chat_id, user_id, created_at, role, content, provider, model, usage`)
     .eq('chat_id', chatId)
     .order('created_at', { ascending: true });
@@ -142,7 +156,7 @@ export const addMessage = async (message: NewMessage): Promise<Message> => {
 
   const newMessageId = uuidv4();
 
-  const { error } = await supabase.from('messages').insert([
+  const { error } = await supabase.from('chat_messages').insert([
     {
       id: newMessageId,
       chat_id: message.chat_id,
@@ -217,7 +231,7 @@ export const getFolders = async (): Promise<Folder[]> => {
 
   const { data, error } = await supabase
     .from('folders')
-    .select(`id, name, user_id, created_at, updated_at`)
+    .select(`id, name, user_id, created_at`)
     .eq('user_id', user.id)
     .order('name', { ascending: true });
 
@@ -246,7 +260,6 @@ export const createFolder = async (name: string): Promise<Folder> => {
     name: name,
     user_id: user.id,
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
   };
 };
 
@@ -298,7 +311,7 @@ export const getTags = async (): Promise<Tag[]> => {
 
   const { data, error } = await supabase
     .from('tags')
-    .select(`id, name, color, user_id, created_at, updated_at`)
+    .select(`id, name, color, user_id, created_at`)
     .eq('user_id', user.id)
     .order('name', { ascending: true });
 
@@ -329,7 +342,6 @@ export const createTag = async (name: string, color?: string): Promise<Tag> => {
     color: color,
     user_id: user.id,
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
   };
 };
 
@@ -413,8 +425,7 @@ export const getChatTags = async (chatId: string): Promise<Tag[]> => {
         name,
         color,
         user_id,
-        created_at,
-        updated_at
+        created_at
       )
     `)
     .eq('chat_id', chatId)
