@@ -49,30 +49,10 @@ const FolderSection = ({
   deleteFolder,
   searchTerm,
 }: FolderSectionProps) => {
-  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
-  const [newFolderName, setNewFolderName] = useState("");
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [editingFolderName, setEditingFolderName] = useState("");
   const [deletingFolder, setDeletingFolder] = useState<Folder | null>(null);
 
-  const handleCreateFolder = () => {
-    if (newFolderName.trim()) {
-      createFolder(newFolderName.trim());
-      setNewFolderName("");
-      setIsCreatingFolder(false);
-    }
-  };
-
-  const handleStartCreating = () => {
-    setIsCreatingFolder(true);
-    setNewFolderName("");
-  };
-
-  const handleCancelCreating = () => {
-    setIsCreatingFolder(false);
-    setNewFolderName("");
-  };
-  
   const handleUpdateFolder = (folderId: string) => {
     if (editingFolderName.trim()) {
       updateFolder({ folderId, name: editingFolderName.trim() });
@@ -89,30 +69,6 @@ const FolderSection = ({
 
   return (
     <div className="px-2">
-      {isCreatingFolder && (
-        <div className="space-y-2 mb-4">
-          <Input
-            placeholder="Enter folder name"
-            value={newFolderName}
-            onChange={(e) => setNewFolderName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleCreateFolder();
-              if (e.key === 'Escape') handleCancelCreating();
-            }}
-            className="h-8 text-sm"
-            autoFocus
-          />
-          <div className="flex items-center gap-2">
-            <Button size="sm" onClick={handleCreateFolder} disabled={!newFolderName.trim()}>
-              Create
-            </Button>
-            <Button size="sm" variant="outline" onClick={handleCancelCreating}>
-              Cancel
-            </Button>
-          </div>
-        </div>
-      )}
-      
       <Accordion type="multiple" className="w-full" defaultValue={folders.map(f => f.id)}>
         {chatsByFolder.map(folder => (
           <AccordionItem key={folder.id} value={folder.id} className="border-none">

@@ -54,29 +54,9 @@ const TagList = ({
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
 
-  const [isCreatingTag, setIsCreatingTag] = useState(false);
-  const [newTagName, setNewTagName] = useState("");
   const [editingTagId, setEditingTagId] = useState<string | null>(null);
   const [editingTagName, setEditingTagName] = useState("");
   const [deletingTag, setDeletingTag] = useState<Tag | null>(null);
-
-  const handleCreateTag = () => {
-    if (newTagName.trim()) {
-      onCreateTag(newTagName.trim());
-      setNewTagName("");
-      setIsCreatingTag(false);
-    }
-  };
-
-  const handleStartCreating = () => {
-    setIsCreatingTag(true);
-    setNewTagName("");
-  };
-
-  const handleCancelCreating = () => {
-    setIsCreatingTag(false);
-    setNewTagName("");
-  };
 
   const handleUpdateTag = (tagId: string) => {
     if (editingTagName.trim()) {
@@ -99,26 +79,6 @@ const TagList = ({
     <>
       <SidebarGroup>
         <SidebarGroupContent>
-          {isCreatingTag && (
-            <div className="space-y-2 px-2 mb-4">
-              <Input
-                placeholder="Enter tag name"
-                value={newTagName}
-                onChange={(e) => setNewTagName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleCreateTag();
-                  if (e.key === 'Escape') handleCancelCreating();
-                }}
-                className="h-8 text-sm"
-                autoFocus
-              />
-              <div className="flex items-center gap-2">
-                <Button size="sm" onClick={handleCreateTag} disabled={!newTagName.trim()}>Create</Button>
-                <Button size="sm" variant="outline" onClick={handleCancelCreating}>Cancel</Button>
-              </div>
-            </div>
-          )}
-          
           <div className="space-y-2 px-2">
             {tags.map(tag => {
               // Filter chats that have this specific tag AND match the search term

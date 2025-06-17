@@ -14,10 +14,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import ChatOsIcon from "@/components/icons/ChatOsIcon";
 import { Search } from "lucide-react";
-import CollapsibleSidebarSection from "./CollapsibleSidebarSection";
 import { useSidebarSections } from "@/hooks/useSidebarSections";
-import FolderSection from "./FolderSection";
 import type { Folder, Tag, Chat as DatabaseChat } from "@/services/chatService";
+import ChatHistorySection from "./sidebar/ChatHistorySection";
+import FolderSectionWrapper from "./sidebar/FolderSection";
+import TagSection from "./sidebar/TagSection";
 
 // UI Chat interface that extends the database Chat
 interface Chat extends Omit<DatabaseChat, 'created_at' | 'updated_at'> {
@@ -70,31 +71,23 @@ const AppSidebar = ({
     messages: []
   }));
 
-  const {
-    user,
-    isGuest
-  } = useAuth();
-  const {
-    updateChatTitle,
-    deleteChat,
-    updateChatPinStatus
-  } = useChat();
+  const { user, isGuest } = useAuth();
+  const { updateChatTitle, deleteChat, updateChatPinStatus } = useChat();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [newChatTitle, setNewChatTitle] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const {
-    state
-  } = useSidebar();
+  const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
-
   const { sections, toggleSection, togglePin } = useSidebarSections();
 
+  // Chat interaction handlers
   const handleDeleteChat = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
     deleteChat(chatId);
   };
+
   const handlePinChat = (e: React.MouseEvent, chatId: string, isPinned: boolean) => {
     e.stopPropagation();
     updateChatPinStatus({
@@ -102,13 +95,16 @@ const AppSidebar = ({
       is_pinned: !isPinned
     });
   };
+
   const handleStartEdit = (chatId: string, currentTitle: string) => {
     setEditingChatId(chatId);
     setNewChatTitle(currentTitle);
   };
+
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNewChatTitle(e.target.value);
   };
+
   const handleUpdateTitle = (chatId: string) => {
     if (newChatTitle.trim() && newChatTitle.trim() !== chats.find(c => c.id === chatId)?.title) {
       updateChatTitle({
@@ -119,6 +115,7 @@ const AppSidebar = ({
     setEditingChatId(null);
     setNewChatTitle("");
   };
+
   const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, chatId: string) => {
     if (e.key === 'Enter') {
       handleUpdateTitle(chatId);
@@ -127,6 +124,7 @@ const AppSidebar = ({
       setNewChatTitle("");
     }
   };
+
   const handleOpenProfile = () => {
     setIsProfileOpen(true);
   };
@@ -140,28 +138,39 @@ const AppSidebar = ({
     onOpenSettings();
   };
 
-  const newChatButton = <Button onClick={onNewChat} size={isCollapsed ? "icon" : "default"} className={cn("bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white", !isCollapsed && "w-full")}>
+  // UI Components
+  const newChatButton = (
+    <Button onClick={onNewChat} size={isCollapsed ? "icon" : "default"} className={cn("bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white", !isCollapsed && "w-full")}>
       <Plus className="w-4 h-4" />
       {!isCollapsed && <span>New Chat</span>}
-    </Button>;
-  const logo = <a href="/" className={cn("flex items-center gap-2", isCollapsed && "justify-center")}>
+    </Button>
+  );
+
+  const logo = (
+    <a href="/" className={cn("flex items-center gap-2", isCollapsed && "justify-center")}>
       <ChatOsIcon className="w-8 h-8 text-primary" />
       {!isCollapsed && <span className="whitespace-nowrap font-semibold text-2xl">ChatOS</span>}
-    </a>;
+    </a>
+  );
+
   return (
     <>
       <Sidebar collapsible="icon" variant="inset">
         <SidebarHeader className={cn("p-4", isCollapsed && "p-2")}>
-          {isCollapsed ? <Tooltip>
+          {isCollapsed ? (
+            <Tooltip>
               <TooltipTrigger asChild>{logo}</TooltipTrigger>
               <TooltipContent side="right"><p>ChatOS</p></TooltipContent>
-            </Tooltip> : logo}
-          {isCollapsed ? <Tooltip>
+            </Tooltip>
+          ) : logo}
+          {isCollapsed ? (
+            <Tooltip>
               <TooltipTrigger asChild>{newChatButton}</TooltipTrigger>
               <TooltipContent side="right">
                 <p>New Chat</p>
               </TooltipContent>
-            </Tooltip> : newChatButton}
+            </Tooltip>
+          ) : newChatButton}
         </SidebarHeader>
 
         <SidebarSeparator />
@@ -189,96 +198,68 @@ const AppSidebar = ({
 
           <SidebarSeparator />
 
-          {/* Chat History */}
+          {/* Chat History Section */}
           {!isCollapsed && (
-            <SidebarGroup>
-              <CollapsibleSidebarSection
-                title="Chat History"
-                isCollapsed={sections.chatHistory.isCollapsed}
-                isPinned={sections.chatHistory.isPinned}
-                onToggle={() => toggleSection('chatHistory')}
-                onTogglePin={() => togglePin('chatHistory')}
-              >
-                <ChatHistory 
-                  chats={chats} 
-                  folders={folders} 
-                  activeChatId={activeChatId} 
-                  editingChatId={editingChatId} 
-                  newChatTitle={newChatTitle} 
-                  onSelectChat={onSelectChat} 
-                  onStartEdit={handleStartEdit} 
-                  onPinChat={handlePinChat} 
-                  onDeleteChat={handleDeleteChat} 
-                  onTitleChange={handleTitleChange} 
-                  onUpdateTitle={handleUpdateTitle} 
-                  onTitleKeyDown={handleTitleKeyDown} 
-                  createFolder={createFolder} 
-                  updateFolder={updateFolder} 
-                  deleteFolder={deleteFolder}
-                  searchTerm={searchTerm}
-                />
-              </CollapsibleSidebarSection>
-            </SidebarGroup>
+            <ChatHistorySection
+              chats={chats}
+              folders={folders}
+              activeChatId={activeChatId}
+              editingChatId={editingChatId}
+              newChatTitle={newChatTitle}
+              onSelectChat={onSelectChat}
+              onStartEdit={handleStartEdit}
+              onPinChat={handlePinChat}
+              onDeleteChat={handleDeleteChat}
+              onTitleChange={handleTitleChange}
+              onUpdateTitle={handleUpdateTitle}
+              onTitleKeyDown={handleTitleKeyDown}
+              createFolder={createFolder}
+              updateFolder={updateFolder}
+              deleteFolder={deleteFolder}
+              searchTerm={searchTerm}
+              isCollapsed={sections.chatHistory.isCollapsed}
+              isPinned={sections.chatHistory.isPinned}
+              onToggle={() => toggleSection('chatHistory')}
+              onTogglePin={() => togglePin('chatHistory')}
+            />
           )}
 
-          {/* Folders */}
+          {/* Folders Section */}
           {!isCollapsed && (
-            <SidebarGroup>
-              <CollapsibleSidebarSection
-                title="Folders"
-                isCollapsed={sections.folders.isCollapsed}
-                isPinned={sections.folders.isPinned}
-                onToggle={() => toggleSection('folders')}
-                onTogglePin={() => togglePin('folders')}
-                rightElement={
-                  <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-muted">
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                }
-              >
-                <FolderSection
-                  folders={folders}
-                  chats={chats}
-                  activeChatId={activeChatId}
-                  onSelectChat={onSelectChat}
-                  createFolder={createFolder}
-                  updateFolder={updateFolder}
-                  deleteFolder={deleteFolder}
-                  searchTerm={searchTerm}
-                />
-              </CollapsibleSidebarSection>
-            </SidebarGroup>
+            <FolderSectionWrapper
+              folders={folders}
+              chats={chats}
+              activeChatId={activeChatId}
+              onSelectChat={onSelectChat}
+              createFolder={createFolder}
+              updateFolder={updateFolder}
+              deleteFolder={deleteFolder}
+              searchTerm={searchTerm}
+              isCollapsed={sections.folders.isCollapsed}
+              isPinned={sections.folders.isPinned}
+              onToggle={() => toggleSection('folders')}
+              onTogglePin={() => togglePin('folders')}
+            />
           )}
           
           <SidebarSeparator />
 
-          {/* Tags */}
+          {/* Tags Section */}
           {!isCollapsed && (
-            <SidebarGroup>
-              <CollapsibleSidebarSection
-                title="Tags"
-                isCollapsed={sections.tags.isCollapsed}
-                isPinned={sections.tags.isPinned}
-                onToggle={() => toggleSection('tags')}
-                onTogglePin={() => togglePin('tags')}
-                rightElement={
-                  <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-muted">
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                }
-              >
-                <TagList
-                  tags={tags}
-                  chats={chats}
-                  activeChatId={activeChatId}
-                  onSelectChat={onSelectChat}
-                  onCreateTag={createTag}
-                  onUpdateTag={updateTag}
-                  onDeleteTag={deleteTag}
-                  searchTerm={searchTerm}
-                />
-              </CollapsibleSidebarSection>
-            </SidebarGroup>
+            <TagSection
+              tags={tags}
+              chats={chats}
+              activeChatId={activeChatId}
+              onSelectChat={onSelectChat}
+              createTag={createTag}
+              updateTag={updateTag}
+              deleteTag={deleteTag}
+              searchTerm={searchTerm}
+              isCollapsed={sections.tags.isCollapsed}
+              isPinned={sections.tags.isPinned}
+              onToggle={() => toggleSection('tags')}
+              onTogglePin={() => togglePin('tags')}
+            />
           )}
 
           {/* Show regular sections when collapsed */}
