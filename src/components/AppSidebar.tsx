@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import React, { useState } from "react";
 import { Settings, Plus } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarFooter, SidebarSeparator, useSidebar } from "@/components/ui/sidebar";
 import SettingsDialog from "./SettingsDialog";
@@ -139,18 +140,6 @@ const AppSidebar = ({
     onOpenSettings();
   };
 
-  // Create refs for folder and tag sections to trigger creation
-  const folderSectionRef = React.useRef<{ startCreating: () => void }>(null);
-  const tagSectionRef = React.useRef<{ startCreating: () => void }>(null);
-
-  const handleCreateNewFolder = () => {
-    // This will be handled by the FolderSection component directly
-  };
-
-  const handleCreateNewTag = () => {
-    // This will be handled by the TagList component directly  
-  };
-
   const newChatButton = <Button onClick={onNewChat} size={isCollapsed ? "icon" : "default"} className={cn("bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white", !isCollapsed && "w-full")}>
       <Plus className="w-4 h-4" />
       {!isCollapsed && <span>New Chat</span>}
@@ -242,13 +231,12 @@ const AppSidebar = ({
                 onToggle={() => toggleSection('folders')}
                 onTogglePin={() => togglePin('folders')}
                 rightElement={
-                  <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-muted" onClick={handleCreateNewFolder}>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-muted">
                     <Plus className="w-4 h-4" />
                   </Button>
                 }
               >
                 <FolderSection
-                  ref={folderSectionRef}
                   folders={folders}
                   chats={chats}
                   activeChatId={activeChatId}
@@ -274,13 +262,12 @@ const AppSidebar = ({
                 onToggle={() => toggleSection('tags')}
                 onTogglePin={() => togglePin('tags')}
                 rightElement={
-                  <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-muted" onClick={handleCreateNewTag}>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-muted">
                     <Plus className="w-4 h-4" />
                   </Button>
                 }
               >
                 <TagList
-                  ref={tagSectionRef}
                   tags={tags}
                   chats={chats}
                   activeChatId={activeChatId}
