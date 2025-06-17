@@ -1,19 +1,11 @@
-
 import { Sun, Moon, Settings } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import ChatOsIcon from "./icons/ChatOsIcon";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import FolderDropdown from "./FolderDropdown";
 import TagDropdown from "./TagDropdown";
 import type { Folder, Chat, Tag } from "@/services/chatService";
-
 interface HeaderProps {
   isDarkMode: boolean;
   toggleDarkMode: () => void;
@@ -37,7 +29,6 @@ interface HeaderProps {
   onCreateTag: (name: string, color?: string) => void;
   onOpenSettings: () => void;
 }
-
 const Header = ({
   isDarkMode,
   toggleDarkMode,
@@ -59,93 +50,50 @@ const Header = ({
   onRemoveTagFromChat,
   onCreateFolder,
   onCreateTag,
-  onOpenSettings,
+  onOpenSettings
 }: HeaderProps) => {
-  return (
-    <div className="flex items-center justify-between w-full gap-4">
+  return <div className="flex items-center justify-between w-full gap-4">
       <div className="flex items-center gap-2 md:hidden">
         <ChatOsIcon className="w-8 h-8 text-primary" />
         <h1 className="text-xl font-semibold shrink-0">ChatOS</h1>
       </div>
       <div className="hidden sm:flex items-center justify-center gap-2">
-        <Select
-          onValueChange={onSelectProvider}
-          value={selectedProvider}
-          disabled={isLoadingProviders || availableProviders.length === 0}
-        >
+        <Select onValueChange={onSelectProvider} value={selectedProvider} disabled={isLoadingProviders || availableProviders.length === 0}>
           <SelectTrigger className="w-[140px] truncate">
             <SelectValue placeholder="Provider" />
           </SelectTrigger>
           <SelectContent>
-            {availableProviders.map((provider) => (
-              <SelectItem key={provider} value={provider}>
+            {availableProviders.map(provider => <SelectItem key={provider} value={provider}>
                 {provider}
-              </SelectItem>
-            ))}
+              </SelectItem>)}
           </SelectContent>
         </Select>
 
-        <Select
-          onValueChange={onSelectModel}
-          value={selectedModel}
-          disabled={!selectedProvider || availableModels.length === 0}
-        >
+        <Select onValueChange={onSelectModel} value={selectedModel} disabled={!selectedProvider || availableModels.length === 0}>
           <SelectTrigger className="w-[220px] truncate">
             <SelectValue placeholder="Model" />
           </SelectTrigger>
           <SelectContent>
-            {availableModels.map((model) => (
-              <SelectItem key={model} value={model}>
+            {availableModels.map(model => <SelectItem key={model} value={model}>
                 {model}
-              </SelectItem>
-            ))}
+              </SelectItem>)}
           </SelectContent>
         </Select>
 
-        <FolderDropdown
-          folders={folders}
-          activeChat={activeChat}
-          onAssignChatToFolder={onAssignChatToFolder}
-          onCreateFolder={onCreateFolder}
-          isLoading={isLoadingFolders}
-        />
+        <FolderDropdown folders={folders} activeChat={activeChat} onAssignChatToFolder={onAssignChatToFolder} onCreateFolder={onCreateFolder} isLoading={isLoadingFolders} />
 
-        <TagDropdown
-          tags={tags}
-          chatTags={chatTags}
-          activeChat={activeChat}
-          onAssignTagToChat={onAssignTagToChat}
-          onRemoveTagFromChat={onRemoveTagFromChat}
-          onCreateTag={onCreateTag}
-          isLoading={isLoadingTags}
-        />
+        <TagDropdown tags={tags} chatTags={chatTags} activeChat={activeChat} onAssignTagToChat={onAssignTagToChat} onRemoveTagFromChat={onRemoveTagFromChat} onCreateTag={onCreateTag} isLoading={isLoadingTags} />
       </div>
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
-          <Sun
-            className={`w-4 h-4 ${
-              !isDarkMode ? "text-yellow-500" : "text-muted-foreground"
-            }`}
-          />
+          <Sun className={`w-4 h-4 ${!isDarkMode ? "text-yellow-500" : "text-muted-foreground"}`} />
           <Switch checked={isDarkMode} onCheckedChange={toggleDarkMode} />
-          <Moon
-            className={`w-4 h-4 ${
-              isDarkMode ? "text-blue-400" : "text-muted-foreground"
-            }`}
-          />
+          <Moon className={`w-4 h-4 ${isDarkMode ? "text-blue-400" : "text-muted-foreground"}`} />
         </div>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={onOpenSettings} 
-          aria-label="Open settings"
-          className="h-9 w-9 hover:bg-muted"
-        >
+        <Button variant="ghost" size="icon" onClick={onOpenSettings} aria-label="Open settings" className="h-8 w-8 hover:bg-muted">
           <Settings className="w-5 h-5" />
         </Button>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Header;
