@@ -29,9 +29,8 @@ const InputArea = ({
             </Button>
         </div>
       </form>
-      <p className="text-xs mt-2 text-center text-muted-foreground" aria-live="polite">
-        OS Chat can make mistakes. Please verify important information.
-      </p>
+      <p aria-live="polite" className="text-xs mt-2 text-center text-muted-foreground hidden ">
+    </p>
     </div>;
 };
 export default InputArea;
