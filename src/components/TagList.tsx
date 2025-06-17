@@ -1,7 +1,7 @@
 
 import { useState } from "react";
-import { Tag as TagIcon, Plus, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu } from "@/components/ui/sidebar";
+import { Tag as TagIcon, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { SidebarGroup, SidebarGroupContent, SidebarMenu } from "@/components/ui/sidebar";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,12 +88,6 @@ const TagList = ({
   return (
     <>
       <SidebarGroup>
-        <SidebarGroupLabel className="flex justify-between items-center text-xs font-medium text-muted-foreground px-2">
-          <span>Tags</span>
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setIsCreatingTag(!isCreatingTag)}>
-            <Plus className="w-4 h-4" />
-          </Button>
-        </SidebarGroupLabel>
         <SidebarGroupContent>
           {isCreatingTag && (
             <div className="flex items-center gap-2 p-2">

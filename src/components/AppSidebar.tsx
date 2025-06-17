@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Settings, Plus } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarFooter, SidebarSeparator, useSidebar } from "@/components/ui/sidebar";
@@ -140,6 +139,11 @@ const AppSidebar = ({
     onOpenSettings();
   };
 
+  // Add handler for creating new tag
+  const handleCreateNewTag = () => {
+    createTag("New Tag");
+  };
+
   const newChatButton = <Button onClick={onNewChat} size={isCollapsed ? "icon" : "default"} className={cn("bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white", !isCollapsed && "w-full")}>
       <Plus className="w-4 h-4" />
       {!isCollapsed && <span>New Chat</span>}
@@ -148,7 +152,8 @@ const AppSidebar = ({
       <ChatOsIcon className="w-8 h-8 text-primary" />
       {!isCollapsed && <span className="whitespace-nowrap font-semibold text-2xl">ChatOS</span>}
     </a>;
-  return <>
+  return (
+    <>
       <Sidebar collapsible="icon" variant="inset">
         <SidebarHeader className={cn("p-4", isCollapsed && "p-2")}>
           {isCollapsed ? <Tooltip>
@@ -230,7 +235,7 @@ const AppSidebar = ({
                 onToggle={() => toggleSection('folders')}
                 onTogglePin={() => togglePin('folders')}
                 rightElement={
-                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => createFolder("New Folder")}>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-muted" onClick={() => createFolder("New Folder")}>
                     <Plus className="w-4 h-4" />
                   </Button>
                 }
@@ -260,6 +265,11 @@ const AppSidebar = ({
                 isPinned={sections.tags.isPinned}
                 onToggle={() => toggleSection('tags')}
                 onTogglePin={() => togglePin('tags')}
+                rightElement={
+                  <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-muted" onClick={handleCreateNewTag}>
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                }
               >
                 <TagList
                   tags={tags}
@@ -339,7 +349,8 @@ const AppSidebar = ({
       
       <SettingsDialog isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} onOpenProfile={handleOpenProfile} />
       <UserProfileDialog isOpen={isProfileOpen} onOpenChange={setIsProfileOpen} isDarkMode={isDarkMode} />
-    </>;
+    </>
+  );
 };
 
 export default AppSidebar;
