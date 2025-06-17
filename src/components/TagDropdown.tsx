@@ -41,6 +41,16 @@ const TagDropdown = ({
     }
   };
 
+  const handleStartCreating = () => {
+    setIsCreating(true);
+    setNewTagName("");
+  };
+
+  const handleCancelCreating = () => {
+    setIsCreating(false);
+    setNewTagName("");
+  };
+
   const handleTagToggle = (tagId: string) => {
     const isAssigned = chatTags.some(tag => tag.id === tagId);
     if (isAssigned) {
@@ -68,7 +78,7 @@ const TagDropdown = ({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 relative"
+              className="h-8 w-8 relative hover:bg-muted"
               disabled={!activeChat || isLoading}
             >
               <Tag className="w-4 h-4" />
@@ -86,33 +96,41 @@ const TagDropdown = ({
           <p>{tooltipContent}</p>
         </TooltipContent>
       </Tooltip>
-      <PopoverContent className="w-64" align="end">
+      <PopoverContent className="w-64 bg-popover border shadow-md" align="end">
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Manage tags</span>
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6"
-              onClick={() => setIsCreating(true)}
+              className="h-6 w-6 hover:bg-muted"
+              onClick={handleStartCreating}
             >
               <Plus className="w-4 h-4" />
             </Button>
           </div>
           
           {isCreating && (
-            <div className="flex items-center gap-2">
+            <div className="space-y-2">
               <Input
-                placeholder="Tag name"
+                placeholder="Enter tag name"
                 value={newTagName}
                 onChange={(e) => setNewTagName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleCreateTag()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleCreateTag();
+                  if (e.key === 'Escape') handleCancelCreating();
+                }}
                 className="h-8 text-sm"
                 autoFocus
               />
-              <Button size="sm" onClick={handleCreateTag}>
-                Add
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button size="sm" onClick={handleCreateTag} disabled={!newTagName.trim()}>
+                  Create
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleCancelCreating}>
+                  Cancel
+                </Button>
+              </div>
             </div>
           )}
           

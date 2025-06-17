@@ -13,6 +13,7 @@ interface CollapsibleSidebarSectionProps {
   onTogglePin: () => void;
   children: ReactNode;
   rightElement?: ReactNode;
+  onPlusClick?: () => void;
 }
 
 const CollapsibleSidebarSection = ({
@@ -22,7 +23,8 @@ const CollapsibleSidebarSection = ({
   onToggle,
   onTogglePin,
   children,
-  rightElement
+  rightElement,
+  onPlusClick
 }: CollapsibleSidebarSectionProps) => {
   return (
     <Collapsible open={!isCollapsed} onOpenChange={onToggle}>

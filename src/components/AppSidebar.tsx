@@ -139,9 +139,16 @@ const AppSidebar = ({
     onOpenSettings();
   };
 
-  // Add handler for creating new tag
+  // Create refs for folder and tag sections to trigger creation
+  const folderSectionRef = React.useRef<{ startCreating: () => void }>(null);
+  const tagSectionRef = React.useRef<{ startCreating: () => void }>(null);
+
+  const handleCreateNewFolder = () => {
+    // This will be handled by the FolderSection component directly
+  };
+
   const handleCreateNewTag = () => {
-    createTag("New Tag");
+    // This will be handled by the TagList component directly  
   };
 
   const newChatButton = <Button onClick={onNewChat} size={isCollapsed ? "icon" : "default"} className={cn("bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white", !isCollapsed && "w-full")}>
@@ -235,12 +242,13 @@ const AppSidebar = ({
                 onToggle={() => toggleSection('folders')}
                 onTogglePin={() => togglePin('folders')}
                 rightElement={
-                  <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-muted" onClick={() => createFolder("New Folder")}>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 hover:bg-muted" onClick={handleCreateNewFolder}>
                     <Plus className="w-4 h-4" />
                   </Button>
                 }
               >
                 <FolderSection
+                  ref={folderSectionRef}
                   folders={folders}
                   chats={chats}
                   activeChatId={activeChatId}
@@ -272,6 +280,7 @@ const AppSidebar = ({
                 }
               >
                 <TagList
+                  ref={tagSectionRef}
                   tags={tags}
                   chats={chats}
                   activeChatId={activeChatId}

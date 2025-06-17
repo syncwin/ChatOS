@@ -37,6 +37,16 @@ const FolderDropdown = ({
     }
   };
 
+  const handleStartCreating = () => {
+    setIsCreating(true);
+    setNewFolderName("");
+  };
+
+  const handleCancelCreating = () => {
+    setIsCreating(false);
+    setNewFolderName("");
+  };
+
   const handleFolderSelect = (folderId: string) => {
     onAssignChatToFolder(folderId);
     setIsOpen(false);
@@ -63,7 +73,7 @@ const FolderDropdown = ({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 relative"
+              className="h-8 w-8 relative hover:bg-muted"
               disabled={!activeChat || isLoading}
             >
               <Folder className="w-4 h-4" />
@@ -81,33 +91,41 @@ const FolderDropdown = ({
           <p>{tooltipContent}</p>
         </TooltipContent>
       </Tooltip>
-      <PopoverContent className="w-64" align="end">
+      <PopoverContent className="w-64 bg-popover border shadow-md" align="end">
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Move to folder</span>
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6"
-              onClick={() => setIsCreating(true)}
+              className="h-6 w-6 hover:bg-muted"
+              onClick={handleStartCreating}
             >
               <Plus className="w-4 h-4" />
             </Button>
           </div>
           
           {isCreating && (
-            <div className="flex items-center gap-2">
+            <div className="space-y-2">
               <Input
-                placeholder="Folder name"
+                placeholder="Enter folder name"
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleCreateFolder();
+                  if (e.key === 'Escape') handleCancelCreating();
+                }}
                 className="h-8 text-sm"
                 autoFocus
               />
-              <Button size="sm" onClick={handleCreateFolder}>
-                Add
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button size="sm" onClick={handleCreateFolder} disabled={!newFolderName.trim()}>
+                  Create
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleCancelCreating}>
+                  Cancel
+                </Button>
+              </div>
             </div>
           )}
           

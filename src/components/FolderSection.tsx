@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Folder as FolderIcon, Plus, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Folder as FolderIcon, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import ChatItem from "./ChatItem";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -62,6 +62,16 @@ const FolderSection = ({
       setIsCreatingFolder(false);
     }
   };
+
+  const handleStartCreating = () => {
+    setIsCreatingFolder(true);
+    setNewFolderName("");
+  };
+
+  const handleCancelCreating = () => {
+    setIsCreatingFolder(false);
+    setNewFolderName("");
+  };
   
   const handleUpdateFolder = (folderId: string) => {
     if (editingFolderName.trim()) {
@@ -80,16 +90,26 @@ const FolderSection = ({
   return (
     <div className="px-2">
       {isCreatingFolder && (
-        <div className="flex items-center gap-2 mb-4">
+        <div className="space-y-2 mb-4">
           <Input
-            placeholder="New folder name"
+            placeholder="Enter folder name"
             value={newFolderName}
             onChange={(e) => setNewFolderName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleCreateFolder();
+              if (e.key === 'Escape') handleCancelCreating();
+            }}
             className="h-8 text-sm"
             autoFocus
           />
-          <Button size="sm" onClick={handleCreateFolder}>Create</Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" onClick={handleCreateFolder} disabled={!newFolderName.trim()}>
+              Create
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleCancelCreating}>
+              Cancel
+            </Button>
+          </div>
         </div>
       )}
       

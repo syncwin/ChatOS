@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Tag as TagIcon, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { SidebarGroup, SidebarGroupContent, SidebarMenu } from "@/components/ui/sidebar";
 import { useSidebar } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -19,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import TagItem from "./TagItem";
 import type { Tag } from "@/services/chatService";
+import { Button } from "@/components/ui/button";
 
 interface Chat {
   id: string;
@@ -68,6 +68,16 @@ const TagList = ({
     }
   };
 
+  const handleStartCreating = () => {
+    setIsCreatingTag(true);
+    setNewTagName("");
+  };
+
+  const handleCancelCreating = () => {
+    setIsCreatingTag(false);
+    setNewTagName("");
+  };
+
   const handleUpdateTag = (tagId: string) => {
     if (editingTagName.trim()) {
       onUpdateTag({ tagId, name: editingTagName.trim() });
@@ -90,16 +100,22 @@ const TagList = ({
       <SidebarGroup>
         <SidebarGroupContent>
           {isCreatingTag && (
-            <div className="flex items-center gap-2 p-2">
+            <div className="space-y-2 px-2 mb-4">
               <Input
-                placeholder="New tag name"
+                placeholder="Enter tag name"
                 value={newTagName}
                 onChange={(e) => setNewTagName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleCreateTag()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleCreateTag();
+                  if (e.key === 'Escape') handleCancelCreating();
+                }}
                 className="h-8 text-sm"
                 autoFocus
               />
-              <Button size="sm" onClick={handleCreateTag}>Create</Button>
+              <div className="flex items-center gap-2">
+                <Button size="sm" onClick={handleCreateTag} disabled={!newTagName.trim()}>Create</Button>
+                <Button size="sm" variant="outline" onClick={handleCancelCreating}>Cancel</Button>
+              </div>
             </div>
           )}
           
