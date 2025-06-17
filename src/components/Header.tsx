@@ -134,7 +134,13 @@ const Header = ({
             }`}
           />
         </div>
-        <Button variant="ghost" size="icon" onClick={onOpenSettings} aria-label="Open settings">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={onOpenSettings} 
+          aria-label="Open settings"
+          className="h-9 w-9 hover:bg-muted"
+        >
           <Settings className="w-5 h-5" />
         </Button>
       </div>

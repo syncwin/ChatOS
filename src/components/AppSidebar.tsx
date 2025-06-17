@@ -16,6 +16,7 @@ import ChatOsIcon from "@/components/icons/ChatOsIcon";
 import { Search } from "lucide-react";
 import CollapsibleSidebarSection from "./CollapsibleSidebarSection";
 import { useSidebarSections } from "@/hooks/useSidebarSections";
+import FolderSection from "./FolderSection";
 import type { Folder, Tag, Chat as DatabaseChat } from "@/services/chatService";
 
 // UI Chat interface that extends the database Chat
@@ -234,10 +235,16 @@ const AppSidebar = ({
                   </Button>
                 }
               >
-                <div className="px-2">
-                  {/* Folder content will be integrated here */}
-                  <p className="text-xs text-muted-foreground">Folders integration coming soon</p>
-                </div>
+                <FolderSection
+                  folders={folders}
+                  chats={chats}
+                  activeChatId={activeChatId}
+                  onSelectChat={onSelectChat}
+                  createFolder={createFolder}
+                  updateFolder={updateFolder}
+                  deleteFolder={deleteFolder}
+                  searchTerm={searchTerm}
+                />
               </CollapsibleSidebarSection>
             </SidebarGroup>
           )}

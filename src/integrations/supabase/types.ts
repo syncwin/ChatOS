@@ -196,6 +196,24 @@ export type Database = {
         }
         Relationships: []
       }
+      sample_table: {
+        Row: {
+          data: string | null
+          id: number
+          updated_at: string | null
+        }
+        Insert: {
+          data?: string | null
+          id?: never
+          updated_at?: string | null
+        }
+        Update: {
+          data?: string | null
+          id?: never
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       tags: {
         Row: {
           color: string | null
