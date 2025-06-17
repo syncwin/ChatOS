@@ -1,5 +1,6 @@
 
 import { useForm } from "react-hook-form";
+import { useEffect } from "react"; // Added for watching provider, though direct watch is often enough
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,8 +35,20 @@ const AddApiKeyForm = ({ saveMutation }: AddApiKeyFormProps) => {
     defaultValues: {
       api_key: "",
       provider: undefined,
+      endpoint_url: "",
+      deployment_id: "",
     },
   });
+
+  const watchedProvider = form.watch('provider');
+
+  // Optional: Reset dependent fields when provider changes
+  useEffect(() => {
+    if (watchedProvider !== 'Azure OpenAI (Custom)') {
+      form.setValue('endpoint_url', undefined);
+      form.setValue('deployment_id', undefined);
+    }
+  }, [watchedProvider, form]);
 
   const onSubmit = (data: ApiKeyFormValues) => {
     saveMutation.mutate(data, {
@@ -94,6 +107,47 @@ const AddApiKeyForm = ({ saveMutation }: AddApiKeyFormProps) => {
             </FormItem>
           )}
         />
+
+        {watchedProvider === 'Azure OpenAI (Custom)' && (
+          <>
+            <FormField
+              control={form.control}
+              name="endpoint_url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Endpoint URL</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="url"
+                      placeholder="e.g., https://your-resource.openai.azure.com/"
+                      {...field}
+                      value={field.value || ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="deployment_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Deployment ID</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      placeholder="e.g., gpt-4o-mini"
+                      {...field}
+                      value={field.value || ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
+        )}
         <Button type="submit" className="w-full" disabled={saveMutation.isPending}>
           {saveMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Save API Key

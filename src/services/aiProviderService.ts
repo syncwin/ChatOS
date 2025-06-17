@@ -118,7 +118,9 @@ export const getDefaultModel = (provider: string): string => {
     'Anthropic': 'claude-3-5-haiku-20241022',
     'Google Gemini': 'gemini-1.5-flash',
     'Mistral': 'mistral-small-latest',
-    'OpenRouter': 'anthropic/claude-3.5-sonnet'
+    'OpenRouter': 'anthropic/claude-3.5-sonnet',
+    'Straico': 'straico/latest',
+    'Azure OpenAI (Custom)': 'user-defined'
   };
 
   return defaultModels[provider] || 'gpt-4o-mini';
@@ -152,7 +154,9 @@ export const getAvailableModels = (provider:string): string[] => {
       'mistralai/mistral-large-latest',
       'meta-llama/llama-3-70b-instruct',
       'meta-llama/llama-3-8b-instruct',
-    ]
+    ],
+    'Straico': ['straico/latest'],
+    'Azure OpenAI (Custom)': ['user-defined']
   };
 
   return models[provider] || ['gpt-4o-mini'];

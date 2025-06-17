@@ -11,6 +11,16 @@ export const apiKeySchema = z.object({
     required_error: "You need to select a provider.",
   }),
   api_key: z.string().min(1, "API key cannot be empty."),
+  endpoint_url: z.string().url({ message: "Must be a valid URL." }).optional(),
+  deployment_id: z.string().min(1, "Deployment ID cannot be empty.").optional(),
+})
+.refine(data => !(data.provider === 'Azure OpenAI (Custom)' && !data.endpoint_url), {
+  message: 'Endpoint URL is required for Azure OpenAI (Custom)',
+  path: ['endpoint_url'],
+})
+.refine(data => !(data.provider === 'Azure OpenAI (Custom)' && !data.deployment_id), {
+  message: 'Deployment ID is required for Azure OpenAI (Custom)',
+  path: ['deployment_id'],
 });
 
 export type ApiKeyFormValues = z.infer<typeof apiKeySchema>;
@@ -71,6 +81,8 @@ export const useApiKeys = () => {
         user_id: user.id,
         provider: values.provider,
         api_key: values.api_key,
+        endpoint_url: values.endpoint_url, // Add this
+        deployment_id: values.deployment_id, // Add this
       }, { onConflict: 'user_id, provider' });
       if (error) throw error;
     },

@@ -252,6 +252,8 @@ export type Database = {
         | "Google Gemini"
         | "Mistral"
         | "OpenRouter"
+        | "Straico"
+        | "Azure OpenAI (Custom)"
       message_role: "user" | "assistant"
     }
     CompositeTypes: {
@@ -374,6 +376,8 @@ export const Constants = {
         "Google Gemini",
         "Mistral",
         "OpenRouter",
+        "Straico",
+        "Azure OpenAI (Custom)",
       ],
       message_role: ["user", "assistant"],
     },
