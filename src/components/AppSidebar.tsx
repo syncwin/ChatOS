@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Settings, Plus } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarFooter, SidebarSeparator, useSidebar } from "@/components/ui/sidebar";
@@ -25,7 +24,6 @@ interface Chat extends Omit<DatabaseChat, 'created_at' | 'updated_at'> {
   date: string;
   messages: unknown[];
 }
-
 interface AppSidebarProps {
   isDarkMode: boolean;
   toggleDarkMode: () => void;
@@ -42,11 +40,14 @@ interface AppSidebarProps {
   deleteFolder: (folderId: string) => void;
   tags: Tag[];
   createTag: (name: string, color?: string) => void;
-  updateTag: (args: { tagId: string; name: string; color?: string }) => void;
+  updateTag: (args: {
+    tagId: string;
+    name: string;
+    color?: string;
+  }) => void;
   deleteTag: (tagId: string) => void;
   onOpenSettings: () => void;
 }
-
 const AppSidebar = ({
   isDarkMode,
   toggleDarkMode,
@@ -62,7 +63,7 @@ const AppSidebar = ({
   createTag,
   updateTag,
   deleteTag,
-  onOpenSettings,
+  onOpenSettings
 }: AppSidebarProps) => {
   // Transform database chats to UI chats
   const chats: Chat[] = dbChats.map(chat => ({
@@ -70,24 +71,35 @@ const AppSidebar = ({
     date: new Date(chat.updated_at).toLocaleDateString(),
     messages: []
   }));
-
-  const { user, isGuest } = useAuth();
-  const { updateChatTitle, deleteChat, updateChatPinStatus } = useChat();
+  const {
+    user,
+    isGuest
+  } = useAuth();
+  const {
+    updateChatTitle,
+    deleteChat,
+    updateChatPinStatus
+  } = useChat();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [newChatTitle, setNewChatTitle] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const { state } = useSidebar();
+  const {
+    state
+  } = useSidebar();
   const isCollapsed = state === 'collapsed';
-  const { sections, toggleSection, togglePin } = useSidebarSections();
+  const {
+    sections,
+    toggleSection,
+    togglePin
+  } = useSidebarSections();
 
   // Chat interaction handlers
   const handleDeleteChat = (e: React.MouseEvent, chatId: string) => {
     e.stopPropagation();
     deleteChat(chatId);
   };
-
   const handlePinChat = (e: React.MouseEvent, chatId: string, isPinned: boolean) => {
     e.stopPropagation();
     updateChatPinStatus({
@@ -95,16 +107,13 @@ const AppSidebar = ({
       is_pinned: !isPinned
     });
   };
-
   const handleStartEdit = (chatId: string, currentTitle: string) => {
     setEditingChatId(chatId);
     setNewChatTitle(currentTitle);
   };
-
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNewChatTitle(e.target.value);
   };
-
   const handleUpdateTitle = (chatId: string) => {
     if (newChatTitle.trim() && newChatTitle.trim() !== chats.find(c => c.id === chatId)?.title) {
       updateChatTitle({
@@ -115,7 +124,6 @@ const AppSidebar = ({
     setEditingChatId(null);
     setNewChatTitle("");
   };
-
   const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, chatId: string) => {
     if (e.key === 'Enter') {
       handleUpdateTitle(chatId);
@@ -124,182 +132,78 @@ const AppSidebar = ({
       setNewChatTitle("");
     }
   };
-
   const handleOpenProfile = () => {
     setIsProfileOpen(true);
   };
-
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
-
   const handleOpenSettings = () => {
     setIsSettingsOpen(true);
     onOpenSettings();
   };
 
   // UI Components
-  const newChatButton = (
-    <Button onClick={onNewChat} size={isCollapsed ? "icon" : "default"} className={cn("bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white", !isCollapsed && "w-full")}>
+  const newChatButton = <Button onClick={onNewChat} size={isCollapsed ? "icon" : "default"} className={cn("bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white", !isCollapsed && "w-full")}>
       <Plus className="w-4 h-4" />
       {!isCollapsed && <span>New Chat</span>}
-    </Button>
-  );
-
-  const logo = (
-    <a href="/" className={cn("flex items-center gap-2", isCollapsed && "justify-center")}>
+    </Button>;
+  const logo = <a href="/" className={cn("flex items-center gap-2", isCollapsed && "justify-center")}>
       <ChatOsIcon className="w-8 h-8 text-primary" />
       {!isCollapsed && <span className="whitespace-nowrap font-semibold text-2xl">ChatOS</span>}
-    </a>
-  );
-
-  return (
-    <>
+    </a>;
+  return <>
       <Sidebar collapsible="icon" variant="inset">
         <SidebarHeader className={cn("p-4", isCollapsed && "p-2")}>
-          {isCollapsed ? (
-            <Tooltip>
+          {isCollapsed ? <Tooltip>
               <TooltipTrigger asChild>{logo}</TooltipTrigger>
               <TooltipContent side="right"><p>ChatOS</p></TooltipContent>
-            </Tooltip>
-          ) : logo}
-          {isCollapsed ? (
-            <Tooltip>
+            </Tooltip> : logo}
+          {isCollapsed ? <Tooltip>
               <TooltipTrigger asChild>{newChatButton}</TooltipTrigger>
               <TooltipContent side="right">
                 <p>New Chat</p>
               </TooltipContent>
-            </Tooltip>
-          ) : newChatButton}
+            </Tooltip> : newChatButton}
         </SidebarHeader>
 
-        <SidebarSeparator />
+        <SidebarSeparator className="hidden " />
 
         <SidebarContent>
           {/* Search Bar */}
-          {!isCollapsed && (
-            <SidebarGroup>
+          {!isCollapsed && <SidebarGroup>
               <SidebarGroupContent>
                 <div className="relative px-2">
                   <label htmlFor="search-chats" className="sr-only">Search chats</label>
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-                  <input 
-                    id="search-chats"
-                    type="text" 
-                    placeholder="Search chats..." 
-                    value={searchTerm} 
-                    onChange={handleSearchChange} 
-                    className="w-full pl-10 pr-4 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-input border border-border text-foreground placeholder:text-muted-foreground" 
-                  />
+                  <input id="search-chats" type="text" placeholder="Search chats..." value={searchTerm} onChange={handleSearchChange} className="w-full pl-10 pr-4 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-input border border-border text-foreground placeholder:text-muted-foreground" />
                 </div>
               </SidebarGroupContent>
-            </SidebarGroup>
-          )}
+            </SidebarGroup>}
 
-          <SidebarSeparator />
+          <SidebarSeparator className="hidden " />
 
           {/* Chat History Section */}
-          {!isCollapsed && (
-            <ChatHistorySection
-              chats={chats}
-              folders={folders}
-              activeChatId={activeChatId}
-              editingChatId={editingChatId}
-              newChatTitle={newChatTitle}
-              onSelectChat={onSelectChat}
-              onStartEdit={handleStartEdit}
-              onPinChat={handlePinChat}
-              onDeleteChat={handleDeleteChat}
-              onTitleChange={handleTitleChange}
-              onUpdateTitle={handleUpdateTitle}
-              onTitleKeyDown={handleTitleKeyDown}
-              createFolder={createFolder}
-              updateFolder={updateFolder}
-              deleteFolder={deleteFolder}
-              searchTerm={searchTerm}
-              isCollapsed={sections.chatHistory.isCollapsed}
-              isPinned={sections.chatHistory.isPinned}
-              onToggle={() => toggleSection('chatHistory')}
-              onTogglePin={() => togglePin('chatHistory')}
-            />
-          )}
+          {!isCollapsed && <ChatHistorySection chats={chats} folders={folders} activeChatId={activeChatId} editingChatId={editingChatId} newChatTitle={newChatTitle} onSelectChat={onSelectChat} onStartEdit={handleStartEdit} onPinChat={handlePinChat} onDeleteChat={handleDeleteChat} onTitleChange={handleTitleChange} onUpdateTitle={handleUpdateTitle} onTitleKeyDown={handleTitleKeyDown} createFolder={createFolder} updateFolder={updateFolder} deleteFolder={deleteFolder} searchTerm={searchTerm} isCollapsed={sections.chatHistory.isCollapsed} isPinned={sections.chatHistory.isPinned} onToggle={() => toggleSection('chatHistory')} onTogglePin={() => togglePin('chatHistory')} />}
 
           {/* Folders Section */}
-          {!isCollapsed && (
-            <FolderSectionWrapper
-              folders={folders}
-              chats={chats}
-              activeChatId={activeChatId}
-              onSelectChat={onSelectChat}
-              createFolder={createFolder}
-              updateFolder={updateFolder}
-              deleteFolder={deleteFolder}
-              searchTerm={searchTerm}
-              isCollapsed={sections.folders.isCollapsed}
-              isPinned={sections.folders.isPinned}
-              onToggle={() => toggleSection('folders')}
-              onTogglePin={() => togglePin('folders')}
-            />
-          )}
+          {!isCollapsed && <FolderSectionWrapper folders={folders} chats={chats} activeChatId={activeChatId} onSelectChat={onSelectChat} createFolder={createFolder} updateFolder={updateFolder} deleteFolder={deleteFolder} searchTerm={searchTerm} isCollapsed={sections.folders.isCollapsed} isPinned={sections.folders.isPinned} onToggle={() => toggleSection('folders')} onTogglePin={() => togglePin('folders')} />}
           
-          <SidebarSeparator />
+          <SidebarSeparator className="hidden " />
 
           {/* Tags Section */}
-          {!isCollapsed && (
-            <TagSection
-              tags={tags}
-              chats={chats}
-              activeChatId={activeChatId}
-              onSelectChat={onSelectChat}
-              createTag={createTag}
-              updateTag={updateTag}
-              deleteTag={deleteTag}
-              searchTerm={searchTerm}
-              isCollapsed={sections.tags.isCollapsed}
-              isPinned={sections.tags.isPinned}
-              onToggle={() => toggleSection('tags')}
-              onTogglePin={() => togglePin('tags')}
-            />
-          )}
+          {!isCollapsed && <TagSection tags={tags} chats={chats} activeChatId={activeChatId} onSelectChat={onSelectChat} createTag={createTag} updateTag={updateTag} deleteTag={deleteTag} searchTerm={searchTerm} isCollapsed={sections.tags.isCollapsed} isPinned={sections.tags.isPinned} onToggle={() => toggleSection('tags')} onTogglePin={() => togglePin('tags')} />}
 
           {/* Show regular sections when collapsed */}
-          {isCollapsed && (
-            <>
-              <ChatHistory 
-                chats={chats} 
-                folders={folders} 
-                activeChatId={activeChatId} 
-                editingChatId={editingChatId} 
-                newChatTitle={newChatTitle} 
-                onSelectChat={onSelectChat} 
-                onStartEdit={handleStartEdit} 
-                onPinChat={handlePinChat} 
-                onDeleteChat={handleDeleteChat} 
-                onTitleChange={handleTitleChange} 
-                onUpdateTitle={handleUpdateTitle} 
-                onTitleKeyDown={handleTitleKeyDown} 
-                createFolder={createFolder} 
-                updateFolder={updateFolder} 
-                deleteFolder={deleteFolder}
-                searchTerm={searchTerm}
-              />
+          {isCollapsed && <>
+              <ChatHistory chats={chats} folders={folders} activeChatId={activeChatId} editingChatId={editingChatId} newChatTitle={newChatTitle} onSelectChat={onSelectChat} onStartEdit={handleStartEdit} onPinChat={handlePinChat} onDeleteChat={handleDeleteChat} onTitleChange={handleTitleChange} onUpdateTitle={handleUpdateTitle} onTitleKeyDown={handleTitleKeyDown} createFolder={createFolder} updateFolder={updateFolder} deleteFolder={deleteFolder} searchTerm={searchTerm} />
               
               <SidebarSeparator />
 
-              <TagList
-                tags={tags}
-                chats={chats}
-                activeChatId={activeChatId}
-                onSelectChat={onSelectChat}
-                onCreateTag={createTag}
-                onUpdateTag={updateTag}
-                onDeleteTag={deleteTag}
-                searchTerm={searchTerm}
-              />
-            </>
-          )}
+              <TagList tags={tags} chats={chats} activeChatId={activeChatId} onSelectChat={onSelectChat} onCreateTag={createTag} onUpdateTag={updateTag} onDeleteTag={deleteTag} searchTerm={searchTerm} />
+            </>}
           
-          <SidebarSeparator />
+          <SidebarSeparator className="hidden " />
 
           {/* Navigation */}
           <SidebarGroup>
@@ -326,8 +230,6 @@ const AppSidebar = ({
       
       <SettingsDialog isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} onOpenProfile={handleOpenProfile} />
       <UserProfileDialog isOpen={isProfileOpen} onOpenChange={setIsProfileOpen} isDarkMode={isDarkMode} />
-    </>
-  );
+    </>;
 };
-
 export default AppSidebar;
