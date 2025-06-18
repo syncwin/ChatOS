@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ChatMessage {
@@ -111,7 +112,7 @@ export const getAvailableProviders = async (): Promise<string[]> => {
   return [...new Set(providers)];
 };
 
-// Default models for each provider
+// Default models for each provider (fallback)
 export const getDefaultModel = (provider: string): string => {
   const defaultModels: Record<string, string> = {
     'OpenAI': 'gpt-4o-mini',
@@ -124,10 +125,10 @@ export const getDefaultModel = (provider: string): string => {
   return defaultModels[provider] || 'gpt-4o-mini';
 };
 
-// Available models for each provider
-export const getAvailableModels = (provider:string): string[] => {
+// Fallback models for each provider (used when dynamic fetching fails)
+export const getAvailableModels = (provider: string): string[] => {
   const models: Record<string, string[]> = {
-    'OpenAI': ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo'],
+    'OpenAI': ['gpt-4o-mini', 'gpt-4o', 'gpt-3.5-turbo', 'o1-preview', 'o1-mini'],
     'Anthropic': [
       'claude-opus-4-20250514',
       'claude-sonnet-4-20250514',
