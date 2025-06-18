@@ -1,6 +1,16 @@
-
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from '@/integrations/supabase/client';
+import { 
+  chatTitleSchema, 
+  folderNameSchema, 
+  tagNameSchema, 
+  messageContentSchema,
+  profileNameSchema,
+  profileWebsiteSchema,
+  validateInput,
+  sanitizeHtml 
+} from '@/lib/validation';
+import { secureGuestStorage } from '@/lib/secureStorage';
 
 export interface UserProfile {
   id: string;
@@ -83,6 +93,15 @@ export const updateProfile = async (updates: { name?: string; avatar_url?: strin
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
+  // Validate inputs
+  if (updates.name !== undefined) {
+    const validation = validateInput(profileNameSchema, updates.name);
+    if (!validation.success) {
+      throw new Error(validation.error || 'Invalid name');
+    }
+    updates.name = validation.data;
+  }
+
   const profileUpdates: any = {};
   if (updates.name !== undefined) profileUpdates.full_name = updates.name;
   if (updates.avatar_url !== undefined) profileUpdates.avatar_url = updates.avatar_url;
@@ -127,12 +146,19 @@ export const createChat = async (title: string): Promise<Chat> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
+  // Validate and sanitize title
+  const validation = validateInput(chatTitleSchema, title);
+  if (!validation.success) {
+    throw new Error(validation.error || 'Invalid chat title');
+  }
+  const sanitizedTitle = sanitizeHtml(validation.data);
+
   const newChatId = uuidv4();
 
   const { error } = await supabase.from('chats').insert([
     {
       id: newChatId,
-      title: title,
+      title: sanitizedTitle,
       user_id: user.id,
     },
   ]);
@@ -141,7 +167,7 @@ export const createChat = async (title: string): Promise<Chat> => {
 
   return {
     id: newChatId,
-    title: title,
+    title: sanitizedTitle,
     user_id: user.id,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -154,6 +180,13 @@ export const addMessage = async (message: NewMessage): Promise<Message> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
+  // Validate and sanitize message content
+  const validation = validateInput(messageContentSchema, message.content);
+  if (!validation.success) {
+    throw new Error(validation.error || 'Invalid message content');
+  }
+  const sanitizedContent = sanitizeHtml(validation.data);
+
   const newMessageId = uuidv4();
 
   const { error } = await supabase.from('chat_messages').insert([
@@ -162,7 +195,7 @@ export const addMessage = async (message: NewMessage): Promise<Message> => {
       chat_id: message.chat_id,
       user_id: user.id,
       role: message.role,
-      content: message.content,
+      content: sanitizedContent,
       provider: message.provider,
       model: message.model,
       usage: message.usage,
@@ -183,7 +216,7 @@ export const addMessage = async (message: NewMessage): Promise<Message> => {
     user_id: user.id,
     created_at: new Date().toISOString(),
     role: message.role,
-    content: message.content,
+    content: sanitizedContent,
     provider: message.provider,
     model: message.model,
     usage: message.usage,
@@ -194,9 +227,16 @@ export const updateChatTitle = async (chatId: string, title: string): Promise<vo
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
+  // Validate and sanitize title
+  const validation = validateInput(chatTitleSchema, title);
+  if (!validation.success) {
+    throw new Error(validation.error || 'Invalid chat title');
+  }
+  const sanitizedTitle = sanitizeHtml(validation.data);
+
   const { error } = await supabase
     .from('chats')
-    .update({ title })
+    .update({ title: sanitizedTitle })
     .eq('id', chatId)
     .eq('user_id', user.id);
 
@@ -243,12 +283,19 @@ export const createFolder = async (name: string): Promise<Folder> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
+  // Validate and sanitize folder name
+  const validation = validateInput(folderNameSchema, name);
+  if (!validation.success) {
+    throw new Error(validation.error || 'Invalid folder name');
+  }
+  const sanitizedName = sanitizeHtml(validation.data);
+
   const newFolderId = uuidv4();
 
   const { error } = await supabase.from('folders').insert([
     {
       id: newFolderId,
-      name: name,
+      name: sanitizedName,
       user_id: user.id,
     },
   ]);
@@ -257,7 +304,7 @@ export const createFolder = async (name: string): Promise<Folder> => {
 
   return {
     id: newFolderId,
-    name: name,
+    name: sanitizedName,
     user_id: user.id,
     created_at: new Date().toISOString(),
   };
@@ -267,9 +314,16 @@ export const updateFolder = async (folderId: string, name: string): Promise<void
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
+  // Validate and sanitize folder name
+  const validation = validateInput(folderNameSchema, name);
+  if (!validation.success) {
+    throw new Error(validation.error || 'Invalid folder name');
+  }
+  const sanitizedName = sanitizeHtml(validation.data);
+
   const { error } = await supabase
     .from('folders')
-    .update({ name })
+    .update({ name: sanitizedName })
     .eq('id', folderId)
     .eq('user_id', user.id);
 
@@ -323,12 +377,19 @@ export const createTag = async (name: string, color?: string): Promise<Tag> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
+  // Validate and sanitize tag name
+  const validation = validateInput(tagNameSchema, name);
+  if (!validation.success) {
+    throw new Error(validation.error || 'Invalid tag name');
+  }
+  const sanitizedName = sanitizeHtml(validation.data);
+
   const newTagId = uuidv4();
 
   const { error } = await supabase.from('tags').insert([
     {
       id: newTagId,
-      name: name,
+      name: sanitizedName,
       color: color,
       user_id: user.id,
     },
@@ -338,7 +399,7 @@ export const createTag = async (name: string, color?: string): Promise<Tag> => {
 
   return {
     id: newTagId,
-    name: name,
+    name: sanitizedName,
     color: color,
     user_id: user.id,
     created_at: new Date().toISOString(),
@@ -349,9 +410,16 @@ export const updateTag = async (tagId: string, name: string, color?: string): Pr
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
+  // Validate and sanitize tag name
+  const validation = validateInput(tagNameSchema, name);
+  if (!validation.success) {
+    throw new Error(validation.error || 'Invalid tag name');
+  }
+  const sanitizedName = sanitizeHtml(validation.data);
+
   const { error } = await supabase
     .from('tags')
-    .update({ name, color })
+    .update({ name: sanitizedName, color })
     .eq('id', tagId)
     .eq('user_id', user.id);
 
@@ -433,4 +501,21 @@ export const getChatTags = async (chatId: string): Promise<Tag[]> => {
 
   if (error) throw error;
   return data?.map(item => item.tags) || [];
+};
+
+// Security utility functions for guest storage
+export const storeGuestApiKey = async (provider: string, apiKey: string): Promise<void> => {
+  await secureGuestStorage.storeApiKey(provider, apiKey);
+};
+
+export const getGuestApiKey = async (provider: string): Promise<string | null> => {
+  return await secureGuestStorage.getApiKey(provider);
+};
+
+export const removeGuestApiKey = (provider: string): void => {
+  secureGuestStorage.removeApiKey(provider);
+};
+
+export const getGuestSecurityWarning = (): string => {
+  return secureGuestStorage.getSecurityWarning();
 };
