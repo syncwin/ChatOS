@@ -33,7 +33,7 @@ class ModelProviderService {
         requestHeaders['Authorization'] = `Bearer ${apiKey}`;
         requestHeaders['HTTP-Referer'] = window.location.origin;
         requestHeaders['X-Title'] = 'ChatOS';
-      } else if (url.includes('openai.com')) {
+      } else if (url.includes('openai.com') || url.includes('generativelanguage.googleapis.com')) {
         requestHeaders['Authorization'] = `Bearer ${apiKey}`;
       }
     }
@@ -105,18 +105,20 @@ class ModelProviderService {
         };
       }
 
+      // Use OpenAI-compatible endpoint for Gemini
       const response = await this.fetchWithAuth(
-        `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
+        'https://generativelanguage.googleapis.com/v1beta/openai/models',
+        apiKey
       );
       
       const data = await response.json();
-      const models: ModelInfo[] = data.models?.map((model: any) => ({
-        id: model.name.replace('models/', ''),
-        name: model.displayName || model.name,
+      const models: ModelInfo[] = data.data?.map((model: any) => ({
+        id: model.id,
+        name: model.id,
         provider: 'Google Gemini',
-        description: model.description,
-        context_length: 128000, // Default for Gemini models
-        capabilities: model.supportedGenerationMethods || []
+        description: this.getGeminiModelDescription(model.id),
+        context_length: this.getGeminiContextLength(model.id),
+        created: model.created
       })) || [];
 
       modelCache.set(cacheKey, { data: models, timestamp: Date.now() });
@@ -174,6 +176,26 @@ class ModelProviderService {
     }
   }
 
+  private getGeminiModelDescription(modelId: string): string {
+    const descriptions: Record<string, string> = {
+      'gemini-1.5-flash': 'Fast and efficient model for most tasks',
+      'gemini-1.5-pro': 'Most capable Gemini model with advanced reasoning',
+      'gemini-pro': 'Balanced performance model for general use',
+      'gemini-pro-vision': 'Gemini model with vision capabilities'
+    };
+    return descriptions[modelId] || 'Google Gemini language model';
+  }
+
+  private getGeminiContextLength(modelId: string): number {
+    const contextLengths: Record<string, number> = {
+      'gemini-1.5-flash': 1000000,
+      'gemini-1.5-pro': 2000000,
+      'gemini-pro': 30720,
+      'gemini-pro-vision': 30720
+    };
+    return contextLengths[modelId] || 128000;
+  }
+
   private getOpenAIModelDescription(modelId: string): string {
     const descriptions: Record<string, string> = {
       'gpt-4o': 'Most capable GPT-4 model with vision capabilities',
@@ -206,8 +228,8 @@ class ModelProviderService {
         { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', provider: 'OpenAI', description: 'Fast and cost-effective', context_length: 16385 }
       ],
       'Google Gemini': [
-        { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', provider: 'Google Gemini', description: 'Fast and efficient model', context_length: 128000 },
-        { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', provider: 'Google Gemini', description: 'Most capable Gemini model', context_length: 128000 },
+        { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', provider: 'Google Gemini', description: 'Fast and efficient model', context_length: 1000000 },
+        { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', provider: 'Google Gemini', description: 'Most capable Gemini model', context_length: 2000000 },
         { id: 'gemini-pro', name: 'Gemini Pro', provider: 'Google Gemini', description: 'Balanced performance model', context_length: 30720 }
       ],
       'OpenRouter': [
