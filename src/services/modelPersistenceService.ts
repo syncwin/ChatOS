@@ -39,7 +39,7 @@ class ModelPersistenceService {
         return null;
       }
 
-      return data?.model_selection as ModelSelection | null;
+      return (data as any)?.model_selection as ModelSelection | null;
     } catch (error) {
       console.error('Error loading model selection:', error);
       return null;

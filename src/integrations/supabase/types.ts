@@ -174,6 +174,7 @@ export type Database = {
           avatar_url: string | null
           full_name: string | null
           id: string
+          model_selection: Json | null
           theme: string
           updated_at: string | null
           website: string | null
@@ -182,6 +183,7 @@ export type Database = {
           avatar_url?: string | null
           full_name?: string | null
           id: string
+          model_selection?: Json | null
           theme?: string
           updated_at?: string | null
           website?: string | null
@@ -190,6 +192,7 @@ export type Database = {
           avatar_url?: string | null
           full_name?: string | null
           id?: string
+          model_selection?: Json | null
           theme?: string
           updated_at?: string | null
           website?: string | null

@@ -22,7 +22,7 @@ export const useModelSelection = () => {
   const loadSelectedModel = () => {
     if (user && profile) {
       // Load from user profile
-      const savedSelection = profile.model_selection as ModelSelection | null;
+      const savedSelection = (profile as any).model_selection as ModelSelection | null;
       if (savedSelection) {
         setSelectedProvider(savedSelection.provider);
         setSelectedModel(savedSelection.model);
@@ -45,7 +45,7 @@ export const useModelSelection = () => {
     if (user && profile) {
       // Save to user profile
       const modelSelection: ModelSelection = { provider, model };
-      updateProfile({ model_selection: modelSelection });
+      updateProfile({ model_selection: modelSelection } as any);
     } else {
       // Save to localStorage for guests or non-logged-in users
       localStorage.setItem('selectedProvider', provider);
@@ -58,7 +58,7 @@ export const useModelSelection = () => {
     setSelectedModel('');
 
     if (user && profile) {
-      updateProfile({ model_selection: null });
+      updateProfile({ model_selection: null } as any);
     } else {
       localStorage.removeItem('selectedProvider');
       localStorage.removeItem('selectedModel');
@@ -73,15 +73,15 @@ export const useModelSelection = () => {
         provider: selectedProvider, 
         model: selectedModel 
       };
-      updateProfile({ model_selection: modelSelection });
+      updateProfile({ model_selection: modelSelection } as any);
       
       // Clear localStorage after migration
       localStorage.removeItem('selectedProvider');
       localStorage.removeItem('selectedModel');
     } else if (!fromGuest) {
       // Migrate from user profile to localStorage (logout)
-      if (profile?.model_selection) {
-        const selection = profile.model_selection as ModelSelection;
+      if ((profile as any)?.model_selection) {
+        const selection = (profile as any).model_selection as ModelSelection;
         localStorage.setItem('selectedProvider', selection.provider);
         localStorage.setItem('selectedModel', selection.model);
       }
