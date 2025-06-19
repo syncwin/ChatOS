@@ -9,13 +9,13 @@ interface ModelSelection {
 class ModelPersistenceService {
   // Save model selection to user profile
   async saveToProfile(userId: string, provider: string, model: string): Promise<void> {
-    const modelSelection: ModelSelection = { provider, model };
+    const modelSelection = { provider, model };
     
     const { error } = await supabase
       .from('profiles')
       .upsert({
         id: userId,
-        model_selection: modelSelection,
+        model_selection: modelSelection as any,
         updated_at: new Date().toISOString(),
       });
 

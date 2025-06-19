@@ -1,3 +1,4 @@
+
 import {
   Dialog,
   DialogContent,
@@ -62,7 +63,8 @@ const UserProfileDialog = ({ isOpen, onOpenChange, isDarkMode }: UserProfileDial
                 full_name: '', 
                 website: null, 
                 updated_at: null,
-                theme: 'dark'
+                theme: 'dark',
+                model_selection: null
               }} 
               onSuccess={() => onOpenChange(false)} 
             />
