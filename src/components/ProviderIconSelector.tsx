@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Bot, Sparkles, Zap, Brain, Cpu } from "lucide-react";
+import { Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -96,85 +96,96 @@ const ProviderIconSelector = ({
   const SelectedIcon = providerIcons[selectedProvider] || Bot;
 
   return (
-    <div className="flex items-center gap-2">
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 hover:bg-muted relative"
-              >
-                <SelectedIcon className="w-4 h-4" />
-                {selectedProvider && (
-                  <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-green-500 rounded-full" />
-                )}
-              </Button>
-            </PopoverTrigger>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{selectedProvider ? `${selectedProvider}` : 'Select AI Provider'}</p>
-          </TooltipContent>
-        </Tooltip>
-        
-        <PopoverContent className="w-72 bg-popover border shadow-md" align="end">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">AI Provider</span>
-            </div>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 hover:bg-muted relative"
+            >
+              <SelectedIcon className="w-4 h-4" />
+              {selectedProvider && (
+                <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-green-500 rounded-full" />
+              )}
+            </Button>
+          </PopoverTrigger>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{selectedProvider ? `${selectedProvider}${selectedModel ? ` - ${selectedModel}` : ''}` : 'Select AI Provider'}</p>
+        </TooltipContent>
+      </Tooltip>
+      
+      <PopoverContent className="w-80 bg-popover border shadow-md" align="end">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">AI Provider & Model</span>
+          </div>
 
-            {selectedProvider && (
-              <div>
-                <span className="text-xs font-medium text-muted-foreground">Current Selection</span>
-                <div className="mt-1">
-                  <Badge variant="secondary" className="text-xs">
-                    {selectedProvider}
+          {selectedProvider && (
+            <div>
+              <span className="text-xs font-medium text-muted-foreground">Current Selection</span>
+              <div className="mt-1 space-y-1">
+                <Badge variant="secondary" className="text-xs">
+                  {selectedProvider}
+                </Badge>
+                {selectedModel && (
+                  <Badge variant="outline" className="text-xs ml-1">
+                    {selectedModel}
                   </Badge>
-                </div>
+                )}
               </div>
-            )}
+            </div>
+          )}
 
-            <Separator />
+          <Separator />
 
-            <div className="space-y-2">
-              <span className="text-xs font-medium text-muted-foreground">Available Providers</span>
-              <div className="grid grid-cols-2 gap-2">
-                {availableProviders.map((provider) => {
-                  const ProviderIcon = providerIcons[provider] || Bot;
-                  const isSelected = provider === selectedProvider;
-                  
-                  return (
-                    <Button
-                      key={provider}
-                      variant={isSelected ? "default" : "outline"}
-                      size="sm"
-                      className="h-12 flex flex-col gap-1 text-xs"
-                      onClick={() => {
-                        onSelectProvider(provider);
-                        setIsOpen(false);
-                      }}
-                    >
-                      <ProviderIcon className="w-4 h-4" />
-                      <span className="truncate">{provider}</span>
-                    </Button>
-                  );
-                })}
-              </div>
+          <div className="space-y-3">
+            <span className="text-xs font-medium text-muted-foreground">Available Providers</span>
+            <div className="grid grid-cols-2 gap-2">
+              {availableProviders.map((provider) => {
+                const ProviderIcon = providerIcons[provider] || Bot;
+                const isSelected = provider === selectedProvider;
+                
+                return (
+                  <Button
+                    key={provider}
+                    variant={isSelected ? "default" : "outline"}
+                    size="sm"
+                    className="h-12 flex flex-col gap-1 text-xs"
+                    onClick={() => {
+                      onSelectProvider(provider);
+                    }}
+                  >
+                    <ProviderIcon className="w-4 h-4" />
+                    <span className="truncate">{provider}</span>
+                  </Button>
+                );
+              })}
             </div>
           </div>
-        </PopoverContent>
-      </Popover>
 
-      {selectedProvider && (
-        <ModelSelector
-          provider={selectedProvider}
-          selectedModel={selectedModel}
-          onSelectModel={onSelectModel}
-          className="h-8 text-xs"
-        />
-      )}
-    </div>
+          {selectedProvider && (
+            <>
+              <Separator />
+              <div className="space-y-3">
+                <span className="text-xs font-medium text-muted-foreground">Select Model</span>
+                <ModelSelector
+                  provider={selectedProvider}
+                  selectedModel={selectedModel}
+                  onSelectModel={(model) => {
+                    onSelectModel(model);
+                    setIsOpen(false);
+                  }}
+                  className="w-full"
+                />
+              </div>
+            </>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 };
 

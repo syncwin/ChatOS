@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import { modelPersistenceService } from '@/services/modelPersistenceService';
+import { toast } from 'sonner';
 
 interface ModelSelection {
   provider: string;
@@ -13,79 +15,98 @@ export const useModelSelection = () => {
   const { profile, updateProfile } = useProfile();
   const [selectedProvider, setSelectedProvider] = useState<string>('');
   const [selectedModel, setSelectedModel] = useState<string>('');
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Load initial selection on mount
+  // Load initial selection on mount and when auth state changes
   useEffect(() => {
     loadSelectedModel();
   }, [user, isGuest, profile]);
 
-  const loadSelectedModel = () => {
-    if (user && profile) {
-      // Load from user profile
-      const savedSelection = (profile as any).model_selection as ModelSelection | null;
+  const loadSelectedModel = async () => {
+    try {
+      let savedSelection: ModelSelection | null = null;
+
+      if (user && profile) {
+        // Load from user profile
+        savedSelection = await modelPersistenceService.loadFromProfile(user.id);
+      } else {
+        // Load from localStorage for guests or non-logged-in users
+        savedSelection = modelPersistenceService.loadFromLocalStorage();
+      }
+
       if (savedSelection) {
         setSelectedProvider(savedSelection.provider);
         setSelectedModel(savedSelection.model);
       }
-    } else {
-      // Load from localStorage for guests or non-logged-in users
-      const savedProvider = localStorage.getItem('selectedProvider');
-      const savedModel = localStorage.getItem('selectedModel');
-      if (savedProvider && savedModel) {
-        setSelectedProvider(savedProvider);
-        setSelectedModel(savedModel);
-      }
+    } catch (error) {
+      console.error('Failed to load model selection:', error);
+    } finally {
+      setIsInitialized(true);
     }
   };
 
-  const saveSelectedModel = (provider: string, model: string) => {
+  const saveSelectedModel = async (provider: string, model: string) => {
     setSelectedProvider(provider);
     setSelectedModel(model);
 
-    if (user && profile) {
-      // Save to user profile
-      const modelSelection: ModelSelection = { provider, model };
-      updateProfile({ model_selection: modelSelection } as any);
-    } else {
-      // Save to localStorage for guests or non-logged-in users
-      localStorage.setItem('selectedProvider', provider);
-      localStorage.setItem('selectedModel', model);
+    try {
+      if (user && profile) {
+        // Save to user profile
+        await modelPersistenceService.saveToProfile(user.id, provider, model);
+      } else {
+        // Save to localStorage for guests or non-logged-in users
+        modelPersistenceService.saveToLocalStorage(provider, model);
+      }
+    } catch (error) {
+      console.error('Failed to save model selection:', error);
+      toast.error('Failed to save model selection');
     }
   };
 
-  const clearSelectedModel = () => {
+  const clearSelectedModel = async () => {
     setSelectedProvider('');
     setSelectedModel('');
 
-    if (user && profile) {
-      updateProfile({ model_selection: null } as any);
-    } else {
-      localStorage.removeItem('selectedProvider');
-      localStorage.removeItem('selectedModel');
+    try {
+      if (user && profile) {
+        await modelPersistenceService.saveToProfile(user.id, '', '');
+      } else {
+        modelPersistenceService.clearLocalStorage();
+      }
+    } catch (error) {
+      console.error('Failed to clear model selection:', error);
     }
   };
 
   // Handle login/logout transitions
-  const migrateSelection = (fromGuest: boolean) => {
+  const migrateSelection = async (fromGuest: boolean) => {
     if (fromGuest && selectedProvider && selectedModel) {
       // Migrate from localStorage to user profile
-      const modelSelection: ModelSelection = { 
-        provider: selectedProvider, 
-        model: selectedModel 
-      };
-      updateProfile({ model_selection: modelSelection } as any);
-      
-      // Clear localStorage after migration
-      localStorage.removeItem('selectedProvider');
-      localStorage.removeItem('selectedModel');
-    } else if (!fromGuest) {
-      // Migrate from user profile to localStorage (logout)
-      if ((profile as any)?.model_selection) {
-        const selection = (profile as any).model_selection as ModelSelection;
-        localStorage.setItem('selectedProvider', selection.provider);
-        localStorage.setItem('selectedModel', selection.model);
+      try {
+        if (user) {
+          await modelPersistenceService.saveToProfile(user.id, selectedProvider, selectedModel);
+          // Clear localStorage after successful migration
+          modelPersistenceService.clearLocalStorage();
+        }
+      } catch (error) {
+        console.error('Failed to migrate model selection:', error);
       }
+    } else if (!fromGuest && selectedProvider && selectedModel) {
+      // Migrate from user profile to localStorage (logout)
+      modelPersistenceService.saveToLocalStorage(selectedProvider, selectedModel);
     }
+  };
+
+  // Check if model is available and handle unavailable models
+  const validateModelAvailability = (modelId: string, availableModels: Array<{ id: string }>) => {
+    if (!modelId) return true;
+    
+    const isAvailable = modelPersistenceService.isModelAvailable(modelId, availableModels);
+    if (!isAvailable && modelId) {
+      toast.warning(`Previously selected model "${modelId}" is no longer available. Please select a new model.`);
+      return false;
+    }
+    return true;
   };
 
   return {
@@ -95,5 +116,7 @@ export const useModelSelection = () => {
     clearSelectedModel,
     migrateSelection,
     loadSelectedModel,
+    validateModelAvailability,
+    isInitialized,
   };
 };
