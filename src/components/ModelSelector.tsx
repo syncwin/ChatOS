@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
-import { Search, ChevronDown, Zap, Brain, Sparkles, Bot, Cpu } from 'lucide-react';
+import { Search, ChevronDown, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { modelProviderService, type ModelInfo } from '@/services/modelProviderService';
+import { modelPersistenceService } from '@/services/modelPersistenceService';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -133,15 +134,21 @@ const ModelSelector = ({
       }
 
       if (response.error && userApiKey) {
-        // Only show error as warning if user has API key but still failed
         setError(response.error);
         toast.warning(`Using fallback models for ${provider}: ${response.error}`);
       } else if (response.error && !userApiKey) {
-        // Show different message if no API key is provided
         setError(`API key required for ${provider} models`);
       }
 
       setModels(response.models);
+
+      // Check if the currently selected model is still available
+      if (selectedModel && response.models.length > 0) {
+        const isModelStillAvailable = modelPersistenceService.isModelAvailable(selectedModel, response.models);
+        if (!isModelStillAvailable) {
+          toast.warning(`Previously selected model "${selectedModel}" is no longer available. Please select a new model.`);
+        }
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch models';
       setError(errorMessage);
@@ -159,20 +166,43 @@ const ModelSelector = ({
 
   // Load persisted model selection on mount
   useEffect(() => {
-    if (provider && !selectedModel) {
-      const persistedModel = localStorage.getItem(`selectedModel_${provider}`);
-      if (persistedModel) {
-        onSelectModel(persistedModel);
-      }
-    }
-  }, [provider, selectedModel, onSelectModel]);
+    const loadPersistedSelection = async () => {
+      if (provider && !selectedModel) {
+        let persistedSelection;
+        
+        if (user) {
+          // Load from user profile
+          persistedSelection = await modelPersistenceService.loadFromProfile(user.id);
+        } else {
+          // Load from localStorage
+          persistedSelection = modelPersistenceService.loadFromLocalStorage();
+        }
 
-  // Save selected model to localStorage
-  useEffect(() => {
-    if (selectedModel && provider) {
-      localStorage.setItem(`selectedModel_${provider}`, selectedModel);
+        if (persistedSelection && persistedSelection.provider === provider) {
+          onSelectModel(persistedSelection.model);
+        }
+      }
+    };
+
+    loadPersistedSelection();
+  }, [provider, selectedModel, onSelectModel, user]);
+
+  const handleModelSelect = async (modelId: string) => {
+    onSelectModel(modelId);
+    setIsOpen(false);
+
+    // Persist the selection
+    try {
+      if (user) {
+        await modelPersistenceService.saveToProfile(user.id, provider, modelId);
+      } else {
+        modelPersistenceService.saveToLocalStorage(provider, modelId);
+      }
+    } catch (error) {
+      console.error('Failed to persist model selection:', error);
+      toast.error('Failed to save model selection');
     }
-  }, [selectedModel, provider]);
+  };
 
   const filteredModels = useMemo(() => {
     if (!searchQuery) return models;
@@ -261,10 +291,7 @@ const ModelSelector = ({
                     key={model.id}
                     variant={model.id === selectedModel ? "secondary" : "ghost"}
                     className="w-full justify-start h-auto p-3 text-left"
-                    onClick={() => {
-                      onSelectModel(model.id);
-                      setIsOpen(false);
-                    }}
+                    onClick={() => handleModelSelect(model.id)}
                   >
                     <div className="flex flex-col gap-1 min-w-0 w-full">
                       <div className="flex items-center justify-between gap-2">

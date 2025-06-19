@@ -1,3 +1,4 @@
+
 export interface ModelInfo {
   id: string;
   name: string;
@@ -20,7 +21,13 @@ export interface ModelResponse {
 const MODEL_CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 const modelCache = new Map<string, { data: ModelInfo[]; timestamp: number }>();
 
+/**
+ * Service for fetching and managing AI model information from various providers
+ */
 class ModelProviderService {
+  /**
+   * Make authenticated requests to provider APIs
+   */
   private async fetchWithAuth(url: string, apiKey?: string, headers: Record<string, string> = {}): Promise<Response> {
     const requestHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -49,6 +56,9 @@ class ModelProviderService {
     return response;
   }
 
+  /**
+   * Fetch available models from OpenRouter
+   */
   async fetchOpenRouterModels(apiKey?: string): Promise<ModelResponse> {
     const cacheKey = 'openrouter';
     const cached = modelCache.get(cacheKey);
@@ -88,6 +98,9 @@ class ModelProviderService {
     }
   }
 
+  /**
+   * Fetch available models from Google Gemini
+   */
   async fetchGeminiModels(apiKey?: string): Promise<ModelResponse> {
     const cacheKey = `gemini_${apiKey ? 'with_key' : 'no_key'}`;
     const cached = modelCache.get(cacheKey);
@@ -130,6 +143,9 @@ class ModelProviderService {
     }
   }
 
+  /**
+   * Fetch available models from OpenAI
+   */
   async fetchOpenAIModels(apiKey?: string): Promise<ModelResponse> {
     const cacheKey = `openai_${apiKey ? 'with_key' : 'no_key'}`;
     const cached = modelCache.get(cacheKey);
@@ -174,6 +190,9 @@ class ModelProviderService {
     }
   }
 
+  /**
+   * Get model description for Gemini models
+   */
   private getGeminiModelDescription(modelId: string): string {
     const descriptions: Record<string, string> = {
       'gemini-1.5-flash': 'Fast and efficient model for most tasks',
@@ -184,6 +203,9 @@ class ModelProviderService {
     return descriptions[modelId] || 'Google Gemini language model';
   }
 
+  /**
+   * Get context length for Gemini models
+   */
   private getGeminiContextLength(modelId: string): number {
     const contextLengths: Record<string, number> = {
       'gemini-1.5-flash': 1000000,
@@ -194,6 +216,9 @@ class ModelProviderService {
     return contextLengths[modelId] || 128000;
   }
 
+  /**
+   * Get model description for OpenAI models
+   */
   private getOpenAIModelDescription(modelId: string): string {
     const descriptions: Record<string, string> = {
       'gpt-4o': 'Most capable GPT-4 model with vision capabilities',
@@ -206,6 +231,9 @@ class ModelProviderService {
     return descriptions[modelId] || 'OpenAI language model';
   }
 
+  /**
+   * Get context length for OpenAI models
+   */
   private getOpenAIContextLength(modelId: string): number {
     const contextLengths: Record<string, number> = {
       'gpt-4o': 128000,
@@ -218,6 +246,9 @@ class ModelProviderService {
     return contextLengths[modelId] || 4096;
   }
 
+  /**
+   * Get fallback models when API calls fail
+   */
   private getFallbackModels(provider: string): ModelInfo[] {
     const fallbackModels: Record<string, ModelInfo[]> = {
       'OpenAI': [
@@ -240,6 +271,9 @@ class ModelProviderService {
     return fallbackModels[provider] || [];
   }
 
+  /**
+   * Clear the model cache
+   */
   clearCache(): void {
     modelCache.clear();
   }
