@@ -1,4 +1,3 @@
-
 export interface ModelInfo {
   id: string;
   name: string;
@@ -90,22 +89,21 @@ class ModelProviderService {
   }
 
   async fetchGeminiModels(apiKey?: string): Promise<ModelResponse> {
-    const cacheKey = 'gemini';
+    const cacheKey = `gemini_${apiKey ? 'with_key' : 'no_key'}`;
     const cached = modelCache.get(cacheKey);
     
     if (cached && Date.now() - cached.timestamp < MODEL_CACHE_DURATION) {
       return { models: cached.data };
     }
 
-    try {
-      if (!apiKey) {
-        return { 
-          models: this.getFallbackModels('Google Gemini'),
-          error: 'API key required for Gemini models'
-        };
-      }
+    if (!apiKey) {
+      return { 
+        models: this.getFallbackModels('Google Gemini'),
+        error: 'API key required for Gemini models'
+      };
+    }
 
-      // Use OpenAI-compatible endpoint for Gemini
+    try {
       const response = await this.fetchWithAuth(
         'https://generativelanguage.googleapis.com/v1beta/openai/models',
         apiKey
@@ -133,21 +131,21 @@ class ModelProviderService {
   }
 
   async fetchOpenAIModels(apiKey?: string): Promise<ModelResponse> {
-    const cacheKey = 'openai';
+    const cacheKey = `openai_${apiKey ? 'with_key' : 'no_key'}`;
     const cached = modelCache.get(cacheKey);
     
     if (cached && Date.now() - cached.timestamp < MODEL_CACHE_DURATION) {
       return { models: cached.data };
     }
 
-    try {
-      if (!apiKey) {
-        return { 
-          models: this.getFallbackModels('OpenAI'),
-          error: 'API key required for OpenAI models'
-        };
-      }
+    if (!apiKey) {
+      return { 
+        models: this.getFallbackModels('OpenAI'),
+        error: 'API key required for OpenAI models'
+      };
+    }
 
+    try {
       const response = await this.fetchWithAuth(
         'https://api.openai.com/v1/models',
         apiKey

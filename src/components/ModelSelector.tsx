@@ -10,6 +10,8 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { modelProviderService, type ModelInfo } from '@/services/modelProviderService';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ModelSelectorProps {
   provider: string;
@@ -65,35 +67,72 @@ const ModelSelector = ({
   apiKey,
   className = ""
 }: ModelSelectorProps) => {
+  const { user, isGuest, guestApiKeys } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Get API key for the provider
+  const getApiKeyForProvider = async (provider: string): Promise<string | undefined> => {
+    if (isGuest) {
+      return guestApiKeys.find(k => k.provider === provider)?.api_key;
+    }
+    
+    if (!user) return undefined;
+    
+    try {
+      const { data, error } = await supabase
+        .from('api_keys')
+        .select('api_key')
+        .eq('user_id', user.id)
+        .eq('provider', provider)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching API key:', error);
+        return undefined;
+      }
+      
+      return data?.api_key;
+    } catch (error) {
+      console.error('Error fetching API key:', error);
+      return undefined;
+    }
+  };
+
   const fetchModels = async () => {
+    if (!provider) return;
+    
     setIsLoading(true);
     setError(null);
 
     try {
+      const userApiKey = await getApiKeyForProvider(provider);
       let response;
+      
       switch (provider) {
         case 'OpenAI':
-          response = await modelProviderService.fetchOpenAIModels(apiKey);
+          response = await modelProviderService.fetchOpenAIModels(userApiKey);
           break;
         case 'Google Gemini':
-          response = await modelProviderService.fetchGeminiModels(apiKey);
+          response = await modelProviderService.fetchGeminiModels(userApiKey);
           break;
         case 'OpenRouter':
-          response = await modelProviderService.fetchOpenRouterModels(apiKey);
+          response = await modelProviderService.fetchOpenRouterModels(userApiKey);
           break;
         default:
           response = { models: [], error: 'Unsupported provider' };
       }
 
-      if (response.error) {
+      if (response.error && userApiKey) {
+        // Only show error as warning if user has API key but still failed
         setError(response.error);
         toast.warning(`Using fallback models for ${provider}: ${response.error}`);
+      } else if (response.error && !userApiKey) {
+        // Show different message if no API key is provided
+        setError(`API key required for ${provider} models`);
       }
 
       setModels(response.models);
@@ -107,12 +146,20 @@ const ModelSelector = ({
     }
   };
 
-  // Fetch models immediately when provider changes
+  // Fetch models when provider changes
   useEffect(() => {
-    if (provider) {
-      fetchModels();
+    fetchModels();
+  }, [provider, user, isGuest]);
+
+  // Load persisted model selection on mount
+  useEffect(() => {
+    if (provider && !selectedModel) {
+      const persistedModel = localStorage.getItem(`selectedModel_${provider}`);
+      if (persistedModel) {
+        onSelectModel(persistedModel);
+      }
     }
-  }, [provider, apiKey]);
+  }, [provider, selectedModel, onSelectModel]);
 
   // Save selected model to localStorage
   useEffect(() => {
@@ -173,7 +220,7 @@ const ModelSelector = ({
               <span className="text-sm font-medium">{provider} Models</span>
               {error && (
                 <Badge variant="secondary" className="text-xs">
-                  Fallback
+                  {error.includes('API key required') ? 'No API Key' : 'Fallback'}
                 </Badge>
               )}
             </div>
@@ -199,7 +246,7 @@ const ModelSelector = ({
               </div>
             ) : filteredModels.length === 0 ? (
               <div className="p-3 text-center text-sm text-muted-foreground">
-                {searchQuery ? 'No models found matching your search' : 'No models available'}
+                {searchQuery ? 'No models found matching your search' : error?.includes('API key required') ? `Add your ${provider} API key in Settings to see available models` : 'No models available'}
               </div>
             ) : (
               <div className="p-2 space-y-1">
