@@ -1,4 +1,3 @@
-
 export interface ModelInfo {
   id: string;
   name: string;
@@ -39,7 +38,9 @@ class ModelProviderService {
         requestHeaders['Authorization'] = `Bearer ${apiKey}`;
         requestHeaders['HTTP-Referer'] = window.location.origin;
         requestHeaders['X-Title'] = 'ChatOS';
-      } else if (url.includes('openai.com') || url.includes('generativelanguage.googleapis.com')) {
+      } else if (url.includes('openai.com')) {
+        requestHeaders['Authorization'] = `Bearer ${apiKey}`;
+      } else if (url.includes('generativelanguage.googleapis.com')) {
         requestHeaders['Authorization'] = `Bearer ${apiKey}`;
       }
     }
@@ -50,7 +51,8 @@ class ModelProviderService {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
     }
 
     return response;
@@ -60,7 +62,7 @@ class ModelProviderService {
    * Fetch available models from OpenRouter
    */
   async fetchOpenRouterModels(apiKey?: string): Promise<ModelResponse> {
-    const cacheKey = 'openrouter';
+    const cacheKey = `openrouter_${apiKey ? 'with_key' : 'no_key'}`;
     const cached = modelCache.get(cacheKey);
     
     if (cached && Date.now() - cached.timestamp < MODEL_CACHE_DURATION) {
@@ -91,6 +93,12 @@ class ModelProviderService {
       return { models };
     } catch (error) {
       console.error('Failed to fetch OpenRouter models:', error);
+      if (!apiKey) {
+        return { 
+          models: this.getFallbackModels('OpenRouter'),
+          error: 'API key required for OpenRouter models'
+        };
+      }
       return { 
         models: this.getFallbackModels('OpenRouter'),
         error: `Failed to fetch OpenRouter models: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -99,7 +107,7 @@ class ModelProviderService {
   }
 
   /**
-   * Fetch available models from Google Gemini
+   * Fetch available models from Google Gemini using OpenAI-compatible endpoint
    */
   async fetchGeminiModels(apiKey?: string): Promise<ModelResponse> {
     const cacheKey = `gemini_${apiKey ? 'with_key' : 'no_key'}`;
@@ -117,6 +125,7 @@ class ModelProviderService {
     }
 
     try {
+      // Use the OpenAI-compatible endpoint for Gemini
       const response = await this.fetchWithAuth(
         'https://generativelanguage.googleapis.com/v1beta/openai/models',
         apiKey
@@ -125,20 +134,25 @@ class ModelProviderService {
       const data = await response.json();
       const models: ModelInfo[] = data.data?.map((model: any) => ({
         id: model.id,
-        name: model.id,
+        name: this.getGeminiDisplayName(model.id),
         provider: 'Google Gemini',
         description: this.getGeminiModelDescription(model.id),
         context_length: this.getGeminiContextLength(model.id),
         created: model.created
       })) || [];
 
+      if (models.length === 0) {
+        throw new Error('No models returned from Gemini API');
+      }
+
       modelCache.set(cacheKey, { data: models, timestamp: Date.now() });
       return { models };
     } catch (error) {
       console.error('Failed to fetch Gemini models:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       return { 
         models: this.getFallbackModels('Google Gemini'),
-        error: `Failed to fetch Gemini models: ${error instanceof Error ? error.message : 'Unknown error'}`
+        error: `Failed to get response from Google Gemini: Gemini API error - ${errorMessage}`
       };
     }
   }
@@ -168,26 +182,72 @@ class ModelProviderService {
       );
       
       const data = await response.json();
+      
+      // Filter to only include chat completion models and exclude unsupported ones
       const models: ModelInfo[] = data.data
-        ?.filter((model: any) => model.id.includes('gpt') || model.id.includes('o1'))
+        ?.filter((model: any) => {
+          const modelId = model.id.toLowerCase();
+          // Include GPT models and o1 models, exclude image generation and other specialized models
+          return (modelId.includes('gpt') || modelId.includes('o1')) && 
+                 !modelId.includes('instruct') && 
+                 !modelId.includes('edit') &&
+                 !modelId.includes('embedding') &&
+                 !modelId.includes('davinci') &&
+                 !modelId.includes('curie') &&
+                 !modelId.includes('babbage') &&
+                 !modelId.includes('ada');
+        })
         ?.map((model: any) => ({
           id: model.id,
-          name: model.id,
+          name: this.getOpenAIDisplayName(model.id),
           provider: 'OpenAI',
           description: this.getOpenAIModelDescription(model.id),
           context_length: this.getOpenAIContextLength(model.id),
           created: model.created
         })) || [];
 
+      if (models.length === 0) {
+        throw new Error('No compatible models found for chat completion');
+      }
+
       modelCache.set(cacheKey, { data: models, timestamp: Date.now() });
       return { models };
     } catch (error) {
       console.error('Failed to fetch OpenAI models:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       return { 
         models: this.getFallbackModels('OpenAI'),
-        error: `Failed to fetch OpenAI models: ${error instanceof Error ? error.message : 'Unknown error'}`
+        error: `Failed to fetch OpenAI models: ${errorMessage}`
       };
     }
+  }
+
+  /**
+   * Get display name for Gemini models
+   */
+  private getGeminiDisplayName(modelId: string): string {
+    const displayNames: Record<string, string> = {
+      'gemini-1.5-flash': 'Gemini 1.5 Flash',
+      'gemini-1.5-pro': 'Gemini 1.5 Pro',
+      'gemini-pro': 'Gemini Pro',
+      'gemini-pro-vision': 'Gemini Pro Vision'
+    };
+    return displayNames[modelId] || modelId;
+  }
+
+  /**
+   * Get display name for OpenAI models
+   */
+  private getOpenAIDisplayName(modelId: string): string {
+    const displayNames: Record<string, string> = {
+      'gpt-4o': 'GPT-4o',
+      'gpt-4o-mini': 'GPT-4o Mini',
+      'gpt-4-turbo': 'GPT-4 Turbo',
+      'gpt-3.5-turbo': 'GPT-3.5 Turbo',
+      'o1-preview': 'o1 Preview',
+      'o1-mini': 'o1 Mini'
+    };
+    return displayNames[modelId] || modelId;
   }
 
   /**

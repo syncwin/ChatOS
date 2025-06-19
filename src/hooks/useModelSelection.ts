@@ -16,6 +16,7 @@ export const useModelSelection = () => {
   const [selectedProvider, setSelectedProvider] = useState<string>('');
   const [selectedModel, setSelectedModel] = useState<string>('');
   const [isInitialized, setIsInitialized] = useState(false);
+  const [hasUserSelection, setHasUserSelection] = useState(false);
 
   // Load initial selection on mount and when auth state changes
   useEffect(() => {
@@ -34,9 +35,11 @@ export const useModelSelection = () => {
         savedSelection = modelPersistenceService.loadFromLocalStorage();
       }
 
-      if (savedSelection) {
+      if (savedSelection && savedSelection.provider && savedSelection.model) {
         setSelectedProvider(savedSelection.provider);
         setSelectedModel(savedSelection.model);
+        setHasUserSelection(true);
+        console.log('Loaded persisted model selection:', savedSelection);
       }
     } catch (error) {
       console.error('Failed to load model selection:', error);
@@ -46,16 +49,20 @@ export const useModelSelection = () => {
   };
 
   const saveSelectedModel = async (provider: string, model: string) => {
+    // Only update state if this is a genuine user selection
     setSelectedProvider(provider);
     setSelectedModel(model);
+    setHasUserSelection(true);
 
     try {
       if (user && profile) {
         // Save to user profile
         await modelPersistenceService.saveToProfile(user.id, provider, model);
+        console.log('Saved model selection to profile:', { provider, model });
       } else {
         // Save to localStorage for guests or non-logged-in users
         modelPersistenceService.saveToLocalStorage(provider, model);
+        console.log('Saved model selection to localStorage:', { provider, model });
       }
     } catch (error) {
       console.error('Failed to save model selection:', error);
@@ -66,6 +73,7 @@ export const useModelSelection = () => {
   const clearSelectedModel = async () => {
     setSelectedProvider('');
     setSelectedModel('');
+    setHasUserSelection(false);
 
     try {
       if (user && profile) {
@@ -80,33 +88,36 @@ export const useModelSelection = () => {
 
   // Handle login/logout transitions
   const migrateSelection = async (fromGuest: boolean) => {
-    if (fromGuest && selectedProvider && selectedModel) {
+    if (fromGuest && selectedProvider && selectedModel && hasUserSelection) {
       // Migrate from localStorage to user profile
       try {
         if (user) {
           await modelPersistenceService.saveToProfile(user.id, selectedProvider, selectedModel);
           // Clear localStorage after successful migration
           modelPersistenceService.clearLocalStorage();
+          console.log('Migrated selection from localStorage to profile');
         }
       } catch (error) {
         console.error('Failed to migrate model selection:', error);
       }
-    } else if (!fromGuest && selectedProvider && selectedModel) {
-      // Migrate from user profile to localStorage (logout)
-      modelPersistenceService.saveToLocalStorage(selectedProvider, selectedModel);
     }
   };
 
   // Check if model is available and handle unavailable models
   const validateModelAvailability = (modelId: string, availableModels: Array<{ id: string }>) => {
-    if (!modelId) return true;
+    if (!modelId || !hasUserSelection) return true;
     
     const isAvailable = modelPersistenceService.isModelAvailable(modelId, availableModels);
-    if (!isAvailable && modelId) {
+    if (!isAvailable && modelId && hasUserSelection) {
       toast.warning(`Previously selected model "${modelId}" is no longer available. Please select a new model.`);
       return false;
     }
     return true;
+  };
+
+  // Only allow automatic fallback if user has never made a selection
+  const shouldAllowFallback = () => {
+    return !hasUserSelection;
   };
 
   return {
@@ -117,6 +128,8 @@ export const useModelSelection = () => {
     migrateSelection,
     loadSelectedModel,
     validateModelAvailability,
+    shouldAllowFallback,
     isInitialized,
+    hasUserSelection,
   };
 };

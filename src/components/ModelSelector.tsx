@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { Search, ChevronDown, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -133,14 +132,15 @@ const ModelSelector = ({
           response = { models: [], error: 'Unsupported provider' };
       }
 
-      if (response.error && userApiKey) {
+      if (response.error) {
         setError(response.error);
-        toast.warning(`Using fallback models for ${provider}: ${response.error}`);
-      } else if (response.error && !userApiKey) {
-        setError(`API key required for ${provider} models`);
+        if (userApiKey) {
+          toast.warning(`${response.error}`);
+        }
       }
 
       setModels(response.models);
+      console.log(`Fetched ${response.models.length} models for ${provider}:`, response.models);
 
       // Check if the currently selected model is still available
       if (selectedModel && response.models.length > 0) {
@@ -152,6 +152,7 @@ const ModelSelector = ({
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch models';
       setError(errorMessage);
+      console.error(`Failed to load ${provider} models:`, err);
       toast.error(`Failed to load ${provider} models: ${errorMessage}`);
       setModels([]);
     } finally {
@@ -188,20 +189,12 @@ const ModelSelector = ({
   }, [provider, selectedModel, onSelectModel, user]);
 
   const handleModelSelect = async (modelId: string) => {
+    console.log(`User selected model: ${modelId} for provider: ${provider}`);
     onSelectModel(modelId);
     setIsOpen(false);
 
-    // Persist the selection
-    try {
-      if (user) {
-        await modelPersistenceService.saveToProfile(user.id, provider, modelId);
-      } else {
-        modelPersistenceService.saveToLocalStorage(provider, modelId);
-      }
-    } catch (error) {
-      console.error('Failed to persist model selection:', error);
-      toast.error('Failed to save model selection');
-    }
+    // Show success message
+    toast.success(`Selected ${modelId}`);
   };
 
   const filteredModels = useMemo(() => {
@@ -255,8 +248,8 @@ const ModelSelector = ({
               <ProviderIcon className="w-4 h-4" />
               <span className="text-sm font-medium">{provider} Models</span>
               {error && (
-                <Badge variant="secondary" className="text-xs">
-                  {error.includes('API key required') ? 'No API Key' : 'Fallback'}
+                <Badge variant="destructive" className="text-xs">
+                  {error.includes('API key required') ? 'No API Key' : 'Error'}
                 </Badge>
               )}
             </div>
@@ -289,16 +282,20 @@ const ModelSelector = ({
                 {filteredModels.map((model) => (
                   <Button
                     key={model.id}
-                    variant={model.id === selectedModel ? "secondary" : "ghost"}
-                    className="w-full justify-start h-auto p-3 text-left"
+                    variant={model.id === selectedModel ? "default" : "ghost"}
+                    className={`w-full justify-start h-auto p-3 text-left ${
+                      model.id === selectedModel 
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                        : "hover:bg-accent"
+                    }`}
                     onClick={() => handleModelSelect(model.id)}
                   >
                     <div className="flex flex-col gap-1 min-w-0 w-full">
                       <div className="flex items-center justify-between gap-2">
                         <span className="font-medium truncate">{model.name}</span>
                         {model.id === selectedModel && (
-                          <Badge variant="default" className="text-xs">
-                            Current
+                          <Badge variant="secondary" className="text-xs bg-primary-foreground text-primary">
+                            Active
                           </Badge>
                         )}
                       </div>
@@ -331,14 +328,14 @@ const ModelSelector = ({
           {error && (
             <>
               <Separator />
-              <div className="p-3 text-xs text-muted-foreground">
-                <p className="text-orange-600 dark:text-orange-400">
+              <div className="p-3 text-xs">
+                <p className="text-destructive mb-2">
                   {error}
                 </p>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="mt-2 h-7 text-xs"
+                  className="h-7 text-xs"
                   onClick={fetchModels}
                 >
                   Retry

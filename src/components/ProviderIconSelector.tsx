@@ -95,6 +95,18 @@ const ProviderIconSelector = ({
 
   const SelectedIcon = providerIcons[selectedProvider] || Bot;
 
+  const handleProviderSelect = (provider: string) => {
+    console.log(`User selected provider: ${provider}`);
+    onSelectProvider(provider);
+    // Don't auto-close when selecting provider, let user select model too
+  };
+
+  const handleModelSelect = (model: string) => {
+    console.log(`User selected model: ${model} for provider: ${selectedProvider}`);
+    onSelectModel(model);
+    setIsOpen(false); // Close popover after model selection
+  };
+
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <Tooltip>
@@ -106,14 +118,14 @@ const ProviderIconSelector = ({
               className="h-8 w-8 hover:bg-muted relative"
             >
               <SelectedIcon className="w-4 h-4" />
-              {selectedProvider && (
+              {selectedProvider && selectedModel && (
                 <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-green-500 rounded-full" />
               )}
             </Button>
           </PopoverTrigger>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{selectedProvider ? `${selectedProvider}${selectedModel ? ` - ${selectedModel}` : ''}` : 'Select AI Provider'}</p>
+          <p>{selectedProvider && selectedModel ? `${selectedProvider} - ${selectedModel}` : selectedProvider ? `${selectedProvider} - Select model` : 'Select AI Provider'}</p>
         </TooltipContent>
       </Tooltip>
       
@@ -131,7 +143,7 @@ const ProviderIconSelector = ({
                   {selectedProvider}
                 </Badge>
                 {selectedModel && (
-                  <Badge variant="outline" className="text-xs ml-1">
+                  <Badge variant="default" className="text-xs ml-1 bg-primary text-primary-foreground">
                     {selectedModel}
                   </Badge>
                 )}
@@ -154,9 +166,7 @@ const ProviderIconSelector = ({
                     variant={isSelected ? "default" : "outline"}
                     size="sm"
                     className="h-12 flex flex-col gap-1 text-xs"
-                    onClick={() => {
-                      onSelectProvider(provider);
-                    }}
+                    onClick={() => handleProviderSelect(provider)}
                   >
                     <ProviderIcon className="w-4 h-4" />
                     <span className="truncate">{provider}</span>
@@ -174,10 +184,7 @@ const ProviderIconSelector = ({
                 <ModelSelector
                   provider={selectedProvider}
                   selectedModel={selectedModel}
-                  onSelectModel={(model) => {
-                    onSelectModel(model);
-                    setIsOpen(false);
-                  }}
+                  onSelectModel={handleModelSelect}
                   className="w-full"
                 />
               </div>
