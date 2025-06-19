@@ -27,8 +27,26 @@ export interface NormalizedResponse {
   provider: string;
 }
 
-const SUPABASE_URL = 'https://ejjmwhkjnkxtmzvpqnig.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqam13aGtqbmt4dG16dnBxbmlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5ODUyNDYsImV4cCI6MjA2NTU2MTI0Nn0.EiOR2sXfGi_YnUcm_hEsyG0yRF6vqhWGH3KFrV0stl8';
+// Get Supabase configuration from environment variables
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://ejjmwhkjnkxtmzvpqnig.supabase.co';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqam13aGtqbmt4dG16dnBxbmlnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5ODUyNDYsImV4cCI6MjA2NTU2MTI0Nn0.EiOR2sXfGi_YnUcm_hEsyG0yRF6vqhWGH3KFrV0stl8';
+
+// Validate required environment variables
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  throw new Error('Missing required Supabase environment variables for AI provider service.');
+}
+
+async function invokeAiChatWithRetry(request: ChatRequest, retries = 3, delay = 1000): Promise<Response> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await invokeAiChat(request);
+    } catch (error) {
+      if (i === retries - 1) throw error;
+      await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
+    }
+  }
+  throw new Error('Failed to invoke AI chat after multiple retries');
+}
 
 async function invokeAiChat(request: ChatRequest): Promise<Response> {
   const { data: { session } } = await supabase.auth.getSession();
@@ -49,14 +67,20 @@ async function invokeAiChat(request: ChatRequest): Promise<Response> {
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
     let errorMessage = `Edge Function returned an error: ${response.status}`;
     try {
-      const errorData = JSON.parse(errorText);
-      errorMessage = errorData.error || errorMessage;
-    } catch {
+      const errorData = await response.json();
+      if (errorData.error) {
+        errorMessage = `Error from ${request.provider}: ${errorData.error}`;
+      } else {
+        errorMessage = `An unknown error occurred in the Edge Function.`
+      }
+    } catch (e) {
+      // If parsing JSON fails, use the raw text
+      const errorText = await response.text();
       errorMessage = errorText || errorMessage;
     }
+    console.error(`[aiProviderService] ${errorMessage}`);
     throw new Error(errorMessage);
   }
 
@@ -64,7 +88,7 @@ async function invokeAiChat(request: ChatRequest): Promise<Response> {
 }
 
 export const sendChatMessage = async (request: ChatRequest): Promise<NormalizedResponse> => {
-  const response = await invokeAiChat({ ...request, stream: false });
+  const response = await invokeAiChatWithRetry({ ...request, stream: false });
   return await response.json();
 };
 
@@ -74,7 +98,7 @@ export const streamChatMessage = async (
   onError: (error: Error) => void
 ): Promise<void> => {
   try {
-    const response = await invokeAiChat({ ...request, stream: true });
+    const response = await invokeAiChatWithRetry({ ...request, stream: true });
 
     if (!response.body) {
       throw new Error('Response body is null');

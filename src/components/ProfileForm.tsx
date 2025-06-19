@@ -63,8 +63,9 @@ const ProfileForm = ({ profile, onSuccess }: ProfileFormProps) => {
         if (newAvatarUrl) {
           updates.avatar_url = newAvatarUrl;
         }
-      } catch (error: any) {
-        toast.error(`Failed to upload avatar: ${error.message}`);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        toast.error(`Failed to upload avatar: ${errorMessage}`);
         return;
       }
     }

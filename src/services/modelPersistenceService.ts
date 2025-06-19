@@ -6,6 +6,16 @@ interface ModelSelection {
   model: string;
 }
 
+interface ProfileData {
+  model_selection?: ModelSelection;
+}
+
+interface ProfileUpsert {
+  id: string;
+  model_selection: ModelSelection;
+  updated_at: string;
+}
+
 class ModelPersistenceService {
   // Save model selection to user profile
   async saveToProfile(userId: string, provider: string, model: string): Promise<void> {
@@ -15,9 +25,9 @@ class ModelPersistenceService {
       .from('profiles')
       .upsert({
         id: userId,
-        model_selection: modelSelection as any,
+        model_selection: modelSelection,
         updated_at: new Date().toISOString(),
-      });
+      } as ProfileUpsert);
 
     if (error) {
       console.error('Failed to save model selection to profile:', error);
@@ -39,7 +49,7 @@ class ModelPersistenceService {
         return null;
       }
 
-      return (data as any)?.model_selection as ModelSelection | null;
+      return (data as ProfileData)?.model_selection || null;
     } catch (error) {
       console.error('Error loading model selection:', error);
       return null;

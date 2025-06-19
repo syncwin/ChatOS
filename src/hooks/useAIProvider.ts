@@ -1,24 +1,45 @@
 
 import { useState, useCallback, useEffect } from 'react';
+import { useModelSelection } from './useModelSelection';
 import { useQuery } from '@tanstack/react-query';
 import { 
   sendChatMessage, 
   streamChatMessage,
   getAvailableProviders, 
   getDefaultModel,
-  getAvailableModels,
   type ChatMessage, 
   type NormalizedResponse,
   type ChatRequest
 } from '@/services/aiProviderService';
+import { getAuthenticatedUserApiKey } from '@/services/chatService';
+import { modelProviderService, type ModelInfo } from '@/services/modelProviderService';
+import { modelPersistenceService } from '@/services/modelPersistenceService';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
 export const useAIProvider = () => {
+  const {
+    selectedProvider,
+    selectedModel,
+    setSelectedProvider,
+    setSelectedModel,
+    isInitialized,
+    hasUserSelection,
+  } = useModelSelection();
+
+  // Safety check for setSelectedProvider
+  if (!setSelectedProvider) {
+    console.error('setSelectedProvider is undefined. Check useModelSelection hook export.');
+  }
+  if (!setSelectedModel) {
+    console.error('setSelectedModel is undefined. Check useModelSelection hook export.');
+  }
   const { user, isGuest, guestApiKeys } = useAuth();
   const [isAiResponding, setIsAiResponding] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState<string>('');
-  const [selectedModel, setSelectedModel] = useState<string>('');
+
+  const [availableModels, setAvailableModels] = useState<ModelInfo[]>([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
+  const [modelError, setModelError] = useState<string | null>(null);
 
   const { data: availableProvidersFromDB = [], isLoading: isLoadingProviders } = useQuery({
     queryKey: ['availableProviders', user?.id],
@@ -30,13 +51,104 @@ export const useAIProvider = () => {
     ? guestApiKeys.map(k => k.provider)
     : availableProvidersFromDB;
 
-  useEffect(() => {
-    if (availableProviders.length > 0 && !availableProviders.includes(selectedProvider)) {
-      const firstProvider = availableProviders[0];
-      setSelectedProvider(firstProvider);
-      setSelectedModel(getDefaultModel(firstProvider));
+  const fetchModels = useCallback(async (provider: string) => {
+    if (!provider) return;
+
+    setIsLoadingModels(true);
+    setModelError(null);
+
+    try {
+      let apiKey: string | undefined;
+      
+      if (isGuest) {
+        // For guest users, get API key from session storage
+        apiKey = guestApiKeys.find(k => k.provider === provider)?.api_key;
+      } else if (user) {
+        // For authenticated users, get API key from database
+        apiKey = await getAuthenticatedUserApiKey(provider, user.id) || undefined;
+      }
+      
+      let modelResponse;
+      
+      // Use the appropriate method based on provider
+      switch (provider) {
+        case 'OpenRouter':
+          modelResponse = await modelProviderService.fetchOpenRouterModels(apiKey);
+          break;
+        case 'Google Gemini':
+          modelResponse = await modelProviderService.fetchGeminiModels(apiKey);
+          break;
+        case 'OpenAI':
+          modelResponse = await modelProviderService.fetchOpenAIModels(apiKey);
+          break;
+        default:
+          // For providers without dynamic fetching, use fallback models
+          setAvailableModels([]);
+          setModelError(`Dynamic model fetching not implemented for ${provider}`);
+          return;
+      }
+      
+      setAvailableModels(modelResponse.models);
+      
+      if (modelResponse.error) {
+        setModelError(modelResponse.error);
+      } else if (hasUserSelection && selectedModel && !modelPersistenceService.isModelAvailable(selectedModel, modelResponse.models)) {
+        toast.warning(`Model ${selectedModel} is no longer available. Please select a new one.`);
+        // Optionally, reset to a default model for the provider
+        const defaultModel = getDefaultModel(provider);
+        setSelectedModel(defaultModel);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch models';
+      setModelError(errorMessage);
+      console.error(`Failed to fetch models for ${provider}:`, error);
+      setAvailableModels([]);
+    } finally {
+      setIsLoadingModels(false);
     }
-  }, [availableProviders, selectedProvider]);
+  }, [isGuest, guestApiKeys, user]);
+
+  useEffect(() => {
+    if (isInitialized && availableProviders.length > 0) {
+      if (!hasUserSelection) {
+        // If no selection is persisted, set the default
+        const firstProvider = availableProviders[0];
+        if (selectedProvider !== firstProvider) {
+          if (setSelectedProvider) {
+            setSelectedProvider(firstProvider);
+          } else {
+            console.error('Cannot set default provider: setSelectedProvider is undefined');
+          }
+          if (setSelectedModel) {
+            setSelectedModel(getDefaultModel(firstProvider));
+          } else {
+            console.error('Cannot set default model: setSelectedModel is undefined');
+          }
+        }
+      } else if (!availableProviders.includes(selectedProvider)) {
+        // If the persisted provider is no longer available, fallback to default
+        toast.warning(`Provider ${selectedProvider} is no longer available. Falling back to default.`);
+        const firstProvider = availableProviders[0];
+        if (setSelectedProvider) {
+          setSelectedProvider(firstProvider);
+        } else {
+          console.error('Cannot fallback provider: setSelectedProvider is undefined');
+        }
+        if (setSelectedModel) {
+          setSelectedModel(getDefaultModel(firstProvider));
+        } else {
+          console.error('Cannot fallback model: setSelectedModel is undefined');
+        }
+      }
+    }
+  }, [isInitialized, hasUserSelection, availableProviders, selectedProvider, setSelectedProvider, setSelectedModel]);
+
+  // Fetch models when provider changes
+  useEffect(() => {
+    if (selectedProvider) {
+      fetchModels(selectedProvider);
+    }
+  }, [selectedProvider, fetchModels]);
 
   const sendMessage = useCallback(async (
     messages: ChatMessage[],
@@ -148,13 +260,25 @@ export const useAIProvider = () => {
   }, [selectedProvider, selectedModel, user, isGuest, guestApiKeys, sendMessage]);
 
   const switchProvider = useCallback((provider: string) => {
-    setSelectedProvider(provider);
-    setSelectedModel(getDefaultModel(provider));
-  }, []);
+    if (setSelectedProvider) {
+      setSelectedProvider(provider);
+    } else {
+      console.error('Cannot switch provider: setSelectedProvider is undefined');
+    }
+    if (setSelectedModel) {
+      setSelectedModel(getDefaultModel(provider));
+    } else {
+      console.error('Cannot switch model: setSelectedModel is undefined');
+    }
+  }, [setSelectedProvider, setSelectedModel]);
 
   const switchModel = useCallback((model: string) => {
-    setSelectedModel(model);
-  }, []);
+    if (setSelectedModel) {
+      setSelectedModel(model);
+    } else {
+      console.error('Cannot switch model: setSelectedModel is undefined');
+    }
+  }, [setSelectedModel]);
 
   return {
     // State
@@ -163,7 +287,9 @@ export const useAIProvider = () => {
     selectedProvider,
     selectedModel,
     availableProviders,
-    availableModels: selectedProvider ? getAvailableModels(selectedProvider) : [],
+    availableModels,
+    isLoadingModels,
+    modelError,
     
     // Actions
     sendMessage,

@@ -1,1 +1,7 @@
 project_id = "ejjmwhkjnkxtmzvpqnig"
+
+[functions.ai-chat]
+auth = false
+
+[functions.get-models]
+auth = false

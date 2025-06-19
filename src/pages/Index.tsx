@@ -58,6 +58,8 @@ const Index = () => {
     switchProvider,
     switchModel,
     isLoadingProviders,
+    isLoadingModels,
+    modelError,
   } = useAIProvider();
 
   const [input, setInput] = useState("");
@@ -248,6 +250,8 @@ const Index = () => {
                 selectedModel={selectedModel}
                 onSelectModel={switchModel}
                 isLoadingProviders={isLoadingProviders}
+                isLoadingModels={isLoadingModels}
+                modelError={modelError}
                 folders={folders}
                 isLoadingFolders={isLoadingFolders}
                 activeChat={activeChat}

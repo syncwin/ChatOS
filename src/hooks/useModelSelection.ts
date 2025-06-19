@@ -123,6 +123,8 @@ export const useModelSelection = () => {
   return {
     selectedProvider,
     selectedModel,
+    setSelectedProvider,
+    setSelectedModel,
     saveSelectedModel,
     clearSelectedModel,
     migrateSelection,

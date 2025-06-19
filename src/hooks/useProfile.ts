@@ -45,9 +45,9 @@ export const useProfile = () => {
     },
     onSuccess: (data) => {
       toast.success('Profile updated successfully!');
-      queryClient.setQueryData(['profile', user?.id], (old: any) => ({ ...old, ...data }));
+      queryClient.setQueryData(['profile', user?.id], (old: Tables<'profiles'> | null) => ({ ...old, ...data }));
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`Failed to update profile: ${error.message}`);
     },
   });

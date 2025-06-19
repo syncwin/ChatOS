@@ -12,6 +12,18 @@ import {
 } from '@/lib/validation';
 import { secureGuestStorage } from '@/lib/secureStorage';
 
+export interface Usage {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens?: number;
+}
+
+interface ProfileUpdates {
+  full_name?: string;
+  avatar_url?: string;
+  theme?: 'light' | 'dark';
+}
+
 export interface UserProfile {
   id: string;
   email: string;
@@ -39,7 +51,7 @@ export interface Message {
   content: string;
   provider?: string;
   model?: string;
-  usage: any;
+  usage: Usage;
 }
 
 export interface NewMessage {
@@ -48,7 +60,7 @@ export interface NewMessage {
   content: string;
   provider?: string;
   model?: string;
-  usage?: any;
+  usage?: Usage;
 }
 
 export interface Folder {
@@ -102,7 +114,7 @@ export const updateProfile = async (updates: { name?: string; avatar_url?: strin
     updates.name = validation.data;
   }
 
-  const profileUpdates: any = {};
+  const profileUpdates: ProfileUpdates = {};
   if (updates.name !== undefined) profileUpdates.full_name = updates.name;
   if (updates.avatar_url !== undefined) profileUpdates.avatar_url = updates.avatar_url;
   if (updates.theme !== undefined) profileUpdates.theme = updates.theme;
@@ -518,4 +530,28 @@ export const removeGuestApiKey = (provider: string): void => {
 
 export const getGuestSecurityWarning = (): string => {
   return secureGuestStorage.getSecurityWarning();
+};
+
+/**
+ * Get API key for authenticated user from database
+ */
+export const getAuthenticatedUserApiKey = async (provider: string, userId: string): Promise<string | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('api_keys')
+      .select('api_key')
+      .eq('provider', provider)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error(`Failed to get API key for ${provider}:`, error);
+      return null;
+    }
+
+    return data?.api_key || null;
+  } catch (error) {
+    console.error(`Error fetching API key for ${provider}:`, error);
+    return null;
+  }
 };

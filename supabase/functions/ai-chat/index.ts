@@ -25,6 +25,10 @@ serve(async (req) => {
 
     console.log(`[ai-chat] Provider: ${provider} | Model: ${model} | Guest?: ${!!guestApiKey} | Stream?: ${stream}`);
 
+    if (!guestApiKey && !req.headers.get('Authorization')) {
+      console.warn('[ai-chat] No API key or Authorization header found.');
+    }
+
     const apiKey = await getApiKey(req, guestApiKey, provider);
     const resolvedModel = model || defaultModels[provider];
     const handler = providerHandlers[provider];

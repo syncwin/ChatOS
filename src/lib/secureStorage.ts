@@ -135,17 +135,73 @@ class SecureGuestStorage {
         sessionStorage.removeItem(key);
       }
     });
+    // Also clear session ID to force new encryption key on next session
+    sessionStorage.removeItem('chat_session_id');
+  }
+
+  // Get all stored providers for guest user
+  getStoredProviders(): string[] {
+    const keys = Object.keys(sessionStorage);
+    return keys
+      .filter(key => key.startsWith('guest_api_key_'))
+      .map(key => key.replace('guest_api_key_', ''));
+  }
+
+  // Check if any API keys are stored
+  hasStoredKeys(): boolean {
+    return this.getStoredProviders().length > 0;
   }
 
   // Warning message for users about guest key security
   getSecurityWarning(): string {
-    return 'Guest API keys are temporarily stored in your browser session and encrypted for basic protection. For enhanced security, please create an account where your API keys will be properly encrypted and stored securely.';
+    return 'Guest API keys are temporarily stored in your browser session with AES-256-GCM encryption. Keys are automatically cleared when you close the browser or end your session. For enhanced security and persistent storage, please create an account where your API keys will be encrypted and stored securely in our database.';
+  }
+
+  // Get security info for display
+  getSecurityInfo(): { encrypted: boolean; sessionBased: boolean; autoCleanup: boolean } {
+    return {
+      encrypted: this.encryptionKey !== null,
+      sessionBased: true,
+      autoCleanup: true
+    };
   }
 }
 
 export const secureGuestStorage = new SecureGuestStorage();
 
-// Cleanup on page unload
-window.addEventListener('beforeunload', () => {
+// Enhanced cleanup on various events for better security
+const cleanupEvents = ['beforeunload', 'pagehide', 'visibilitychange'];
+
+cleanupEvents.forEach(event => {
+  window.addEventListener(event, () => {
+    if (event === 'visibilitychange' && document.visibilityState !== 'hidden') {
+      return; // Only cleanup when page becomes hidden
+    }
+    secureGuestStorage.clearAllApiKeys();
+  });
+});
+
+// Additional cleanup on tab close/navigation
+window.addEventListener('unload', () => {
   secureGuestStorage.clearAllApiKeys();
 });
+
+// Cleanup on session timeout (30 minutes of inactivity)
+let sessionTimeout: NodeJS.Timeout;
+const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+
+function resetSessionTimeout() {
+  clearTimeout(sessionTimeout);
+  sessionTimeout = setTimeout(() => {
+    secureGuestStorage.clearAllApiKeys();
+    console.log('Guest session expired due to inactivity');
+  }, SESSION_TIMEOUT);
+}
+
+// Reset timeout on user activity
+['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(event => {
+  document.addEventListener(event, resetSessionTimeout, { passive: true });
+});
+
+// Initialize session timeout
+resetSessionTimeout();

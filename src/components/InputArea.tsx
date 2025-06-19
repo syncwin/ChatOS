@@ -61,7 +61,14 @@ const InputArea = ({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e as any);
+      // Create a synthetic form event
+      const form = e.currentTarget.form;
+      if (form) {
+        const syntheticEvent = new Event('submit', { bubbles: true, cancelable: true });
+        Object.defineProperty(syntheticEvent, 'target', { value: form });
+        Object.defineProperty(syntheticEvent, 'currentTarget', { value: form });
+        handleSubmit(syntheticEvent as React.FormEvent);
+      }
     }
   };
 

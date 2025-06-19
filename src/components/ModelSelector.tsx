@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Search, ChevronDown, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,17 +7,17 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { modelProviderService, type ModelInfo } from '@/services/modelProviderService';
-import { modelPersistenceService } from '@/services/modelPersistenceService';
 import { toast } from 'sonner';
-import { useAuth } from '@/hooks/useAuth';
+import type { ModelInfo } from '@/services/modelProviderService';
+import { useModelSelection } from '@/hooks/useModelSelection';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ModelSelectorProps {
   provider: string;
-  selectedModel: string;
+  models: ModelInfo[];
+  isLoading: boolean;
+  error: string | null;
   onSelectModel: (modelId: string) => void;
-  apiKey?: string;
   className?: string;
 }
 
@@ -65,135 +65,20 @@ const providerIcons: Record<string, React.ComponentType<{ className?: string }>>
 
 const ModelSelector = ({ 
   provider, 
-  selectedModel, 
+  models,
+  isLoading,
+  error,
   onSelectModel, 
-  apiKey,
   className = ""
 }: ModelSelectorProps) => {
-  const { user, isGuest, guestApiKeys } = useAuth();
+  const { selectedModel, saveSelectedModel } = useModelSelection();
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [models, setModels] = useState<ModelInfo[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // Get API key for the provider
-  const getApiKeyForProvider = async (providerName: string): Promise<string | undefined> => {
-    // Normalize provider name to match valid types
-    const normalizedProvider = providerName as ValidProvider;
-    
-    if (isGuest) {
-      return guestApiKeys.find(k => k.provider === normalizedProvider)?.api_key;
-    }
-    
-    if (!user) return undefined;
-    
-    try {
-      const { data, error } = await supabase
-        .from('api_keys')
-        .select('api_key')
-        .eq('user_id', user.id)
-        .eq('provider', normalizedProvider)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching API key:', error);
-        return undefined;
-      }
-      
-      return data?.api_key;
-    } catch (error) {
-      console.error('Error fetching API key:', error);
-      return undefined;
-    }
-  };
-
-  const fetchModels = async () => {
-    if (!provider) return;
-    
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const userApiKey = await getApiKeyForProvider(provider);
-      let response;
-      
-      switch (provider) {
-        case 'OpenAI':
-          response = await modelProviderService.fetchOpenAIModels(userApiKey);
-          break;
-        case 'Google Gemini':
-          response = await modelProviderService.fetchGeminiModels(userApiKey);
-          break;
-        case 'OpenRouter':
-          response = await modelProviderService.fetchOpenRouterModels(userApiKey);
-          break;
-        default:
-          response = { models: [], error: 'Unsupported provider' };
-      }
-
-      if (response.error) {
-        setError(response.error);
-        if (userApiKey) {
-          toast.warning(`${response.error}`);
-        }
-      }
-
-      setModels(response.models);
-      console.log(`Fetched ${response.models.length} models for ${provider}:`, response.models);
-
-      // Check if the currently selected model is still available
-      if (selectedModel && response.models.length > 0) {
-        const isModelStillAvailable = modelPersistenceService.isModelAvailable(selectedModel, response.models);
-        if (!isModelStillAvailable) {
-          toast.warning(`Previously selected model "${selectedModel}" is no longer available. Please select a new model.`);
-        }
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch models';
-      setError(errorMessage);
-      console.error(`Failed to load ${provider} models:`, err);
-      toast.error(`Failed to load ${provider} models: ${errorMessage}`);
-      setModels([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Fetch models when provider changes
-  useEffect(() => {
-    fetchModels();
-  }, [provider, user, isGuest]);
-
-  // Load persisted model selection on mount
-  useEffect(() => {
-    const loadPersistedSelection = async () => {
-      if (provider && !selectedModel) {
-        let persistedSelection;
-        
-        if (user) {
-          // Load from user profile
-          persistedSelection = await modelPersistenceService.loadFromProfile(user.id);
-        } else {
-          // Load from localStorage
-          persistedSelection = modelPersistenceService.loadFromLocalStorage();
-        }
-
-        if (persistedSelection && persistedSelection.provider === provider) {
-          onSelectModel(persistedSelection.model);
-        }
-      }
-    };
-
-    loadPersistedSelection();
-  }, [provider, selectedModel, onSelectModel, user]);
-
-  const handleModelSelect = async (modelId: string) => {
-    console.log(`User selected model: ${modelId} for provider: ${provider}`);
+  const handleModelSelect = (modelId: string) => {
     onSelectModel(modelId);
+    saveSelectedModel(provider, modelId);
     setIsOpen(false);
-
-    // Show success message
     toast.success(`Selected ${modelId}`);
   };
 

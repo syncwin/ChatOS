@@ -17,6 +17,44 @@ export interface ModelResponse {
   error?: string;
 }
 
+interface OpenRouterModel {
+  id: string;
+  name?: string;
+  description?: string;
+  context_length?: number;
+  pricing?: {
+    prompt?: number;
+    completion?: number;
+  };
+  created?: number;
+}
+
+interface OpenRouterResponse {
+  data: OpenRouterModel[];
+}
+
+interface OpenAIModel {
+  id: string;
+  object: string;
+  created: number;
+  owned_by: string;
+}
+
+interface OpenAIResponse {
+  data: OpenAIModel[];
+  object: string;
+}
+
+interface GeminiModel {
+  name: string;
+  displayName?: string;
+  description?: string;
+}
+
+interface GeminiResponse {
+  models: GeminiModel[];
+}
+
 const MODEL_CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 const modelCache = new Map<string, { data: ModelInfo[]; timestamp: number }>();
 
@@ -41,7 +79,8 @@ class ModelProviderService {
       } else if (url.includes('openai.com')) {
         requestHeaders['Authorization'] = `Bearer ${apiKey}`;
       } else if (url.includes('generativelanguage.googleapis.com')) {
-        requestHeaders['Authorization'] = `Bearer ${apiKey}`;
+        // For Google Generative Language API, use API key as query parameter
+        // We'll handle this in the URL construction instead of headers
       }
     }
 
@@ -75,16 +114,16 @@ class ModelProviderService {
         apiKey
       );
       
-      const data = await response.json();
-      const models: ModelInfo[] = data.data?.map((model: any) => ({
+      const data: OpenRouterResponse = await response.json();
+      const models: ModelInfo[] = data.data?.map((model: OpenRouterModel) => ({
         id: model.id,
         name: model.name || model.id,
         provider: 'OpenRouter',
         description: model.description,
         context_length: model.context_length,
         pricing: {
-          prompt: parseFloat(model.pricing?.prompt || '0'),
-          completion: parseFloat(model.pricing?.completion || '0'),
+          prompt: parseFloat(model.pricing?.prompt?.toString() || '0'),
+          completion: parseFloat(model.pricing?.completion?.toString() || '0'),
         },
         capabilities: []
       })) || [];
@@ -125,20 +164,17 @@ class ModelProviderService {
     }
 
     try {
-      // Use the OpenAI-compatible endpoint for Gemini
-      const response = await this.fetchWithAuth(
-        'https://generativelanguage.googleapis.com/v1beta/openai/models',
-        apiKey
-      );
+      // Use the official Google Generative Language API endpoint
+      const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+      const response = await this.fetchWithAuth(url);
       
-      const data = await response.json();
-      const models: ModelInfo[] = data.data?.map((model: any) => ({
-        id: model.id,
-        name: this.getGeminiDisplayName(model.id),
+      const data: GeminiResponse = await response.json();
+      const models: ModelInfo[] = data.models?.map((model: GeminiModel) => ({
+        id: model.name.replace('models/', ''), // Remove 'models/' prefix
+        name: model.displayName || this.getGeminiDisplayName(model.name.replace('models/', '')),
         provider: 'Google Gemini',
-        description: this.getGeminiModelDescription(model.id),
-        context_length: this.getGeminiContextLength(model.id),
-        created: model.created
+        description: model.description || this.getGeminiModelDescription(model.name.replace('models/', '')),
+        context_length: this.getGeminiContextLength(model.name.replace('models/', '')),
       })) || [];
 
       if (models.length === 0) {
@@ -181,11 +217,11 @@ class ModelProviderService {
         apiKey
       );
       
-      const data = await response.json();
+      const data: OpenAIResponse = await response.json();
       
       // Filter to only include chat completion models and exclude unsupported ones
       const models: ModelInfo[] = data.data
-        ?.filter((model: any) => {
+        ?.filter((model: OpenAIModel) => {
           const modelId = model.id.toLowerCase();
           // Include GPT models and o1 models, exclude image generation and other specialized models
           return (modelId.includes('gpt') || modelId.includes('o1')) && 
@@ -197,7 +233,7 @@ class ModelProviderService {
                  !modelId.includes('babbage') &&
                  !modelId.includes('ada');
         })
-        ?.map((model: any) => ({
+        ?.map((model: OpenAIModel) => ({
           id: model.id,
           name: this.getOpenAIDisplayName(model.id),
           provider: 'OpenAI',

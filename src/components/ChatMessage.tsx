@@ -8,6 +8,11 @@ import ChatOsIcon from "./icons/ChatOsIcon";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 
+interface Usage {
+  prompt_tokens: number;
+  completion_tokens: number;
+}
+
 interface Message {
   id: string;
   chat_id: string;
@@ -17,7 +22,7 @@ interface Message {
   content: string;
   provider?: string;
   model?: string;
-  usage?: any;
+  usage?: Usage;
   isStreaming?: boolean;
 }
 

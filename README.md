@@ -6,8 +6,9 @@ ChatOS is an open-source, extensible AI chatbot platform that empowers anyone to
 
 ## Features
 
-- **Multi-Provider API Support**  
-  Connect your own API keys for OpenAI, Anthropic, Gemini, Mistral, OpenRouter, and others. Switch providers per chat session.
+- **Multi-Provider Support**: Connect to OpenAI, Google Gemini, Anthropic, Mistral, and any OpenRouter-compatible provider.
+- **Dynamic Model Selection**: Automatically fetches and displays the latest models available from your chosen provider.
+- **Robust Error Handling**: Includes automatic retries with exponential backoff and real-time error reporting with Sentry.
 
 - **Folders & Tags**  
   Organize chats with folders and tags, accessible from both the header and sidebar with a unified, icon-based UI.
@@ -21,27 +22,92 @@ ChatOS is an open-source, extensible AI chatbot platform that empowers anyone to
 ---
 
 ## Quick Start
-**Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Automated Setup (Recommended)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+For the fastest setup experience, use our automated setup script:
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+```powershell
+# Clone the repository
 git clone https://github.com/your-org/chatos.git
-
-# Step 2: Navigate to the project directory.
 cd chatos
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Run automated setup script (Windows PowerShell)
+.\scripts\dev-setup.ps1
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Or run with options
+.\scripts\dev-setup.ps1 -Help  # Show all options
+```
+
+The script will:
+- ✅ Check prerequisites (Node.js 18+, npm, Git)
+- 📦 Install dependencies
+- 🔧 Set up environment configuration
+- 🗄️ Configure Supabase (if available)
+- 🚀 Start development server
+
+### Manual Setup
+
+If you prefer manual setup:
+
+```sh
+# Step 1: Clone the repository
+git clone https://github.com/your-org/chatos.git
+
+# Step 2: Navigate to the project directory
+cd chatos
+
+# Step 3: Install dependencies
+npm install
+
+# Step 4: Configure environment (optional)
+cp .env.example .env
+# Edit .env with your configuration
+
+# Step 5: Start development server
 npm run dev
 ```
+
+### Access Your Local Instance
+
+- **Local**: http://localhost:8080
+- **Network**: Use `scripts\get-network-info.ps1` to get network URLs for sharing
+- **External**: Use ngrok or localtunnel for external testing
+
+📋 **Complete setup guide**: [DEVELOPMENT_SETUP.md](DEVELOPMENT_SETUP.md)
+
+## Testing & Quality Assurance
+
+### Guest & Authenticated User Testing
+
+ChatOS supports both **guest users** (session-based) and **authenticated users** (persistent data). Both flows must be thoroughly tested:
+
+#### Guest Mode Testing
+- ✅ Session-based API key storage (encrypted)
+- ✅ Temporary chat data (cleared on session end)
+- ✅ No persistent data storage
+- ✅ Security warnings displayed
+
+#### Authenticated Mode Testing
+- ✅ User registration and login
+- ✅ Persistent API key storage (encrypted)
+- ✅ Chat history and data persistence
+- ✅ Profile management
+
+### Testing Resources
+
+- 📋 **[TESTING_CHECKLIST.md](TESTING_CHECKLIST.md)** - Comprehensive testing checklist covering all features
+- 🌐 **Network Testing**: Use `scripts\get-network-info.ps1` to get URLs for live testing
+- 🔧 **Setup Automation**: Use `scripts\dev-setup.ps1` for consistent environment setup
+
+### AI Provider Testing
+
+Test integration with multiple AI providers:
+- **OpenAI** (GPT-4o, GPT-4o-mini)
+- **Anthropic** (Claude variants)
+- **Google Gemini** (Gemini Pro, Flash)
+- **Mistral** (Various models)
+- **OpenRouter** (Multiple model access)
 
 **Edit a file directly in GitHub**
 

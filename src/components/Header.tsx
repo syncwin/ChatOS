@@ -6,6 +6,7 @@ import FolderDropdown from "./FolderDropdown";
 import TagDropdown from "./TagDropdown";
 import ProviderIconSelector from "./ProviderIconSelector";
 import type { Folder, Chat, Tag } from "@/services/chatService";
+import type { ModelInfo } from '@/services/modelProviderService';
 
 interface HeaderProps {
   isDarkMode: boolean;
@@ -13,7 +14,9 @@ interface HeaderProps {
   availableProviders: string[];
   selectedProvider: string;
   onSelectProvider: (provider: string) => void;
-  availableModels: string[];
+  availableModels: ModelInfo[];
+  isLoadingModels: boolean;
+  modelError: string | null;
   selectedModel: string;
   onSelectModel: (model: string) => void;
   isLoadingProviders: boolean;
@@ -40,6 +43,8 @@ const Header = ({
   availableModels,
   selectedModel,
   onSelectModel,
+  isLoadingModels,
+  modelError,
   isLoadingProviders,
   folders,
   isLoadingFolders,
@@ -70,6 +75,8 @@ const Header = ({
           selectedModel={selectedModel}
           onSelectModel={onSelectModel}
           isLoadingProviders={isLoadingProviders}
+          isLoadingModels={isLoadingModels}
+          modelError={modelError}
         />
 
         <FolderDropdown 

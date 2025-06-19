@@ -7,13 +7,16 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import ModelSelector from "./ModelSelector";
+import type { ModelInfo } from '@/services/modelProviderService';
 import { useAuth } from "@/hooks/useAuth";
 
 interface ProviderIconSelectorProps {
   availableProviders: string[];
   selectedProvider: string;
   onSelectProvider: (provider: string) => void;
-  availableModels: string[];
+  availableModels: ModelInfo[];
+  isLoadingModels: boolean;
+  modelError: string | null;
   selectedModel: string;
   onSelectModel: (model: string) => void;
   isLoadingProviders: boolean;
@@ -68,6 +71,8 @@ const ProviderIconSelector = ({
   availableModels,
   selectedModel,
   onSelectModel,
+  isLoadingModels,
+  modelError,
   isLoadingProviders,
 }: ProviderIconSelectorProps) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -183,7 +188,10 @@ const ProviderIconSelector = ({
                 <span className="text-xs font-medium text-muted-foreground">Select Model</span>
                 <ModelSelector
                   provider={selectedProvider}
+                  models={availableModels}
                   selectedModel={selectedModel}
+                  isLoading={isLoadingModels}
+                  error={modelError}
                   onSelectModel={handleModelSelect}
                   className="w-full"
                 />
