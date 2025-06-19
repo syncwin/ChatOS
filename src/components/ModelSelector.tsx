@@ -21,6 +21,9 @@ interface ModelSelectorProps {
   className?: string;
 }
 
+// Valid provider types
+type ValidProvider = "OpenRouter" | "Google Gemini" | "OpenAI" | "Anthropic" | "Mistral";
+
 // Custom SVG icons for providers
 const AnthropicIcon = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" fillRule="evenodd" height="1em" style={{flex: 'none', lineHeight: 1}} viewBox="0 0 24 24" width="1em" className={className}>
@@ -75,9 +78,12 @@ const ModelSelector = ({
   const [error, setError] = useState<string | null>(null);
 
   // Get API key for the provider
-  const getApiKeyForProvider = async (provider: string): Promise<string | undefined> => {
+  const getApiKeyForProvider = async (providerName: string): Promise<string | undefined> => {
+    // Normalize provider name to match valid types
+    const normalizedProvider = providerName as ValidProvider;
+    
     if (isGuest) {
-      return guestApiKeys.find(k => k.provider === provider)?.api_key;
+      return guestApiKeys.find(k => k.provider === normalizedProvider)?.api_key;
     }
     
     if (!user) return undefined;
@@ -87,7 +93,7 @@ const ModelSelector = ({
         .from('api_keys')
         .select('api_key')
         .eq('user_id', user.id)
-        .eq('provider', provider)
+        .eq('provider', normalizedProvider)
         .single();
       
       if (error) {
