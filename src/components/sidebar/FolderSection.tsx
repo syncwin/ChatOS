@@ -1,12 +1,11 @@
-
 import React, { useState } from "react";
-import { Plus, X, Check } from "lucide-react";
+import { Plus } from "lucide-react";
 import { SidebarGroup } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import CollapsibleSidebarSection from "../CollapsibleSidebarSection";
 import FolderSection from "../FolderSection";
+import SidebarEditInput from "@/components/ui/SidebarEditInput";
 import type { Folder } from "@/services/chatService";
 
 interface Chat {
@@ -68,7 +67,6 @@ const FolderSectionWrapper = ({
 
   const handleCreateFolder = () => {
     if (newFolderName.trim()) {
-      // Auto-expand the section if it's collapsed when creating a new folder
       if (isCollapsed) {
         onToggle();
       }
@@ -79,7 +77,6 @@ const FolderSectionWrapper = ({
   };
 
   const handleStartCreating = () => {
-    // Auto-expand the section if it's collapsed when starting to create
     if (isCollapsed) {
       onToggle();
     }
@@ -90,6 +87,11 @@ const FolderSectionWrapper = ({
   const handleCancelCreating = () => {
     setIsCreating(false);
     setNewFolderName("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') handleCreateFolder();
+    if (e.key === 'Escape') handleCancelCreating();
   };
 
   return (
@@ -119,41 +121,15 @@ const FolderSectionWrapper = ({
         }
       >
         {isCreating && (
-          <div className="space-y-2 px-2 mb-4">
-            <div className="flex items-center gap-2">
-              <Input
-                placeholder="Enter folder name"
-                value={newFolderName}
-                onChange={(e) => setNewFolderName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleCreateFolder();
-                  if (e.key === 'Escape') handleCancelCreating();
-                }}
-                className="h-8 text-sm flex-1 min-w-[200px] max-w-none"
-                style={{ width: `${Math.max(200, newFolderName.length * 8 + 40)}px` }}
-                autoFocus
-              />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button size="sm" onClick={handleCreateFolder} disabled={!newFolderName.trim()} className="h-8 w-8 p-0 bg-primary hover:bg-primary/90">
-                    <Check className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Save</p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button size="sm" variant="outline" onClick={handleCancelCreating} className="h-8 w-8 p-0">
-                    <X className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Cancel</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
+          <div className="sidebar-input-container px-2 mb-4">
+            <SidebarEditInput
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              onSave={handleCreateFolder}
+              onCancel={handleCancelCreating}
+              onKeyDown={handleKeyDown}
+              placeholder="Enter folder name"
+            />
           </div>
         )}
         <FolderSection

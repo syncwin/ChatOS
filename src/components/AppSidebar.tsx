@@ -144,12 +144,12 @@ const AppSidebar = ({
   };
 
   // UI Components
-  const newChatButton = <Button onClick={onNewChat} size={isCollapsed ? "icon" : "default"} className={cn("bg-gradient-to-r from-primary to-primary hover:from-primary/90 hover:to-primary/80 text-primary-foreground", !isCollapsed && "w-full")}>
+  const newChatButton = <Button onClick={onNewChat} size={isCollapsed ? "icon" : "default"} className={cn("gradient-button", !isCollapsed && "w-full")}>
       <Plus className="w-4 h-4" />
       {!isCollapsed && <span>New Chat</span>}
     </Button>;
   const logo = <a href="/" className={cn("flex items-center gap-2", isCollapsed && "justify-center")}>
-      <ChatOsIcon className="w-8 h-8 text-primary" />
+      <ChatOsIcon className="w-8 h-8" />
       {!isCollapsed && <span className="whitespace-nowrap font-semibold text-2xl">ChatOS</span>}
     </a>;
   return <>

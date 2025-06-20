@@ -1,12 +1,11 @@
-
 import React, { useState } from "react";
-import { Plus, X, Check } from "lucide-react";
+import { Plus } from "lucide-react";
 import { SidebarGroup } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import CollapsibleSidebarSection from "../CollapsibleSidebarSection";
 import TagList from "../TagList";
+import SidebarEditInput from "@/components/ui/SidebarEditInput";
 import type { Tag } from "@/services/chatService";
 
 interface Chat {
@@ -53,7 +52,6 @@ const TagSection = ({
 
   const handleCreateTag = () => {
     if (newTagName.trim()) {
-      // Auto-expand the section if it's collapsed when creating a new tag
       if (isCollapsed) {
         onToggle();
       }
@@ -64,7 +62,6 @@ const TagSection = ({
   };
 
   const handleStartCreating = () => {
-    // Auto-expand the section if it's collapsed when starting to create
     if (isCollapsed) {
       onToggle();
     }
@@ -75,6 +72,11 @@ const TagSection = ({
   const handleCancelCreating = () => {
     setIsCreating(false);
     setNewTagName("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') handleCreateTag();
+    if (e.key === 'Escape') handleCancelCreating();
   };
 
   return (
@@ -104,41 +106,15 @@ const TagSection = ({
         }
       >
         {isCreating && (
-          <div className="space-y-2 px-2 mb-4">
-            <div className="flex items-center gap-2">
-              <Input
-                placeholder="Enter tag name"
-                value={newTagName}
-                onChange={(e) => setNewTagName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleCreateTag();
-                  if (e.key === 'Escape') handleCancelCreating();
-                }}
-                className="h-8 text-sm flex-1 min-w-[200px] max-w-none"
-                style={{ width: `${Math.max(200, newTagName.length * 8 + 40)}px` }}
-                autoFocus
-              />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button size="sm" onClick={handleCreateTag} disabled={!newTagName.trim()} className="h-8 w-8 p-0 bg-primary hover:bg-primary/90">
-                    <Check className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Save</p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button size="sm" variant="outline" onClick={handleCancelCreating} className="h-8 w-8 p-0">
-                    <X className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Cancel</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
+          <div className="sidebar-input-container px-2 mb-4">
+            <SidebarEditInput
+              value={newTagName}
+              onChange={(e) => setNewTagName(e.target.value)}
+              onSave={handleCreateTag}
+              onCancel={handleCancelCreating}
+              onKeyDown={handleKeyDown}
+              placeholder="Enter tag name"
+            />
           </div>
         )}
         <TagList

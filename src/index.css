@@ -72,7 +72,7 @@
     --popover: 0 0% 8%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 255 100% 50%;
+    --primary: 255 0% 25%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 60 100% 50%;
@@ -89,16 +89,16 @@
 
     --border: 0 0% 15%;
     --input: 0 0% 15%;
-    --ring: 255 100% 50%;
+    --ring: 255 0% 25%;
     
     --sidebar-background: 0 0% 3%;
     --sidebar-foreground: 0 0% 85%;
-    --sidebar-primary: 255 100% 50%;
+    --sidebar-primary: 255 0% 25%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 6%;
     --sidebar-accent-foreground: 0 0% 90%;
     --sidebar-border: 0 0% 12%;
-    --sidebar-ring: 255 100% 50%;
+    --sidebar-ring: 255 0% 25%;
   }
 }
 
@@ -109,6 +109,28 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Gradient button styling for New Chat */
+  .gradient-button {
+    background: linear-gradient(135deg, #3f00ff 0%, #ff8000 100%);
+    color: white;
+    border: none;
+  }
+
+  .gradient-button:hover {
+    background: linear-gradient(135deg, rgba(63, 0, 255, 0.9) 0%, rgba(255, 128, 0, 0.9) 100%);
+  }
+
+  /* Sidebar input field constraints */
+  .sidebar-input-container {
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  .sidebar-input-container input {
+    max-width: calc(100% - 68px) !important;
+    min-width: 0 !important;
   }
 
   /* Sleek, slim scrollbars for all scrollable areas */

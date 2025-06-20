@@ -1,10 +1,8 @@
-
 import { useState } from "react";
-import { Folder as FolderIcon, MoreHorizontal, Pencil, Trash2, Check, X } from "lucide-react";
+import { Folder as FolderIcon, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import ChatItem from "./ChatItem";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
@@ -18,6 +16,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { SidebarMenu } from "@/components/ui/sidebar";
+import SidebarEditInput from "@/components/ui/SidebarEditInput";
 import type { Folder } from "@/services/chatService";
 
 interface Chat {
@@ -83,6 +82,11 @@ const FolderSection = ({
     setEditingFolderName("");
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') handleUpdateFolder(editingFolderId!);
+    if (e.key === 'Escape') handleCancelEdit();
+  };
+
   const filteredChats = chats.filter(chat => chat.title.toLowerCase().includes(searchTerm.toLowerCase()));
   const chatsByFolder = folders.map(folder => ({
     ...folder,
@@ -97,44 +101,22 @@ const FolderSection = ({
             <div className="flex items-center group/folder hover:bg-muted/50 rounded-md">
               <AccordionTrigger className="flex-1 p-2 text-sm font-medium text-sidebar-foreground hover:no-underline">
                 <div className="flex items-center gap-2 w-full" onClick={(e) => e.stopPropagation()}>
-                  {editingFolderId !== folder.id && <FolderIcon className="w-4 h-4 flex-shrink-0" />}
                   {editingFolderId === folder.id ? (
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <Input
+                    <div className="sidebar-input-container flex-1 min-w-0">
+                      <SidebarEditInput
                         value={editingFolderName}
                         onChange={(e) => setEditingFolderName(e.target.value)}
-                        onKeyDown={(e) => { 
-                          if (e.key === 'Enter') handleUpdateFolder(folder.id); 
-                          if (e.key === 'Escape') handleCancelEdit();
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className="h-8 text-sm flex-1 min-w-[200px] max-w-none"
-                        autoFocus
-                        style={{ width: `${Math.max(200, editingFolderName.length * 8 + 40)}px` }}
+                        onSave={() => handleUpdateFolder(folder.id)}
+                        onCancel={handleCancelEdit}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Enter folder name"
                       />
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button size="sm" onClick={() => handleUpdateFolder(folder.id)} disabled={!editingFolderName.trim()} className="h-8 w-8 p-0 bg-primary hover:bg-primary/90">
-                            <Check className="w-3 h-3" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Save</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button size="sm" variant="outline" onClick={handleCancelEdit} className="h-8 w-8 p-0">
-                            <X className="w-3 h-3" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Cancel</p>
-                        </TooltipContent>
-                      </Tooltip>
                     </div>
                   ) : (
-                    <span className="truncate flex-1">{folder.name}</span>
+                    <>
+                      <FolderIcon className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate flex-1">{folder.name}</span>
+                    </>
                   )}
                 </div>
               </AccordionTrigger>
