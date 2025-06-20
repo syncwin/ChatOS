@@ -51,8 +51,8 @@
 
     --radius: 0.5rem;
 
-    /* Light mode sidebar uses lightest shade of primary */
-    --sidebar-background: 255 0% 98%;
+    /* Light mode sidebar uses distinct shade of primary */
+    --sidebar-background: 250 0% 95%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 255 0% 25%;
     --sidebar-primary-foreground: 0 0% 98%;
@@ -107,8 +107,28 @@
     @apply border-border;
   }
 
+  html, body, #root {
+    height: 100vh;
+    overflow: hidden;
+  }
+
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Chat area specific styling */
+  .chat-container {
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Ensure chat bubbles are contained */
+  .chat-message {
+    max-width: calc(100% - 2rem);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 
   /* Gradient button styling for New Chat */
@@ -122,15 +142,13 @@
     background: linear-gradient(135deg, rgba(63, 0, 255, 0.9) 0%, rgba(255, 128, 0, 0.9) 100%);
   }
 
-  /* Sidebar input field constraints */
-  .sidebar-input-container {
-    max-width: 100%;
-    overflow: hidden;
+  /* Accent color for specific elements */
+  .accent-color {
+    color: hsl(var(--accent));
   }
 
-  .sidebar-input-container input {
-    max-width: calc(100% - 68px) !important;
-    min-width: 0 !important;
+  .accent-bg {
+    background-color: hsl(var(--accent));
   }
 
   /* Sleek, slim scrollbars for all scrollable areas */

@@ -1,3 +1,4 @@
+
 import { Pin, PinOff, Pencil, Trash2, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarMenuItem } from "@/components/ui/sidebar";
@@ -50,8 +51,7 @@ const ChatItem = ({
     onStartEdit(chat.id, chat.title);
   };
 
-  const handleCancelEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleCancelEdit = () => {
     const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' }) as any;
     onTitleKeyDown(escapeEvent, chat.id);
   };
@@ -66,7 +66,7 @@ const ChatItem = ({
       )}
     >
       {isEditing && !isCollapsed ? (
-        <div className="sidebar-input-container">
+        <div className="w-full">
           <SidebarEditInput
             value={newChatTitle}
             onChange={onTitleChange}

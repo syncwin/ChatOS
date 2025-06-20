@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Plus } from "lucide-react";
 import { SidebarGroup } from "@/components/ui/sidebar";
@@ -88,25 +89,27 @@ const TagSection = ({
         onToggle={onToggle}
         onTogglePin={onTogglePin}
         rightElement={
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-6 w-6 hover:bg-muted"
-                onClick={handleStartCreating}
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Create tag</p>
-            </TooltipContent>
-          </Tooltip>
+          !isCreating ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6 hover:bg-muted"
+                  onClick={handleStartCreating}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Create tag</p>
+              </TooltipContent>
+            </Tooltip>
+          ) : undefined
         }
       >
         {isCreating && (
-          <div className="sidebar-input-container px-2 mb-4">
+          <div className="px-2 mb-4">
             <SidebarEditInput
               value={newTagName}
               onChange={(e) => setNewTagName(e.target.value)}

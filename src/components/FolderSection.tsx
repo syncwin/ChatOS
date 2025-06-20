@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Folder as FolderIcon, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import ChatItem from "./ChatItem";
@@ -102,7 +103,7 @@ const FolderSection = ({
               <AccordionTrigger className="flex-1 p-2 text-sm font-medium text-sidebar-foreground hover:no-underline">
                 <div className="flex items-center gap-2 w-full" onClick={(e) => e.stopPropagation()}>
                   {editingFolderId === folder.id ? (
-                    <div className="sidebar-input-container flex-1 min-w-0">
+                    <div className="w-full">
                       <SidebarEditInput
                         value={editingFolderName}
                         onChange={(e) => setEditingFolderName(e.target.value)}

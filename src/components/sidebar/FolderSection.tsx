@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Plus } from "lucide-react";
 import { SidebarGroup } from "@/components/ui/sidebar";
@@ -103,25 +104,27 @@ const FolderSectionWrapper = ({
         onToggle={onToggle}
         onTogglePin={onTogglePin}
         rightElement={
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-6 w-6 hover:bg-muted"
-                onClick={handleStartCreating}
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Create folder</p>
-            </TooltipContent>
-          </Tooltip>
+          !isCreating ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6 hover:bg-muted"
+                  onClick={handleStartCreating}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Create folder</p>
+              </TooltipContent>
+            </Tooltip>
+          ) : undefined
         }
       >
         {isCreating && (
-          <div className="sidebar-input-container px-2 mb-4">
+          <div className="px-2 mb-4">
             <SidebarEditInput
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}

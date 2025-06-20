@@ -55,23 +55,24 @@ const ChatView = ({
   const isInputLoading = isLoading || isAiResponding;
 
   return (
-    <main className="flex-1 flex flex-col overflow-hidden">
+    <main className="flex-1 flex flex-col h-full overflow-hidden chat-container">
       {showWelcomeScreen ? (
-        <div className="container mx-auto max-w-4xl flex-1 flex">
+        <div className="container mx-auto max-w-4xl flex-1 flex px-4">
           <WelcomeScreen 
             suggestedQuestions={suggestedQuestions}
             onQuestionSelect={onQuestionSelect}
           />
         </div>
       ) : (
-        <ScrollArea className="flex-1">
-          <div className="container mx-auto max-w-4xl py-4">
+        <ScrollArea className="flex-1 overflow-auto">
+          <div className="container mx-auto max-w-4xl py-4 px-4">
             <div className="space-y-6">
               {messages.map((message) => (
-                <ChatMessage 
-                  key={message.id} 
-                  message={message} 
-                />
+                <div key={message.id} className="chat-message">
+                  <ChatMessage 
+                    message={message} 
+                  />
+                </div>
               ))}
               <div ref={messagesEndRef} />
             </div>
@@ -79,7 +80,7 @@ const ChatView = ({
         </ScrollArea>
       )}
 
-      <div className="container mx-auto max-w-4xl">
+      <div className="container mx-auto max-w-4xl px-4 py-2">
         <InputArea 
           input={input}
           setInput={setInput}

@@ -179,8 +179,6 @@ const AppSidebar = ({
               </SidebarGroupContent>
             </SidebarGroup>}
 
-          <SidebarSeparator className="hidden " />
-
           {/* Chat History Section */}
           {!isCollapsed && <ChatHistorySection chats={chats} folders={folders} activeChatId={activeChatId} editingChatId={editingChatId} newChatTitle={newChatTitle} onSelectChat={onSelectChat} onStartEdit={handleStartEdit} onPinChat={handlePinChat} onDeleteChat={handleDeleteChat} onTitleChange={handleTitleChange} onUpdateTitle={handleUpdateTitle} onTitleKeyDown={handleTitleKeyDown} createFolder={createFolder} updateFolder={updateFolder} deleteFolder={deleteFolder} searchTerm={searchTerm} isCollapsed={sections.chatHistory.isCollapsed} isPinned={sections.chatHistory.isPinned} onToggle={() => toggleSection('chatHistory')} onTogglePin={() => togglePin('chatHistory')} />}
 
@@ -207,8 +205,6 @@ const AppSidebar = ({
             onUpdateTitle={handleUpdateTitle}
             onTitleKeyDown={handleTitleKeyDown}
           />}
-          
-          <SidebarSeparator className="hidden " />
 
           {/* Tags Section */}
           {!isCollapsed && <TagSection tags={tags} chats={chats} activeChatId={activeChatId} onSelectChat={onSelectChat} createTag={createTag} updateTag={updateTag} deleteTag={deleteTag} searchTerm={searchTerm} isCollapsed={sections.tags.isCollapsed} isPinned={sections.tags.isPinned} onToggle={() => toggleSection('tags')} onTogglePin={() => togglePin('tags')} />}
@@ -217,14 +213,12 @@ const AppSidebar = ({
           {isCollapsed && <>
               <ChatHistory chats={chats} folders={folders} activeChatId={activeChatId} editingChatId={editingChatId} newChatTitle={newChatTitle} onSelectChat={onSelectChat} onStartEdit={handleStartEdit} onPinChat={handlePinChat} onDeleteChat={handleDeleteChat} onTitleChange={handleTitleChange} onUpdateTitle={handleUpdateTitle} onTitleKeyDown={handleTitleKeyDown} createFolder={createFolder} updateFolder={updateFolder} deleteFolder={deleteFolder} searchTerm={searchTerm} />
               
-              <SidebarSeparator />
-
               <TagList tags={tags} chats={chats} activeChatId={activeChatId} onSelectChat={onSelectChat} onCreateTag={createTag} onUpdateTag={updateTag} onDeleteTag={deleteTag} searchTerm={searchTerm} />
             </>}
         </SidebarContent>
 
         {/* Profile and Settings Section - Sticky at bottom */}
-        <SidebarFooter className="sticky bottom-0 bg-sidebar border-t border-sidebar-border p-0">
+        <SidebarFooter className="sticky bottom-0 bg-sidebar p-0">
           <div className={cn("p-4", isCollapsed && "p-2")}>
             <UserFooter isGuest={isGuest} user={user} onOpenProfile={handleOpenProfile} />
             
