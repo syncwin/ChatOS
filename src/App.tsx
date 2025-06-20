@@ -12,7 +12,17 @@ import Auth from "./pages/Auth";
 import ProtectedRoute from "./components/ProtectedRoute";
 import UpdatePassword from "./pages/UpdatePassword";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Disable automatic refetching to prevent deleted messages from reappearing
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      // Keep data fresh for 5 minutes
+      staleTime: 5 * 60 * 1000,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

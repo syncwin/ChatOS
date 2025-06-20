@@ -1,20 +1,32 @@
 
-import { useRef, useEffect } from "react";
+import React, { useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import WelcomeScreen from "@/components/WelcomeScreen";
-import ChatMessage from "@/components/ChatMessage";
-import InputArea from "@/components/InputArea";
-import type { Message as MessageType } from "@/pages/Index";
+import ChatMessage from "./ChatMessage";
+import InputArea from "./InputArea";
+import WelcomeScreen from "./WelcomeScreen";
+import type { Message } from "@/pages/Index";
+
+export interface ChatViewRef {
+  scrollToInput: () => void;
+}
 
 interface ChatViewProps {
-  messages: MessageType[];
+  messages: Message[];
   isLoading: boolean;
   isAiResponding: boolean;
   input: string;
   setInput: (value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   onNewChat: () => void;
+  suggestedQuestions: string[];
   activeChatId: string | null;
+  editingMessageId: string | null;
+  editingContent: string;
+  setEditingContent: (value: string) => void;
+  onEditMessage: (messageId: string) => void;
+  onSaveEdit: () => void;
+  onCancelEdit: () => void;
+  onDeleteMessage: (messageId: string) => void;
 }
 
 const suggestedQuestions = [
@@ -24,21 +36,38 @@ const suggestedQuestions = [
   "What are the latest trends in AI?"
 ];
 
-const ChatView = ({ 
-  messages, 
-  isLoading, 
-  isAiResponding, 
-  input, 
-  setInput, 
+const ChatView = forwardRef<ChatViewRef, ChatViewProps>(({ 
+  messages,
+  isLoading,
+  isAiResponding,
+  input,
+  setInput,
   onSubmit,
   onNewChat,
+  suggestedQuestions,
   activeChatId,
-}: ChatViewProps) => {
+  editingMessageId,
+  editingContent,
+  setEditingContent,
+  onEditMessage,
+  onSaveEdit,
+  onCancelEdit,
+  onDeleteMessage
+}, ref) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputAreaRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  const scrollToInput = () => {
+    inputAreaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
+  useImperativeHandle(ref, () => ({
+    scrollToInput
+  }));
 
   useEffect(() => {
     scrollToBottom();
@@ -55,9 +84,9 @@ const ChatView = ({
   const isInputLoading = isLoading || isAiResponding;
 
   return (
-    <main className="flex-1 flex flex-col h-full overflow-hidden chat-container">
+    <main className="flex-1 flex flex-col h-full overflow-hidden chat-container min-w-0">
       {showWelcomeScreen ? (
-        <div className="container mx-auto max-w-4xl flex-1 flex px-4">
+        <div className="container mx-auto max-w-4xl flex-1 flex px-2 sm:px-4">
           <WelcomeScreen 
             suggestedQuestions={suggestedQuestions}
             onQuestionSelect={onQuestionSelect}
@@ -65,12 +94,19 @@ const ChatView = ({
         </div>
       ) : (
         <ScrollArea className="flex-1 overflow-auto">
-          <div className="container mx-auto max-w-4xl py-4 px-4">
-            <div className="space-y-6">
+          <div className="container mx-auto max-w-4xl py-2 sm:py-4 px-2 sm:px-4">
+            <div className="space-y-4 sm:space-y-6">
               {messages.map((message) => (
                 <div key={message.id} className="chat-message">
                   <ChatMessage 
-                    message={message} 
+                    message={message}
+                    isEditing={editingMessageId === message.id}
+                    editingContent={editingContent}
+                    setEditingContent={setEditingContent}
+                    onEditMessage={onEditMessage}
+                    onSaveEdit={onSaveEdit}
+                    onCancelEdit={onCancelEdit}
+                    onDeleteMessage={onDeleteMessage}
                   />
                 </div>
               ))}
@@ -80,8 +116,9 @@ const ChatView = ({
         </ScrollArea>
       )}
 
-      <div className="container mx-auto max-w-4xl px-4 py-2">
+      <div className="container mx-auto max-w-4xl px-2 sm:px-4 py-2">
         <InputArea 
+          ref={inputAreaRef}
           input={input}
           setInput={setInput}
           onSubmit={onSubmit}
@@ -90,6 +127,8 @@ const ChatView = ({
       </div>
     </main>
   );
-};
+});
+
+ChatView.displayName = 'ChatView';
 
 export default ChatView;

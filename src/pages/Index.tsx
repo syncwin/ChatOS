@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { v4 as uuidv4 } from 'uuid';
+import { useRef } from 'react';
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import Header from "@/components/Header";
 import AppSidebar from "@/components/AppSidebar";
-import ChatView from "@/components/ChatView";
+import ChatView, { ChatViewRef } from "@/components/ChatView";
 import { useChat } from "@/hooks/useChat";
 import { useAIProvider } from "@/hooks/useAIProvider";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,6 +21,7 @@ const Index = () => {
   const { user, isGuest } = useAuth();
   const { profile, updateProfile } = useProfile();
   const queryClient = useQueryClient();
+  const chatViewRef = useRef<ChatViewRef>(null);
   const {
     chats,
     isLoadingChats,
@@ -35,6 +37,8 @@ const Index = () => {
     createChatAsync,
     addMessage: addMessageMutation,
     updateChatTitle,
+    deleteMessage,
+    deleteMessagePair,
     createFolder,
     updateFolder,
     deleteFolder,
@@ -47,6 +51,18 @@ const Index = () => {
   } = useChat();
 
   const messages: Message[] = dbMessages;
+  
+  // Suggested questions for welcome screen
+  const suggestedQuestions = [
+    "What is artificial intelligence?",
+    "How do large language models work?",
+    "Compare AI agents and agentic AI",
+    "What are the latest trends in AI?"
+  ];
+  
+  // Edit functionality state
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingContent, setEditingContent] = useState<string>('');
 
   const {
     streamMessage,
@@ -144,12 +160,23 @@ const Index = () => {
           )
         );
       },
-      () => { // onComplete
+      (usage) => { // onComplete
+        console.log('Creating final assistant message with:', {
+          provider: selectedProvider,
+          model: selectedModel,
+          usage: usage
+        });
         const finalAssistantMessage: NewMessage = {
           chat_id: currentChatId!,
           content: finalContent,
           role: 'assistant',
           provider: selectedProvider,
+          model: selectedModel,
+          usage: usage || {
+            prompt_tokens: 0,
+            completion_tokens: 0,
+            total_tokens: 0
+          }
         };
         // Replace placeholder with final message from DB
         addMessageMutation(finalAssistantMessage, {
@@ -186,6 +213,189 @@ const Index = () => {
 
   const handleSelectChat = (chat: { id: string }) => {
     setActiveChatId(chat.id);
+  };
+
+  // Edit functionality handlers
+  const handleEditMessage = (messageId: string) => {
+    const clickedMessage = messages.find(msg => msg.id === messageId);
+    
+    if (!clickedMessage) return;
+    
+    let messageToEdit;
+    
+    if (clickedMessage.role === 'user') {
+      // Direct edit of user message
+      messageToEdit = clickedMessage;
+    } else if (clickedMessage.role === 'assistant') {
+      // For assistant messages, find the previous user message
+      const messageIndex = messages.findIndex(msg => msg.id === messageId);
+      const previousUserMessage = messages.slice(0, messageIndex).reverse().find(msg => msg.role === 'user');
+      messageToEdit = previousUserMessage;
+    }
+    
+    if (messageToEdit) {
+      setEditingMessageId(messageToEdit.id);
+      setEditingContent(messageToEdit.content);
+      // Scroll to input area after a short delay to ensure the edit UI is rendered
+      setTimeout(() => {
+        chatViewRef.current?.scrollToInput();
+      }, 100);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMessageId(null);
+    setEditingContent('');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingMessageId || !editingContent.trim()) return;
+    
+    const trimmedContent = editingContent.trim();
+    const messageIndex = messages.findIndex(msg => msg.id === editingMessageId);
+    
+    if (messageIndex === -1) return;
+    
+    // Find the assistant message that follows this user message
+    const assistantMessageIndex = messageIndex + 1;
+    const hasAssistantResponse = assistantMessageIndex < messages.length && 
+                                messages[assistantMessageIndex].role === 'assistant';
+    
+    // Update the user message content
+    const updatedUserMessage = { ...messages[messageIndex], content: trimmedContent };
+    
+    // Update messages in the query cache
+    const updatedMessages = [...messages];
+    updatedMessages[messageIndex] = updatedUserMessage;
+    
+    // If there's an assistant response, remove it as we'll regenerate
+    if (hasAssistantResponse) {
+      updatedMessages.splice(assistantMessageIndex, 1);
+    }
+    
+    queryClient.setQueryData<Message[]>(['messages', activeChatId], updatedMessages);
+    
+    // Clear edit state
+    setEditingMessageId(null);
+    setEditingContent('');
+    
+    // Regenerate AI response with the edited message
+    if (activeChatId) {
+      const historyForAI: ChatMessage[] = updatedMessages
+        .slice(0, messageIndex + 1)
+        .map(m => ({ role: m.role, content: m.content }));
+      
+      const assistantId = uuidv4();
+      const assistantPlaceholder: Message = {
+        id: assistantId,
+        chat_id: activeChatId,
+        content: '',
+        role: 'assistant',
+        created_at: new Date().toISOString(),
+        isStreaming: true,
+        user_id: user?.id || '',
+        model: selectedModel,
+        provider: selectedProvider,
+        usage: null,
+      };
+      
+      // Add placeholder
+      queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) => [
+        ...oldData,
+        assistantPlaceholder
+      ]);
+      
+      let finalContent = "";
+      
+      await streamMessage(
+        historyForAI,
+        (delta) => {
+          finalContent += delta;
+          queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) =>
+            oldData.map(msg => 
+              msg.id === assistantId ? { ...msg, content: finalContent } : msg
+            )
+          );
+        },
+        (usage) => {
+          const finalAssistantMessage: NewMessage = {
+            chat_id: activeChatId!,
+            content: finalContent,
+            role: 'assistant',
+            provider: selectedProvider,
+            model: selectedModel,
+            usage: usage || {
+              prompt_tokens: 0,
+              completion_tokens: 0,
+              total_tokens: 0
+            }
+          };
+          addMessageMutation(finalAssistantMessage, {
+            onSuccess: () => {
+              queryClient.invalidateQueries({ queryKey: ['messages', activeChatId] });
+            }
+          });
+        },
+        (error) => {
+          toast.error(`Error from AI: ${error.message}`);
+          queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) =>
+            oldData.filter(msg => msg.id !== assistantId)
+          );
+        }
+      );
+    }
+  };
+
+  // Helper function to find message pairs (user input + assistant output)
+  const findMessagePair = (messages: Message[], targetMessageId: string): string[] => {
+    const targetIndex = messages.findIndex(msg => msg.id === targetMessageId);
+    if (targetIndex === -1) return [targetMessageId];
+    
+    const targetMessage = messages[targetIndex];
+    const messagesToDelete: string[] = [];
+    
+    if (targetMessage.role === 'user') {
+      // If user message, find the next assistant message
+      messagesToDelete.push(targetMessage.id);
+      if (targetIndex + 1 < messages.length && messages[targetIndex + 1].role === 'assistant') {
+        messagesToDelete.push(messages[targetIndex + 1].id);
+      }
+    } else if (targetMessage.role === 'assistant') {
+      // If assistant message, find the previous user message
+      if (targetIndex > 0 && messages[targetIndex - 1].role === 'user') {
+        messagesToDelete.push(messages[targetIndex - 1].id);
+      }
+      messagesToDelete.push(targetMessage.id);
+    }
+    
+    return messagesToDelete;
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    // Store the original messages for potential rollback
+    const originalMessages = queryClient.getQueryData<Message[]>(['messages', activeChatId]);
+    
+    if (!originalMessages) return;
+    
+    // Find all messages in the pair to delete
+    const messageIdsToDelete = findMessagePair(originalMessages, messageId);
+    
+    try {
+      // Optimistically remove the message pair from the UI
+      const updatedMessages = originalMessages.filter(msg => !messageIdsToDelete.includes(msg.id));
+      queryClient.setQueryData<Message[]>(['messages', activeChatId], updatedMessages);
+      
+      // Delete all messages in the pair using the efficient batch delete
+        if (messageIdsToDelete.length > 1) {
+          await deleteMessagePair(messageIdsToDelete);
+        } else {
+          await deleteMessage(messageIdsToDelete[0]);
+        }
+    } catch (error) {
+      // If deletion fails, restore the original messages
+      queryClient.setQueryData<Message[]>(['messages', activeChatId], originalMessages);
+      toast.error('Failed to delete message pair');
+    }
   };
 
   const activeChat = chats.find(c => c.id === activeChatId);
@@ -269,15 +479,24 @@ const Index = () => {
           </header>
 
           <ChatView
-            messages={messages}
-            isLoading={isLoading}
-            isAiResponding={isAiResponding}
-            input={input}
-            setInput={setInput}
-            onSubmit={handleSubmit}
-            onNewChat={handleNewChat}
-            activeChatId={activeChatId}
-          />
+          ref={chatViewRef}
+          messages={messages}
+          isLoading={isLoadingMessages}
+          isAiResponding={isAiResponding}
+          input={input}
+          setInput={setInput}
+          onSubmit={handleSubmit}
+          onNewChat={handleNewChat}
+          suggestedQuestions={suggestedQuestions}
+          activeChatId={activeChatId}
+          editingMessageId={editingMessageId}
+          editingContent={editingContent}
+          setEditingContent={setEditingContent}
+          onEditMessage={handleEditMessage}
+          onSaveEdit={handleSaveEdit}
+          onCancelEdit={handleCancelEdit}
+          onDeleteMessage={handleDeleteMessage}
+        />
         </div>
       </SidebarInset>
     </>

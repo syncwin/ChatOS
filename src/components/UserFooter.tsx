@@ -53,7 +53,7 @@ const UserFooter = ({ isGuest, user, onOpenProfile }: UserFooterProps) => {
     }
     return (
       <div className="space-y-3">
-        <div className="p-3 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800">
+        <div className="p-3 rounded-md bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800">
           <div className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
             Sign in for more features
           </div>
@@ -78,7 +78,7 @@ const UserFooter = ({ isGuest, user, onOpenProfile }: UserFooterProps) => {
       onClick={onOpenProfile} 
       aria-label="Open user profile"
       className={cn(
-        "flex items-center gap-3 p-3 rounded-lg transition-colors cursor-pointer bg-sidebar-accent hover:bg-sidebar-accent/80 text-sidebar-accent-foreground w-full text-left",
+        "flex items-center gap-3 p-3 rounded-md transition-colors cursor-pointer bg-sidebar-accent hover:bg-sidebar-accent/80 text-sidebar-accent-foreground w-full text-left",
         isCollapsed && "w-10 h-10 justify-center p-1"
       )}
     >

@@ -83,10 +83,12 @@ const TagDropdown = ({
             >
               <Tag className="w-4 h-4" />
               {hasAssignedTags && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full flex items-center justify-center">
-                  <span className="text-xs text-primary-foreground font-bold">
-                    {chatTags.length}
-                  </span>
+                <div className="selection-indicator-with-number">
+                  {chatTags.length > 1 && (
+                    <span className="text-[0.5rem] font-medium text-primary-foreground leading-none">
+                      {chatTags.length}
+                    </span>
+                  )}
                 </div>
               )}
             </Button>

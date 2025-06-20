@@ -1,5 +1,5 @@
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { createClient } from "jsr:@supabase/supabase-js@2";
 
 async function getApiKeyForUser(authHeader: string, provider: string): Promise<string> {
     console.log('[ai-chat] Getting API key for authenticated user');

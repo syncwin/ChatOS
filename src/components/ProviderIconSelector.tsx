@@ -124,7 +124,7 @@ const ProviderIconSelector = ({
             >
               <SelectedIcon className="w-4 h-4" />
               {selectedProvider && selectedModel && (
-                <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-green-500 rounded-full" />
+                <div className="selection-indicator" />
               )}
             </Button>
           </PopoverTrigger>

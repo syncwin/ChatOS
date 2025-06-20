@@ -259,6 +259,32 @@ export const updateChatTitle = async (chatId: string, title: string): Promise<vo
   if (error) throw error;
 };
 
+export const deleteMessage = async (messageId: string): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  const { error } = await supabase
+    .from('chat_messages')
+    .delete()
+    .eq('id', messageId)
+    .eq('user_id', user.id);
+
+  if (error) throw error;
+};
+
+export const deleteMessagePair = async (messageIds: string[]): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  const { error } = await supabase
+    .from('chat_messages')
+    .delete()
+    .in('id', messageIds)
+    .eq('user_id', user.id);
+
+  if (error) throw error;
+};
+
 export const deleteChat = async (chatId: string): Promise<void> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');

@@ -1,4 +1,4 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from '../ai-chat/_shared/cors.ts';
 import { getApiKey } from '../ai-chat/auth/apiKeyHandler.ts';
 import { getAvailableGeminiModels } from '../ai-chat/providers/gemini.ts';

@@ -15,8 +15,12 @@ export async function getAvailableModels(provider: string, guestApiKey?: string)
     'Content-Type': 'application/json',
     'apikey': SUPABASE_ANON_KEY,
   };
+  
+  // Always provide Authorization header - use user token if available, otherwise use anon key
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
+  } else {
+    headers['Authorization'] = `Bearer ${SUPABASE_ANON_KEY}`;
   }
 
   const response = await fetch(`${SUPABASE_URL}/functions/v1/get-models`, {

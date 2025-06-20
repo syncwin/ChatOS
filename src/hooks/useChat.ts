@@ -7,6 +7,8 @@ import {
   addMessage,
   updateChatTitle,
   deleteChat,
+  deleteMessage,
+  deleteMessagePair,
   updateChatPinStatus,
   getFolders,
   createFolder,
@@ -115,6 +117,28 @@ export const useChat = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['chats', user?.id] });
       toast.success('Chat deleted.');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
+  });
+
+  const deleteMessageMutation = useMutation({
+    mutationFn: deleteMessage,
+    onSuccess: (_, messageId) => {
+      // Don't invalidate here - optimistic updates are handled in the component
+      toast.success('Message deleted.');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    }
+  });
+
+  const deleteMessagePairMutation = useMutation({
+    mutationFn: deleteMessagePair,
+    onSuccess: (_, messageIds) => {
+      // Don't invalidate here - optimistic updates are handled in the component
+      toast.success(`Deleted ${messageIds.length > 1 ? 'conversation pair' : 'message'}.`);
     },
     onError: (error: Error) => {
       toast.error(error.message);
@@ -233,12 +257,22 @@ export const useChat = () => {
     }
   });
 
-  // Effect to manage activeChatId for authenticated user
+  // Effect to load persisted activeChatId for authenticated users
   useEffect(() => {
     if (isGuest || isLoadingChats) return;
+    
+    try {
+      const savedActiveChatId = localStorage.getItem('activeChatId');
+      if (savedActiveChatId && chats.find(c => c.id === savedActiveChatId)) {
+        setActiveChatId(savedActiveChatId);
+        return;
+      }
+    } catch (error) {
+      console.error('Failed to load active chat ID from localStorage:', error);
+    }
 
     if (chats.length > 0) {
-      // If there's no active chat, or the active chat is no longer in the list (e.g. deleted),
+      // If there's no saved active chat, or the saved chat is no longer in the list (e.g. deleted),
       // set the first chat in the list as active.
       // This runs on initial load and when the chats list changes.
       if (!activeChatId || !chats.find((c) => c.id === activeChatId)) {
@@ -253,6 +287,17 @@ export const useChat = () => {
     // user manually changes the active chat (e.g., by clicking "New Chat").
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chats, isGuest, isLoadingChats, setActiveChatId]);
+
+  // Effect to persist activeChatId for authenticated users
+  useEffect(() => {
+    if (isGuest || !activeChatId) return;
+    
+    try {
+      localStorage.setItem('activeChatId', activeChatId);
+    } catch (error) {
+      console.error('Failed to save active chat ID to localStorage:', error);
+    }
+  }, [activeChatId, isGuest]);
 
   // Effect to load guest data from session storage
   useEffect(() => {
@@ -288,6 +333,7 @@ export const useChat = () => {
       addMessage: (message: NewMessage) => addGuestMessage(message, setGuestChats),
       updateChatTitle: (args: { chatId: string, title: string }) => updateGuestChatTitleLogic(args, setGuestChats),
       deleteChat: (chatId: string) => deleteGuestChatLogic(chatId, guestChats, setGuestChats, activeChatId, setActiveChatId),
+      deleteMessage: () => toast.info('Sign in to delete messages.'),
       updateChatPinStatus: () => { toast.info("Sign in to pin chats."); },
       folders: [],
       isLoadingFolders: false,
@@ -318,6 +364,8 @@ export const useChat = () => {
     addMessage: addMessageMutation.mutate,
     updateChatTitle: updateChatTitleMutation.mutate,
     deleteChat: deleteChatMutation.mutate,
+    deleteMessage: deleteMessageMutation.mutate,
+    deleteMessagePair: deleteMessagePairMutation.mutate,
     updateChatPinStatus: updateChatPinStatusMutation.mutate,
     folders,
     isLoadingFolders,

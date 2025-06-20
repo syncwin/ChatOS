@@ -198,7 +198,7 @@ export const useAIProvider = () => {
   const streamMessage = useCallback(async (
     messages: ChatMessage[],
     onDelta: (chunk: string) => void,
-    onComplete: () => void,
+    onComplete: (usage?: { prompt_tokens: number; completion_tokens: number; total_tokens?: number }) => void,
     onError: (error: Error) => void,
   ) => {
     if (!selectedProvider) {
@@ -229,6 +229,7 @@ export const useAIProvider = () => {
       if (selectedProvider === 'OpenAI') {
         try {
           await streamChatMessage(request, onDelta, onError);
+          // For streaming, we don't have usage data immediately, so pass empty usage
           onComplete();
         } catch (streamError) {
           console.warn('Streaming failed, falling back to non-streaming:', streamError);
@@ -236,7 +237,7 @@ export const useAIProvider = () => {
           const fallbackResponse = await sendChatMessage(request);
           if (fallbackResponse) {
             onDelta(fallbackResponse.content);
-            onComplete();
+            onComplete(fallbackResponse.usage);
           } else {
             onError(new Error("Both streaming and non-streaming failed."));
           }
@@ -246,7 +247,7 @@ export const useAIProvider = () => {
         const fallbackResponse = await sendChatMessage(request);
         if (fallbackResponse) {
           onDelta(fallbackResponse.content);
-          onComplete();
+          onComplete(fallbackResponse.usage);
         } else {
           onError(new Error("Non-streaming request failed."));
         }

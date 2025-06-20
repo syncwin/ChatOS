@@ -78,11 +78,7 @@ const FolderDropdown = ({
             >
               <Folder className="w-4 h-4" />
               {hasAssignedFolder && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full flex items-center justify-center">
-                  <span className="text-xs text-primary-foreground font-bold">
-                    1
-                  </span>
-                </div>
+                <div className="selection-indicator" />
               )}
             </Button>
           </PopoverTrigger>
