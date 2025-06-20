@@ -114,12 +114,12 @@ const TagSection = ({
                   if (e.key === 'Enter') handleCreateTag();
                   if (e.key === 'Escape') handleCancelCreating();
                 }}
-                className="h-8 text-sm flex-1"
+                className="h-8 text-sm flex-1 min-w-0"
                 autoFocus
               />
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="sm" onClick={handleCreateTag} disabled={!newTagName.trim()} className="h-8 w-8 p-0">
+                  <Button size="sm" onClick={handleCreateTag} disabled={!newTagName.trim()} className="h-8 w-8 p-0 bg-primary hover:bg-primary/90">
                     <Check className="w-4 h-4" />
                   </Button>
                 </TooltipTrigger>

@@ -1,5 +1,5 @@
 
-import { Pin, PinOff, Pencil, Trash2, Check, MessageSquare } from "lucide-react";
+import { Pin, PinOff, Pencil, Trash2, Check, MessageSquare, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SidebarMenuItem } from "@/components/ui/sidebar";
@@ -51,6 +51,13 @@ const ChatItem = ({
     onStartEdit(chat.id, chat.title);
   };
 
+  const handleCancelEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Reset editing state by calling onTitleKeyDown with Escape
+    const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' }) as any;
+    onTitleKeyDown(escapeEvent, chat.id);
+  };
+
   const itemContent = (
     <div
       onClick={() => !isEditing && onSelectChat(chat)}
@@ -67,18 +74,41 @@ const ChatItem = ({
             onChange={onTitleChange}
             onKeyDown={(e) => onTitleKeyDown(e, chat.id)}
             onClick={(e) => e.stopPropagation()}
-            className="h-7 text-sm flex-1"
+            className="h-8 text-sm flex-1 min-w-0"
             autoFocus
           />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-foreground group-data-[active=true]/item:text-primary-foreground group-data-[active=true]/item:hover:bg-primary/80"
-            onClick={() => onUpdateTitle(chat.id)}
-            aria-label="Save title"
-          >
-            <Check className="w-4 h-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground group-data-[active=true]/item:text-primary-foreground group-data-[active=true]/item:hover:bg-primary/80 bg-primary hover:bg-primary/90"
+                onClick={() => onUpdateTitle(chat.id)}
+                aria-label="Save title"
+              >
+                <Check className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Save</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                onClick={handleCancelEdit}
+                aria-label="Cancel editing"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Cancel</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       ) : isCollapsed ? (
         chat.is_pinned ? <Pin className="w-4 h-4 text-amber-500" /> : <MessageSquare className="w-4 h-4" />

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Settings, Plus } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarFooter, SidebarSeparator, useSidebar } from "@/components/ui/sidebar";
@@ -144,7 +145,7 @@ const AppSidebar = ({
   };
 
   // UI Components
-  const newChatButton = <Button onClick={onNewChat} size={isCollapsed ? "icon" : "default"} className={cn("bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground", !isCollapsed && "w-full")}>
+  const newChatButton = <Button onClick={onNewChat} size={isCollapsed ? "icon" : "default"} className={cn("bg-gradient-to-r from-primary to-primary hover:from-primary/90 hover:to-primary/80 text-primary-foreground", !isCollapsed && "w-full")}>
       <Plus className="w-4 h-4" />
       {!isCollapsed && <span>New Chat</span>}
     </Button>;
@@ -166,45 +167,6 @@ const AppSidebar = ({
               </TooltipContent>
             </Tooltip> : newChatButton}
         </SidebarHeader>
-
-        {/* Profile Section - Sticky */}
-        <div className="sticky top-0 z-10 bg-sidebar border-b border-sidebar-border">
-          <div className={cn("p-4", isCollapsed && "p-1")}>
-            <UserFooter isGuest={isGuest} user={user} onOpenProfile={handleOpenProfile} />
-          </div>
-          
-          {/* Settings Button - Centered below profile */}
-          <div className="pb-4 flex justify-center">
-            {isCollapsed ? (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={handleOpenSettings}
-                    className="h-8 w-8 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  >
-                    <Settings className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right">
-                  <p>Settings</p>
-                </TooltipContent>
-              </Tooltip>
-            ) : (
-              <Button 
-                variant="ghost" 
-                onClick={handleOpenSettings}
-                className="h-8 px-4 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
-              </Button>
-            )}
-          </div>
-        </div>
-
-        <SidebarSeparator className="hidden " />
 
         <SidebarContent>
           {/* Search Bar */}
@@ -241,7 +203,42 @@ const AppSidebar = ({
             </>}
         </SidebarContent>
 
-        <SidebarFooter className="p-0" />
+        {/* Profile and Settings Section - Sticky at bottom */}
+        <SidebarFooter className="sticky bottom-0 bg-sidebar border-t border-sidebar-border p-0">
+          <div className={cn("p-4", isCollapsed && "p-2")}>
+            <UserFooter isGuest={isGuest} user={user} onOpenProfile={handleOpenProfile} />
+            
+            {/* Settings Button - Below profile */}
+            <div className="mt-3 flex justify-center">
+              {isCollapsed ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={handleOpenSettings}
+                      className="h-8 w-8 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    >
+                      <Settings className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>Settings</p>
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                <Button 
+                  variant="ghost" 
+                  onClick={handleOpenSettings}
+                  className="h-8 px-4 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings
+                </Button>
+              )}
+            </div>
+          </div>
+        </SidebarFooter>
       </Sidebar>
       
       <SettingsDialog isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} onOpenProfile={handleOpenProfile} />

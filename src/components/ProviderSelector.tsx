@@ -78,12 +78,12 @@ const ProviderSelector = () => {
               Provider
             </Label>
             <Select value={selectedProvider} onValueChange={switchProvider}>
-              <SelectTrigger id="provider-select">
+              <SelectTrigger id="provider-select" className="hover:bg-primary/5 focus:ring-primary">
                 <SelectValue placeholder="Select provider" />
               </SelectTrigger>
               <SelectContent>
                 {availableProviders.map((provider) => (
-                  <SelectItem key={provider} value={provider}>
+                  <SelectItem key={provider} value={provider} className="hover:bg-primary/10">
                     {provider}
                   </SelectItem>
                 ))}
@@ -96,12 +96,12 @@ const ProviderSelector = () => {
               Model
             </Label>
             <Select value={selectedModel} onValueChange={switchModel}>
-              <SelectTrigger id="model-select">
+              <SelectTrigger id="model-select" className="hover:bg-primary/5 focus:ring-primary">
                 <SelectValue placeholder="Select model" />
               </SelectTrigger>
               <SelectContent>
                 {availableModels.map((model) => (
-                  <SelectItem key={model.id} value={model.id}>
+                  <SelectItem key={model.id} value={model.id} className="hover:bg-primary/10">
                     {model.name}
                   </SelectItem>
                 ))}
