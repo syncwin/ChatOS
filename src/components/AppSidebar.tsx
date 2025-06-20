@@ -144,7 +144,7 @@ const AppSidebar = ({
   };
 
   // UI Components
-  const newChatButton = <Button onClick={onNewChat} size={isCollapsed ? "icon" : "default"} className={cn("bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white", !isCollapsed && "w-full")}>
+  const newChatButton = <Button onClick={onNewChat} size={isCollapsed ? "icon" : "default"} className={cn("bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-primary-foreground", !isCollapsed && "w-full")}>
       <Plus className="w-4 h-4" />
       {!isCollapsed && <span>New Chat</span>}
     </Button>;
@@ -166,6 +166,43 @@ const AppSidebar = ({
               </TooltipContent>
             </Tooltip> : newChatButton}
         </SidebarHeader>
+
+        {/* Profile Section - Sticky */}
+        <div className="sticky top-0 z-10 bg-sidebar border-b border-sidebar-border">
+          <div className={cn("p-4", isCollapsed && "p-1")}>
+            <UserFooter isGuest={isGuest} user={user} onOpenProfile={handleOpenProfile} />
+          </div>
+          
+          {/* Settings Button - Centered below profile */}
+          <div className="pb-4 flex justify-center">
+            {isCollapsed ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={handleOpenSettings}
+                    className="h-8 w-8 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  >
+                    <Settings className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>Settings</p>
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <Button 
+                variant="ghost" 
+                onClick={handleOpenSettings}
+                className="h-8 px-4 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
+              </Button>
+            )}
+          </div>
+        </div>
 
         <SidebarSeparator className="hidden " />
 
@@ -202,30 +239,9 @@ const AppSidebar = ({
 
               <TagList tags={tags} chats={chats} activeChatId={activeChatId} onSelectChat={onSelectChat} onCreateTag={createTag} onUpdateTag={updateTag} onDeleteTag={deleteTag} searchTerm={searchTerm} />
             </>}
-          
-          <SidebarSeparator className="hidden " />
-
-          {/* Navigation */}
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-xs font-medium text-muted-foreground">
-              Navigation
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton onClick={handleOpenSettings} tooltip="Settings" className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" aria-label="Open settings">
-                    <Settings className="w-4 h-4" />
-                    {!isCollapsed && <span>Settings</span>}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
         </SidebarContent>
 
-        <SidebarFooter className={cn("p-4", isCollapsed && "p-1")}>
-          <UserFooter isGuest={isGuest} user={user} onOpenProfile={handleOpenProfile} />
-        </SidebarFooter>
+        <SidebarFooter className="p-0" />
       </Sidebar>
       
       <SettingsDialog isOpen={isSettingsOpen} onOpenChange={setIsSettingsOpen} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} onOpenProfile={handleOpenProfile} />

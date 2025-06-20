@@ -1,10 +1,11 @@
 
 import { useState } from "react";
-import { Folder as FolderIcon, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Folder as FolderIcon, MoreHorizontal, Pencil, Trash2, Check, X } from "lucide-react";
 import ChatItem from "./ChatItem";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
@@ -61,6 +62,11 @@ const FolderSection = ({
     setEditingFolderName("");
   };
 
+  const handleCancelEdit = () => {
+    setEditingFolderId(null);
+    setEditingFolderName("");
+  };
+
   const filteredChats = chats.filter(chat => chat.title.toLowerCase().includes(searchTerm.toLowerCase()));
   const chatsByFolder = folders.map(folder => ({
     ...folder,
@@ -74,40 +80,66 @@ const FolderSection = ({
           <AccordionItem key={folder.id} value={folder.id} className="border-none">
             <div className="flex items-center group/folder hover:bg-muted/50 rounded-md">
               <AccordionTrigger className="flex-1 p-2 text-sm font-medium text-sidebar-foreground hover:no-underline">
-                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center gap-2 w-full" onClick={(e) => e.stopPropagation()}>
                   <FolderIcon className="w-4 h-4" />
                   {editingFolderId === folder.id ? (
-                     <Input
-                     value={editingFolderName}
-                     onChange={(e) => setEditingFolderName(e.target.value)}
-                     onKeyDown={(e) => { if (e.key === 'Enter') handleUpdateFolder(folder.id); if (e.key === 'Escape') setEditingFolderId(null);}}
-                     onClick={(e) => e.stopPropagation()}
-                     className="h-7 text-sm"
-                     autoFocus
-                     onBlur={() => handleUpdateFolder(folder.id)}
-                   />
+                    <div className="flex items-center gap-2 flex-1">
+                      <Input
+                        value={editingFolderName}
+                        onChange={(e) => setEditingFolderName(e.target.value)}
+                        onKeyDown={(e) => { 
+                          if (e.key === 'Enter') handleUpdateFolder(folder.id); 
+                          if (e.key === 'Escape') handleCancelEdit();
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="h-7 text-sm flex-1"
+                        autoFocus
+                      />
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button size="sm" onClick={() => handleUpdateFolder(folder.id)} disabled={!editingFolderName.trim()} className="h-7 w-7 p-0">
+                            <Check className="w-3 h-3" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Save</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button size="sm" variant="outline" onClick={handleCancelEdit} className="h-7 w-7 p-0">
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Cancel</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                   ) : (
                     <span className="truncate">{folder.name}</span>
                   )}
                 </div>
               </AccordionTrigger>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover/folder:opacity-100">
-                        <MoreHorizontal className="w-4 h-4" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent side="right" align="start">
-                    <DropdownMenuItem onClick={() => { setEditingFolderId(folder.id); setEditingFolderName(folder.name); }}>
-                        <Pencil className="mr-2 h-4 w-4" />
-                        <span>Rename</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setDeletingFolder(folder)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        <span>Delete</span>
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {editingFolderId !== folder.id && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover/folder:opacity-100">
+                          <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent side="right" align="start">
+                      <DropdownMenuItem onClick={() => { setEditingFolderId(folder.id); setEditingFolderName(folder.name); }}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          <span>Rename</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setDeletingFolder(folder)} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          <span>Delete</span>
+                      </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
             <AccordionContent className="pb-0 pl-2">
               <SidebarMenu>

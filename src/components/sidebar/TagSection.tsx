@@ -1,9 +1,10 @@
 
 import React, { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, X, Check } from "lucide-react";
 import { SidebarGroup } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import CollapsibleSidebarSection from "../CollapsibleSidebarSection";
 import TagList from "../TagList";
 import type { Tag } from "@/services/chatService";
@@ -52,6 +53,10 @@ const TagSection = ({
 
   const handleCreateTag = () => {
     if (newTagName.trim()) {
+      // Auto-expand the section if it's collapsed when creating a new tag
+      if (isCollapsed) {
+        onToggle();
+      }
       createTag(newTagName.trim());
       setNewTagName("");
       setIsCreating(false);
@@ -59,6 +64,10 @@ const TagSection = ({
   };
 
   const handleStartCreating = () => {
+    // Auto-expand the section if it's collapsed when starting to create
+    if (isCollapsed) {
+      onToggle();
+    }
     setIsCreating(true);
     setNewTagName("");
   };
@@ -77,36 +86,57 @@ const TagSection = ({
         onToggle={onToggle}
         onTogglePin={onTogglePin}
         rightElement={
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-6 w-6 hover:bg-muted"
-            onClick={handleStartCreating}
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6 hover:bg-muted"
+                onClick={handleStartCreating}
+              >
+                <Plus className="w-4 h-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Create tag</p>
+            </TooltipContent>
+          </Tooltip>
         }
       >
         {isCreating && (
           <div className="space-y-2 px-2 mb-4">
-            <Input
-              placeholder="Enter tag name"
-              value={newTagName}
-              onChange={(e) => setNewTagName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleCreateTag();
-                if (e.key === 'Escape') handleCancelCreating();
-              }}
-              className="h-8 text-sm"
-              autoFocus
-            />
             <div className="flex items-center gap-2">
-              <Button size="sm" onClick={handleCreateTag} disabled={!newTagName.trim()}>
-                Create
-              </Button>
-              <Button size="sm" variant="outline" onClick={handleCancelCreating}>
-                Cancel
-              </Button>
+              <Input
+                placeholder="Enter tag name"
+                value={newTagName}
+                onChange={(e) => setNewTagName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleCreateTag();
+                  if (e.key === 'Escape') handleCancelCreating();
+                }}
+                className="h-8 text-sm flex-1"
+                autoFocus
+              />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="sm" onClick={handleCreateTag} disabled={!newTagName.trim()} className="h-8 w-8 p-0">
+                    <Check className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Save</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="sm" variant="outline" onClick={handleCancelCreating} className="h-8 w-8 p-0">
+                    <X className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Cancel</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
         )}
