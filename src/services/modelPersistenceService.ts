@@ -12,7 +12,7 @@ interface ProfileData {
 
 interface ProfileUpsert {
   id: string;
-  model_selection: ModelSelection;
+  model_selection: Record<string, any>;
   updated_at: string;
 }
 
@@ -25,9 +25,9 @@ class ModelPersistenceService {
       .from('profiles')
       .upsert({
         id: userId,
-        model_selection: modelSelection,
+        model_selection: modelSelection as any,
         updated_at: new Date().toISOString(),
-      } as ProfileUpsert);
+      });
 
     if (error) {
       console.error('Failed to save model selection to profile:', error);
@@ -49,7 +49,13 @@ class ModelPersistenceService {
         return null;
       }
 
-      return (data as ProfileData)?.model_selection || null;
+      const modelSelection = data?.model_selection;
+      if (modelSelection && typeof modelSelection === 'object' && 
+          'provider' in modelSelection && 'model' in modelSelection) {
+        return modelSelection as ModelSelection;
+      }
+
+      return null;
     } catch (error) {
       console.error('Error loading model selection:', error);
       return null;

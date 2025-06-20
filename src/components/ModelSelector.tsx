@@ -10,11 +10,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import type { ModelInfo } from '@/services/modelProviderService';
 import { useModelSelection } from '@/hooks/useModelSelection';
-import { supabase } from '@/integrations/supabase/client';
 
 interface ModelSelectorProps {
   provider: string;
   models: ModelInfo[];
+  selectedModel: string;
   isLoading: boolean;
   error: string | null;
   onSelectModel: (modelId: string) => void;
@@ -66,12 +66,13 @@ const providerIcons: Record<string, React.ComponentType<{ className?: string }>>
 const ModelSelector = ({ 
   provider, 
   models,
+  selectedModel,
   isLoading,
   error,
   onSelectModel, 
   className = ""
 }: ModelSelectorProps) => {
-  const { selectedModel, saveSelectedModel } = useModelSelection();
+  const { saveSelectedModel } = useModelSelection();
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -106,6 +107,11 @@ const ModelSelector = ({
   const formatPrice = (price?: number) => {
     if (!price) return '';
     return `$${price.toFixed(6)}`;
+  };
+
+  const handleRetry = () => {
+    // Trigger a retry by notifying parent component
+    window.location.reload();
   };
 
   return (
@@ -221,7 +227,7 @@ const ModelSelector = ({
                   variant="outline"
                   size="sm"
                   className="h-7 text-xs"
-                  onClick={fetchModels}
+                  onClick={handleRetry}
                 >
                   Retry
                 </Button>

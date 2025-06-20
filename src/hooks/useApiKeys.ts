@@ -22,8 +22,12 @@ export const useApiKeys = () => {
   // --- Guest Mutations ---
   const saveGuestKeyMutation = useMutation<void, Error, ApiKeyFormValues>({
     mutationFn: async (values) => {
-      // The zod schema ensures values are valid
-      addGuestApiKey(values);
+      // Ensure values are fully formed before adding
+      if (values.provider && values.api_key) {
+        addGuestApiKey({ provider: values.provider, api_key: values.api_key });
+      } else {
+        throw new Error("Provider and API key are required");
+      }
     },
     onSuccess: (_, values) => {
       toast.success(`API key for ${values.provider} saved for this session.`);
