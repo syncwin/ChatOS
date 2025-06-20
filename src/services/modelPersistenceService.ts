@@ -10,12 +10,6 @@ interface ProfileData {
   model_selection?: ModelSelection;
 }
 
-interface ProfileUpsert {
-  id: string;
-  model_selection: Record<string, any>;
-  updated_at: string;
-}
-
 class ModelPersistenceService {
   // Save model selection to user profile
   async saveToProfile(userId: string, provider: string, model: string): Promise<void> {
@@ -52,7 +46,7 @@ class ModelPersistenceService {
       const modelSelection = data?.model_selection;
       if (modelSelection && typeof modelSelection === 'object' && 
           'provider' in modelSelection && 'model' in modelSelection) {
-        return modelSelection as ModelSelection;
+        return modelSelection as unknown as ModelSelection;
       }
 
       return null;

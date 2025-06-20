@@ -11,6 +11,7 @@ import {
   sanitizeHtml 
 } from '@/lib/validation';
 import { secureGuestStorage } from '@/lib/secureStorage';
+import type { Database } from '@/integrations/supabase/types';
 
 export interface Usage {
   prompt_tokens: number;
@@ -151,7 +152,12 @@ export const getMessages = async (chatId: string): Promise<Message[]> => {
     .order('created_at', { ascending: true });
 
   if (error) throw error;
-  return data || [];
+  
+  // Transform the data to ensure proper typing
+  return (data || []).map(msg => ({
+    ...msg,
+    usage: (msg.usage as any) || { prompt_tokens: 0, completion_tokens: 0 }
+  }));
 };
 
 export const createChat = async (title: string): Promise<Chat> => {
@@ -201,18 +207,16 @@ export const addMessage = async (message: NewMessage): Promise<Message> => {
 
   const newMessageId = uuidv4();
 
-  const { error } = await supabase.from('chat_messages').insert([
-    {
-      id: newMessageId,
-      chat_id: message.chat_id,
-      user_id: user.id,
-      role: message.role,
-      content: sanitizedContent,
-      provider: message.provider,
-      model: message.model,
-      usage: message.usage,
-    },
-  ]);
+  const { error } = await supabase.from('chat_messages').insert({
+    id: newMessageId,
+    chat_id: message.chat_id,
+    user_id: user.id,
+    role: message.role,
+    content: sanitizedContent,
+    provider: message.provider,
+    model: message.model,
+    usage: message.usage as any,
+  });
 
   if (error) throw error;
 
@@ -231,7 +235,7 @@ export const addMessage = async (message: NewMessage): Promise<Message> => {
     content: sanitizedContent,
     provider: message.provider,
     model: message.model,
-    usage: message.usage,
+    usage: message.usage || { prompt_tokens: 0, completion_tokens: 0 },
   };
 };
 
@@ -537,10 +541,17 @@ export const getGuestSecurityWarning = (): string => {
  */
 export const getAuthenticatedUserApiKey = async (provider: string, userId: string): Promise<string | null> => {
   try {
+    // Type guard for provider
+    const validProviders = ["OpenAI", "Anthropic", "Google Gemini", "Mistral", "OpenRouter"];
+    if (!validProviders.includes(provider)) {
+      console.error(`Invalid provider: ${provider}`);
+      return null;
+    }
+
     const { data, error } = await supabase
       .from('api_keys')
       .select('api_key')
-      .eq('provider', provider)
+      .eq('provider', provider as Database['public']['Enums']['api_provider'])
       .eq('user_id', userId)
       .maybeSingle();
 

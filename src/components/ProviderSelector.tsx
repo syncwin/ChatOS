@@ -101,8 +101,8 @@ const ProviderSelector = () => {
               </SelectTrigger>
               <SelectContent>
                 {availableModels.map((model) => (
-                  <SelectItem key={model} value={model}>
-                    {model}
+                  <SelectItem key={model.id} value={model.id}>
+                    {model.name}
                   </SelectItem>
                 ))}
               </SelectContent>
