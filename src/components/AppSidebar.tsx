@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Settings, Plus } from "lucide-react";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarHeader, SidebarFooter, SidebarSeparator, useSidebar } from "@/components/ui/sidebar";
@@ -186,7 +185,28 @@ const AppSidebar = ({
           {!isCollapsed && <ChatHistorySection chats={chats} folders={folders} activeChatId={activeChatId} editingChatId={editingChatId} newChatTitle={newChatTitle} onSelectChat={onSelectChat} onStartEdit={handleStartEdit} onPinChat={handlePinChat} onDeleteChat={handleDeleteChat} onTitleChange={handleTitleChange} onUpdateTitle={handleUpdateTitle} onTitleKeyDown={handleTitleKeyDown} createFolder={createFolder} updateFolder={updateFolder} deleteFolder={deleteFolder} searchTerm={searchTerm} isCollapsed={sections.chatHistory.isCollapsed} isPinned={sections.chatHistory.isPinned} onToggle={() => toggleSection('chatHistory')} onTogglePin={() => togglePin('chatHistory')} />}
 
           {/* Folders Section */}
-          {!isCollapsed && <FolderSectionWrapper folders={folders} chats={chats} activeChatId={activeChatId} onSelectChat={onSelectChat} createFolder={createFolder} updateFolder={updateFolder} deleteFolder={deleteFolder} searchTerm={searchTerm} isCollapsed={sections.folders.isCollapsed} isPinned={sections.folders.isPinned} onToggle={() => toggleSection('folders')} onTogglePin={() => togglePin('folders')} />}
+          {!isCollapsed && <FolderSectionWrapper 
+            folders={folders} 
+            chats={chats} 
+            activeChatId={activeChatId} 
+            onSelectChat={onSelectChat} 
+            createFolder={createFolder} 
+            updateFolder={updateFolder} 
+            deleteFolder={deleteFolder} 
+            searchTerm={searchTerm} 
+            isCollapsed={sections.folders.isCollapsed} 
+            isPinned={sections.folders.isPinned} 
+            onToggle={() => toggleSection('folders')} 
+            onTogglePin={() => togglePin('folders')}
+            editingChatId={editingChatId}
+            newChatTitle={newChatTitle}
+            onStartEdit={handleStartEdit}
+            onPinChat={handlePinChat}
+            onDeleteChat={handleDeleteChat}
+            onTitleChange={handleTitleChange}
+            onUpdateTitle={handleUpdateTitle}
+            onTitleKeyDown={handleTitleKeyDown}
+          />}
           
           <SidebarSeparator className="hidden " />
 

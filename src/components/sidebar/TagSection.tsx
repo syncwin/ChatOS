@@ -114,7 +114,8 @@ const TagSection = ({
                   if (e.key === 'Enter') handleCreateTag();
                   if (e.key === 'Escape') handleCancelCreating();
                 }}
-                className="h-8 text-sm flex-1 min-w-0"
+                className="h-8 text-sm flex-1 min-w-[200px] max-w-none"
+                style={{ width: `${Math.max(200, newTagName.length * 8 + 40)}px` }}
                 autoFocus
               />
               <Tooltip>

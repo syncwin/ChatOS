@@ -74,7 +74,8 @@ const ChatItem = ({
             onChange={onTitleChange}
             onKeyDown={(e) => onTitleKeyDown(e, chat.id)}
             onClick={(e) => e.stopPropagation()}
-            className="h-8 text-sm flex-1 min-w-0"
+            className="h-8 text-sm flex-1 min-w-[200px] max-w-none"
+            style={{ width: `${Math.max(200, newChatTitle.length * 8 + 40)}px` }}
             autoFocus
           />
           <Tooltip>

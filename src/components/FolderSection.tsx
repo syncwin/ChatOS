@@ -38,6 +38,14 @@ interface FolderSectionProps {
   updateFolder: (args: { folderId: string; name: string }) => void;
   deleteFolder: (folderId: string) => void;
   searchTerm: string;
+  editingChatId?: string | null;
+  newChatTitle?: string;
+  onStartEdit?: (chatId: string, currentTitle: string) => void;
+  onPinChat?: (e: React.MouseEvent, chatId: string, isPinned: boolean) => void;
+  onDeleteChat?: (e: React.MouseEvent, chatId: string) => void;
+  onTitleChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onUpdateTitle?: (chatId: string) => void;
+  onTitleKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>, chatId: string) => void;
 }
 
 const FolderSection = ({
@@ -49,6 +57,14 @@ const FolderSection = ({
   updateFolder,
   deleteFolder,
   searchTerm,
+  editingChatId = null,
+  newChatTitle = "",
+  onStartEdit = () => {},
+  onPinChat = () => {},
+  onDeleteChat = () => {},
+  onTitleChange = () => {},
+  onUpdateTitle = () => {},
+  onTitleKeyDown = () => {},
 }: FolderSectionProps) => {
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [editingFolderName, setEditingFolderName] = useState("");
@@ -81,9 +97,9 @@ const FolderSection = ({
             <div className="flex items-center group/folder hover:bg-muted/50 rounded-md">
               <AccordionTrigger className="flex-1 p-2 text-sm font-medium text-sidebar-foreground hover:no-underline">
                 <div className="flex items-center gap-2 w-full" onClick={(e) => e.stopPropagation()}>
-                  <FolderIcon className="w-4 h-4" />
+                  {editingFolderId !== folder.id && <FolderIcon className="w-4 h-4 flex-shrink-0" />}
                   {editingFolderId === folder.id ? (
-                    <div className="flex items-center gap-2 flex-1">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
                       <Input
                         value={editingFolderName}
                         onChange={(e) => setEditingFolderName(e.target.value)}
@@ -92,12 +108,13 @@ const FolderSection = ({
                           if (e.key === 'Escape') handleCancelEdit();
                         }}
                         onClick={(e) => e.stopPropagation()}
-                        className="h-7 text-sm flex-1"
+                        className="h-8 text-sm flex-1 min-w-[200px] max-w-none"
                         autoFocus
+                        style={{ width: `${Math.max(200, editingFolderName.length * 8 + 40)}px` }}
                       />
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button size="sm" onClick={() => handleUpdateFolder(folder.id)} disabled={!editingFolderName.trim()} className="h-7 w-7 p-0">
+                          <Button size="sm" onClick={() => handleUpdateFolder(folder.id)} disabled={!editingFolderName.trim()} className="h-8 w-8 p-0 bg-primary hover:bg-primary/90">
                             <Check className="w-3 h-3" />
                           </Button>
                         </TooltipTrigger>
@@ -107,7 +124,7 @@ const FolderSection = ({
                       </Tooltip>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button size="sm" variant="outline" onClick={handleCancelEdit} className="h-7 w-7 p-0">
+                          <Button size="sm" variant="outline" onClick={handleCancelEdit} className="h-8 w-8 p-0">
                             <X className="w-3 h-3" />
                           </Button>
                         </TooltipTrigger>
@@ -117,7 +134,7 @@ const FolderSection = ({
                       </Tooltip>
                     </div>
                   ) : (
-                    <span className="truncate">{folder.name}</span>
+                    <span className="truncate flex-1">{folder.name}</span>
                   )}
                 </div>
               </AccordionTrigger>
@@ -148,15 +165,15 @@ const FolderSection = ({
                     key={chat.id}
                     chat={chat}
                     isActive={chat.id === activeChatId}
-                    isEditing={false}
-                    newChatTitle=""
+                    isEditing={chat.id === editingChatId}
+                    newChatTitle={newChatTitle}
                     onSelectChat={onSelectChat}
-                    onStartEdit={() => {}}
-                    onPinChat={() => {}}
-                    onDeleteChat={() => {}}
-                    onTitleChange={() => {}}
-                    onUpdateTitle={() => {}}
-                    onTitleKeyDown={() => {}}
+                    onStartEdit={onStartEdit}
+                    onPinChat={onPinChat}
+                    onDeleteChat={onDeleteChat}
+                    onTitleChange={onTitleChange}
+                    onUpdateTitle={onUpdateTitle}
+                    onTitleKeyDown={onTitleKeyDown}
                   />
                 ))}
                 {folder.chats.length === 0 && searchTerm === '' && (

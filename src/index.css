@@ -51,7 +51,8 @@
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 95%;
+    /* Light mode sidebar uses lightest shade of primary */
+    --sidebar-background: 255 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 255 0% 25%;
     --sidebar-primary-foreground: 0 0% 98%;

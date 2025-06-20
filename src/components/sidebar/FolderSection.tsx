@@ -31,6 +31,14 @@ interface FolderSectionWrapperProps {
   isPinned: boolean;
   onToggle: () => void;
   onTogglePin: () => void;
+  editingChatId?: string | null;
+  newChatTitle?: string;
+  onStartEdit?: (chatId: string, currentTitle: string) => void;
+  onPinChat?: (e: React.MouseEvent, chatId: string, isPinned: boolean) => void;
+  onDeleteChat?: (e: React.MouseEvent, chatId: string) => void;
+  onTitleChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onUpdateTitle?: (chatId: string) => void;
+  onTitleKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>, chatId: string) => void;
 }
 
 const FolderSectionWrapper = ({
@@ -46,6 +54,14 @@ const FolderSectionWrapper = ({
   isPinned,
   onToggle,
   onTogglePin,
+  editingChatId,
+  newChatTitle,
+  onStartEdit,
+  onPinChat,
+  onDeleteChat,
+  onTitleChange,
+  onUpdateTitle,
+  onTitleKeyDown,
 }: FolderSectionWrapperProps) => {
   const [isCreating, setIsCreating] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
@@ -113,7 +129,8 @@ const FolderSectionWrapper = ({
                   if (e.key === 'Enter') handleCreateFolder();
                   if (e.key === 'Escape') handleCancelCreating();
                 }}
-                className="h-8 text-sm flex-1 min-w-0"
+                className="h-8 text-sm flex-1 min-w-[200px] max-w-none"
+                style={{ width: `${Math.max(200, newFolderName.length * 8 + 40)}px` }}
                 autoFocus
               />
               <Tooltip>
@@ -148,6 +165,14 @@ const FolderSectionWrapper = ({
           updateFolder={updateFolder}
           deleteFolder={deleteFolder}
           searchTerm={searchTerm}
+          editingChatId={editingChatId}
+          newChatTitle={newChatTitle}
+          onStartEdit={onStartEdit}
+          onPinChat={onPinChat}
+          onDeleteChat={onDeleteChat}
+          onTitleChange={onTitleChange}
+          onUpdateTitle={onUpdateTitle}
+          onTitleKeyDown={onTitleKeyDown}
         />
       </CollapsibleSidebarSection>
     </SidebarGroup>
