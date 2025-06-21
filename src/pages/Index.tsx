@@ -494,9 +494,9 @@ const Index = () => {
         onOpenSettings={handleOpenSettings}
       />
       <SidebarInset>
-        <div className="min-h-screen bg-background text-foreground h-screen flex flex-col w-full overflow-hidden">
-          <header className="py-2 sm:py-4 flex-shrink-0 sticky top-0 bg-background/95 backdrop-blur-sm z-10 border-b">
-            <div className="w-full max-w-4xl mx-auto flex items-center gap-2 px-2 sm:px-4">
+        <div className="min-h-screen min-h-[100dvh] bg-background text-foreground h-screen h-[100dvh] flex flex-col w-full overflow-hidden">
+          <header className="py-1 xs:py-2 sm:py-4 flex-shrink-0 sticky top-0 bg-background/95 backdrop-blur-sm z-10 border-b">
+            <div className="w-full max-w-4xl mx-auto flex items-center gap-1 xs:gap-2 px-1 xs:px-2 sm:px-4">
               <SidebarTrigger className="text-muted-foreground hover:text-foreground flex-shrink-0" aria-label="Toggle sidebar" />
               <Header
                 isDarkMode={isDarkMode}

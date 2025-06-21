@@ -68,14 +68,14 @@ const Header = ({
   };
 
   return (
-    <div className="header-main flex items-center justify-between w-full gap-2 sm:gap-4 px-2 sm:px-0">
+    <div className="header-main flex items-center justify-between w-full gap-1 xs:gap-2 sm:gap-4 px-1 xs:px-2 sm:px-0">
       {/* Mobile Logo - only show on mobile */}
-      <div className="flex items-center gap-2 md:hidden">
-        <ChatOsIcon className="header-icon-hover w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+      <div className="flex items-center gap-1 xs:gap-2 md:hidden">
+        <ChatOsIcon className="header-icon-hover w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 text-primary" />
       </div>
       
       {/* Main controls - conditional based on screen size */}
-      <div className="header-controls flex items-center justify-center gap-1 sm:gap-2 flex-1 overflow-hidden min-w-0">
+      <div className="header-controls flex items-center justify-center gap-0.5 xs:gap-1 sm:gap-2 flex-1 overflow-hidden min-w-0">
         {isMobile ? (
           /* Mobile: Empty center space */
           <div className="flex-1"></div>
@@ -116,7 +116,7 @@ const Header = ({
       </div>
       
       {/* Right side controls */}
-      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+      <div className="flex items-center gap-1 xs:gap-2 sm:gap-3 flex-shrink-0">
         {/* Mobile modal - positioned on the right */}
         {isMobile && (
           <MobileSelectionModal
@@ -143,15 +143,15 @@ const Header = ({
           />
         )}
         
-        {/* Theme toggle */}
-        <div className="flex items-center gap-1 sm:gap-2">
-          <Sun className={`header-icon-hover w-3 h-3 sm:w-4 sm:h-4 ${!isDarkMode ? "text-accent" : "text-muted-foreground"}`} />
+        {/* Theme toggle with improved mobile appearance */}
+        <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-2">
+          <Sun className={`header-icon-hover w-3 h-3 xs:w-4 xs:h-4 sm:w-4 sm:h-4 ${!isDarkMode ? "text-primary" : "text-muted-foreground"}`} />
           <Switch 
             checked={isDarkMode} 
             onCheckedChange={handleThemeToggle}
-            className="scale-75 sm:scale-100 data-[state=checked]:bg-accent" 
+            className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input" 
           />
-          <Moon className={`header-icon-hover w-3 h-3 sm:w-4 sm:h-4 ${isDarkMode ? "text-accent" : "text-muted-foreground"}`} />
+          <Moon className={`header-icon-hover w-3 h-3 xs:w-4 xs:h-4 sm:w-4 sm:h-4 ${isDarkMode ? "text-primary" : "text-muted-foreground"}`} />
         </div>
       </div>
     </div>

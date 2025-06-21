@@ -63,26 +63,26 @@ const MobileSelectionModal = ({
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 hover:bg-muted rounded-md transition-colors"
+          className="h-6 w-6 xs:h-7 xs:w-7 sm:h-8 sm:w-8 hover:bg-muted rounded-md transition-colors"
         >
-          <Filter className="w-4 h-4 text-primary dark:text-white" />
+          <Filter className="w-3 h-3 xs:w-4 xs:h-4 text-primary dark:text-white" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[95vw] max-w-md mx-auto p-0 gap-0 max-h-[85vh] overflow-hidden">
-        <DialogHeader className="p-4 pb-2 border-b flex-shrink-0">
-          <DialogTitle className="text-lg font-semibold">
+      <DialogContent className="w-[95vw] max-w-md mx-auto p-0 gap-0 max-h-[90vh] overflow-hidden">
+        <DialogHeader className="p-3 xs:p-4 pb-2 border-b flex-shrink-0">
+          <DialogTitle className="text-base xs:text-lg font-semibold">
             Chat Settings
           </DialogTitle>
         </DialogHeader>
         
-        <div className="p-4 space-y-6 overflow-y-auto flex-1">
+        <div className="p-3 xs:p-4 space-y-4 xs:space-y-6 overflow-y-auto flex-1">
           {/* AI Provider & Model Section */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-5 bg-primary rounded-full"></div>
-              <h3 className="text-sm font-semibold text-foreground">AI Provider & Model</h3>
+          <div className="space-y-2 xs:space-y-3">
+            <div className="flex items-center gap-1 xs:gap-2">
+              <div className="w-1 h-4 xs:h-5 bg-primary rounded-full"></div>
+              <h3 className="text-xs xs:text-sm font-semibold text-foreground">AI Provider & Model</h3>
             </div>
-            <div className="bg-muted/30 rounded-lg p-3">
+            <div className="bg-muted/30 rounded-lg p-2 xs:p-3">
               <ProviderIconSelector
                 availableProviders={availableProviders}
                 selectedProvider={selectedProvider}
@@ -97,15 +97,15 @@ const MobileSelectionModal = ({
             </div>
           </div>
 
-          <Separator className="my-4" />
+          <Separator className="my-3 xs:my-4" />
 
           {/* Folder Section */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-5 bg-secondary rounded-full"></div>
-              <h3 className="text-sm font-semibold text-foreground">Folder Organization</h3>
+          <div className="space-y-2 xs:space-y-3">
+            <div className="flex items-center gap-1 xs:gap-2">
+              <div className="w-1 h-4 xs:h-5 bg-secondary rounded-full"></div>
+              <h3 className="text-xs xs:text-sm font-semibold text-foreground">Folder Organization</h3>
             </div>
-            <div className="bg-muted/30 rounded-lg p-3">
+            <div className="bg-muted/30 rounded-lg p-2 xs:p-3">
               <FolderDropdown
                 folders={folders}
                 activeChat={activeChat}
@@ -116,15 +116,15 @@ const MobileSelectionModal = ({
             </div>
           </div>
 
-          <Separator className="my-4" />
+          <Separator className="my-3 xs:my-4" />
 
           {/* Tags Section */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-5 bg-accent rounded-full"></div>
-              <h3 className="text-sm font-semibold text-foreground">Tags & Labels</h3>
+          <div className="space-y-2 xs:space-y-3">
+            <div className="flex items-center gap-1 xs:gap-2">
+              <div className="w-1 h-4 xs:h-5 bg-accent rounded-full"></div>
+              <h3 className="text-xs xs:text-sm font-semibold text-foreground">Tags & Labels</h3>
             </div>
-            <div className="bg-muted/30 rounded-lg p-3">
+            <div className="bg-muted/30 rounded-lg p-2 xs:p-3">
               <TagDropdown
                 tags={tags}
                 chatTags={chatTags}

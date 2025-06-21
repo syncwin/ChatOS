@@ -79,7 +79,7 @@ const ChatView = forwardRef<ChatViewRef, ChatViewProps>(({
   return (
     <main className="flex-1 flex flex-col h-full w-full overflow-hidden">
       {showWelcomeScreen ? (
-        <div className="flex-1 flex w-full px-2 sm:px-4 overflow-hidden">
+        <div className="flex-1 flex w-full px-1 xs:px-2 sm:px-4 overflow-hidden">
           <WelcomeScreen 
             suggestedQuestions={suggestedQuestions}
             onQuestionSelect={onQuestionSelect}
@@ -87,8 +87,8 @@ const ChatView = forwardRef<ChatViewRef, ChatViewProps>(({
         </div>
       ) : (
         <ScrollArea className="flex-1 w-full overflow-hidden">
-          <div className="w-full max-w-4xl mx-auto py-2 sm:py-4 px-2 sm:px-4">
-            <div className="space-y-4 sm:space-y-6 w-full">
+          <div className="w-full max-w-4xl mx-auto py-1 xs:py-2 sm:py-4 px-1 xs:px-2 sm:px-4">
+            <div className="space-y-2 xs:space-y-3 sm:space-y-4 lg:space-y-6 w-full">
               {messages.map((message) => (
                 <div key={message.id} className="w-full max-w-full overflow-hidden">
                   <ChatMessage 
@@ -109,7 +109,7 @@ const ChatView = forwardRef<ChatViewRef, ChatViewProps>(({
         </ScrollArea>
       )}
 
-      <div className="w-full max-w-4xl mx-auto px-2 sm:px-4 py-2 flex-shrink-0">
+      <div className="w-full max-w-4xl mx-auto px-1 xs:px-2 sm:px-4 py-1 xs:py-2 flex-shrink-0">
         <InputArea 
           ref={inputAreaRef}
           input={input}
