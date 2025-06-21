@@ -63,6 +63,10 @@ const Header = ({
 }: HeaderProps) => {
   const isMobile = useIsMobile();
 
+  const handleThemeToggle = () => {
+    toggleDarkMode();
+  };
+
   return (
     <div className="header-main flex items-center justify-between w-full gap-2 sm:gap-4 px-2 sm:px-0">
       {/* Mobile Logo - only show on mobile */}
@@ -144,7 +148,7 @@ const Header = ({
           <Sun className={`header-icon-hover w-3 h-3 sm:w-4 sm:h-4 ${!isDarkMode ? "text-accent" : "text-muted-foreground"}`} />
           <Switch 
             checked={isDarkMode} 
-            onCheckedChange={toggleDarkMode} 
+            onCheckedChange={handleThemeToggle}
             className="scale-75 sm:scale-100 data-[state=checked]:bg-accent" 
           />
           <Moon className={`header-icon-hover w-3 h-3 sm:w-4 sm:h-4 ${isDarkMode ? "text-accent" : "text-muted-foreground"}`} />

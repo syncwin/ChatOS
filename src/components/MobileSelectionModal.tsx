@@ -68,10 +68,10 @@ const MobileSelectionModal = ({
           <Filter className="w-4 h-4 text-primary dark:text-white" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-[95vw] max-w-md mx-auto p-0 gap-0 max-h-[90vh] overflow-hidden">
+      <DialogContent className="w-[95vw] max-w-md mx-auto p-0 gap-0 max-h-[85vh] overflow-hidden">
         <DialogHeader className="p-4 pb-2 border-b flex-shrink-0">
-          <DialogTitle className="flex items-center justify-between text-lg font-semibold">
-            <span>Chat Settings</span>
+          <DialogTitle className="text-lg font-semibold">
+            Chat Settings
           </DialogTitle>
         </DialogHeader>
         
@@ -82,7 +82,7 @@ const MobileSelectionModal = ({
               <div className="w-1 h-5 bg-primary rounded-full"></div>
               <h3 className="text-sm font-semibold text-foreground">AI Provider & Model</h3>
             </div>
-            <div className="bg-muted/30 rounded-lg p-3 flex justify-center">
+            <div className="bg-muted/30 rounded-lg p-3">
               <ProviderIconSelector
                 availableProviders={availableProviders}
                 selectedProvider={selectedProvider}
@@ -105,7 +105,7 @@ const MobileSelectionModal = ({
               <div className="w-1 h-5 bg-secondary rounded-full"></div>
               <h3 className="text-sm font-semibold text-foreground">Folder Organization</h3>
             </div>
-            <div className="bg-muted/30 rounded-lg p-3 flex justify-center">
+            <div className="bg-muted/30 rounded-lg p-3">
               <FolderDropdown
                 folders={folders}
                 activeChat={activeChat}
@@ -124,7 +124,7 @@ const MobileSelectionModal = ({
               <div className="w-1 h-5 bg-accent rounded-full"></div>
               <h3 className="text-sm font-semibold text-foreground">Tags & Labels</h3>
             </div>
-            <div className="bg-muted/30 rounded-lg p-3 flex justify-center">
+            <div className="bg-muted/30 rounded-lg p-3">
               <TagDropdown
                 tags={tags}
                 chatTags={chatTags}

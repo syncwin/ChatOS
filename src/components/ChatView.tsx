@@ -29,13 +29,6 @@ interface ChatViewProps {
   onDeleteMessage: (messageId: string) => void;
 }
 
-const suggestedQuestions = [
-  "What is artificial intelligence?",
-  "How do large language models work?",
-  "Explain quantum computing",
-  "What are the latest trends in AI?"
-];
-
 const ChatView = forwardRef<ChatViewRef, ChatViewProps>(({ 
   messages,
   isLoading,
@@ -84,7 +77,7 @@ const ChatView = forwardRef<ChatViewRef, ChatViewProps>(({
   const isInputLoading = isLoading || isAiResponding;
 
   return (
-    <main className="flex-1 flex flex-col h-full w-full overflow-hidden min-w-0">
+    <main className="flex-1 flex flex-col h-full w-full overflow-hidden">
       {showWelcomeScreen ? (
         <div className="flex-1 flex w-full px-2 sm:px-4 overflow-hidden">
           <WelcomeScreen 
@@ -97,7 +90,7 @@ const ChatView = forwardRef<ChatViewRef, ChatViewProps>(({
           <div className="w-full max-w-4xl mx-auto py-2 sm:py-4 px-2 sm:px-4">
             <div className="space-y-4 sm:space-y-6 w-full">
               {messages.map((message) => (
-                <div key={message.id} className="w-full">
+                <div key={message.id} className="w-full max-w-full overflow-hidden">
                   <ChatMessage 
                     message={message}
                     isEditing={editingMessageId === message.id}

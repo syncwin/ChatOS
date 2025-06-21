@@ -109,10 +109,12 @@
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
   }
 
   html, body, #root {
     height: 100vh;
+    width: 100vw;
     overflow: hidden;
   }
 
@@ -124,6 +126,7 @@
   /* Chat area specific styling */
   .chat-container {
     height: 100vh;
+    width: 100vw;
     overflow: hidden;
     display: flex;
     flex-direction: column;

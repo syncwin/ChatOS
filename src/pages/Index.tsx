@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { v4 as uuidv4 } from 'uuid';
@@ -91,12 +90,39 @@ const Index = () => {
     }
   }, [isDarkMode]);
 
-  // Persist active chat ID in sessionStorage for mobile reload fix
+  // Enhanced mobile reload handling
+  useEffect(() => {
+    const handleReloadState = () => {
+      const savedChatId = sessionStorage.getItem('activeChatId');
+      const isMobile = window.innerWidth < 768;
+      
+      if (savedChatId && !activeChatId && chats.length > 0) {
+        const chatExists = chats.find(chat => chat.id === savedChatId);
+        if (chatExists) {
+          // Force set active chat on mobile after reload
+          if (isMobile) {
+            setTimeout(() => {
+              setActiveChatId(savedChatId);
+            }, 100);
+          } else {
+            setActiveChatId(savedChatId);
+          }
+        }
+      }
+    };
+
+    handleReloadState();
+  }, [chats, activeChatId, setActiveChatId]);
+
+  // Enhanced sessionStorage persistence
   useEffect(() => {
     if (activeChatId) {
       sessionStorage.setItem('activeChatId', activeChatId);
+      // Also store timestamp for mobile reload detection
+      sessionStorage.setItem('activeChatTimestamp', Date.now().toString());
     } else {
       sessionStorage.removeItem('activeChatId');
+      sessionStorage.removeItem('activeChatTimestamp');
     }
   }, [activeChatId]);
 
