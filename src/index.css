@@ -118,6 +118,7 @@
 
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
   }
 
   /* Chat area specific styling */
@@ -128,20 +129,33 @@
     flex-direction: column;
   }
 
-  /* Ensure chat bubbles are contained */
+  /* Ensure chat bubbles are contained and responsive */
   .chat-message {
     max-width: 85%;
     word-wrap: break-word;
     overflow-wrap: anywhere;
     word-break: break-word;
     hyphens: auto;
+    width: 100%;
   }
 
-  /* Enhanced responsive text wrapping */
+  .chat-bubble {
+    max-width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    hyphens: auto;
+  }
+
+  /* Mobile responsive chat bubbles */
   @media (max-width: 640px) {
     .chat-message {
       max-width: 95%;
       font-size: 0.875rem;
+    }
+    
+    .chat-bubble {
+      max-width: 100%;
+      padding: 0.75rem;
     }
   }
 
@@ -149,21 +163,25 @@
     .chat-message {
       max-width: 90%;
     }
+    
+    .chat-bubble {
+      max-width: 100%;
+    }
   }
 
   @media (min-width: 769px) {
     .chat-message {
       max-width: 85%;
     }
+    
+    .chat-bubble {
+      max-width: 100%;
+    }
   }
 
   /* Prevent horizontal overflow */
   * {
     box-sizing: border-box;
-  }
-
-  body {
-    overflow-x: hidden;
   }
 
   /* Ensure all text content wraps properly */
@@ -197,6 +215,13 @@
        min-width: 16px;
        min-height: 16px;
        font-size: 10px;
+     }
+     
+     /* Fix mobile header overflow */
+     .header-main {
+       min-width: 0;
+       overflow: hidden;
+       padding: 0 0.5rem;
      }
    }
    
@@ -252,53 +277,6 @@
     color: var(--primary);
     font-weight: 600;
   }
-   
-   /* Mobile optimizations */
-   @media (max-width: 767px) {
-     .header-main {
-       gap: 0.25rem;
-       padding: 0 0.5rem;
-     }
-     
-     .header-controls {
-       gap: 0.25rem;
-     }
-     
-     .header-main .flex-shrink-0 button {
-       min-width: 2rem;
-       min-height: 2rem;
-     }
-     
-     /* Mobile modal optimizations */
-     .mobile-selection-modal {
-       width: 95vw;
-       max-width: 28rem;
-       margin: 0 auto;
-     }
-     
-     .mobile-selection-section {
-       padding: 1rem 0;
-     }
-   }
-   
-   /* Tablet optimizations */
-   @media (min-width: 768px) and (max-width: 1023px) {
-     .header-controls {
-       gap: 0.5rem;
-     }
-   }
-   
-   /* Prevent header overflow on very small screens */
-   @media (max-width: 480px) {
-     .header-main {
-       min-width: 0;
-       overflow: hidden;
-     }
-     
-     .header-controls > * {
-       flex-shrink: 0;
-     }
-   }
 
   /* Gradient button styling for New Chat */
   .gradient-button {
@@ -370,36 +348,5 @@
 
   .dark .header-icon-hover:hover {
     color: hsl(var(--primary)) !important;
-  }
-
-  /* Chat bubble full width containment */
-  .chat-message {
-    width: 100%;
-    max-width: 100%;
-  }
-
-  .chat-bubble {
-    max-width: 85%;
-    word-wrap: break-word;
-    overflow-wrap: anywhere;
-    hyphens: auto;
-  }
-
-  @media (min-width: 640px) {
-    .chat-bubble {
-      max-width: 80%;
-    }
-  }
-
-  @media (min-width: 768px) {
-    .chat-bubble {
-      max-width: 75%;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .chat-bubble {
-      max-width: 70%;
-    }
   }
 }

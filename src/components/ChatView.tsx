@@ -84,20 +84,20 @@ const ChatView = forwardRef<ChatViewRef, ChatViewProps>(({
   const isInputLoading = isLoading || isAiResponding;
 
   return (
-    <main className="flex-1 flex flex-col h-full overflow-hidden chat-container min-w-0">
+    <main className="flex-1 flex flex-col h-full w-full overflow-hidden min-w-0">
       {showWelcomeScreen ? (
-        <div className="container mx-auto max-w-4xl flex-1 flex px-2 sm:px-4">
+        <div className="flex-1 flex w-full px-2 sm:px-4 overflow-hidden">
           <WelcomeScreen 
             suggestedQuestions={suggestedQuestions}
             onQuestionSelect={onQuestionSelect}
           />
         </div>
       ) : (
-        <ScrollArea className="flex-1 overflow-auto">
-          <div className="container mx-auto max-w-4xl py-2 sm:py-4 px-2 sm:px-4">
-            <div className="space-y-4 sm:space-y-6">
+        <ScrollArea className="flex-1 w-full overflow-hidden">
+          <div className="w-full max-w-4xl mx-auto py-2 sm:py-4 px-2 sm:px-4">
+            <div className="space-y-4 sm:space-y-6 w-full">
               {messages.map((message) => (
-                <div key={message.id} className="chat-message">
+                <div key={message.id} className="w-full">
                   <ChatMessage 
                     message={message}
                     isEditing={editingMessageId === message.id}
@@ -116,7 +116,7 @@ const ChatView = forwardRef<ChatViewRef, ChatViewProps>(({
         </ScrollArea>
       )}
 
-      <div className="container mx-auto max-w-4xl px-2 sm:px-4 py-2">
+      <div className="w-full max-w-4xl mx-auto px-2 sm:px-4 py-2 flex-shrink-0">
         <InputArea 
           ref={inputAreaRef}
           input={input}

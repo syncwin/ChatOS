@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { v4 as uuidv4 } from 'uuid';
@@ -89,6 +90,26 @@ const Index = () => {
       document.documentElement.classList.remove('dark');
     }
   }, [isDarkMode]);
+
+  // Persist active chat ID in sessionStorage for mobile reload fix
+  useEffect(() => {
+    if (activeChatId) {
+      sessionStorage.setItem('activeChatId', activeChatId);
+    } else {
+      sessionStorage.removeItem('activeChatId');
+    }
+  }, [activeChatId]);
+
+  // Restore active chat ID on component mount
+  useEffect(() => {
+    const savedChatId = sessionStorage.getItem('activeChatId');
+    if (savedChatId && !activeChatId && chats.length > 0) {
+      const chatExists = chats.find(chat => chat.id === savedChatId);
+      if (chatExists) {
+        setActiveChatId(savedChatId);
+      }
+    }
+  }, [chats, activeChatId, setActiveChatId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -197,6 +218,7 @@ const Index = () => {
   
   const handleNewChat = () => {
     setActiveChatId(null);
+    sessionStorage.removeItem('activeChatId');
   };
 
   const handleOpenSettings = () => {
@@ -446,10 +468,10 @@ const Index = () => {
         onOpenSettings={handleOpenSettings}
       />
       <SidebarInset>
-        <div className="min-h-screen bg-background text-foreground h-screen flex flex-col">
-          <header className="py-4">
-            <div className="container mx-auto max-w-4xl flex items-center gap-2">
-              <SidebarTrigger className="text-muted-foreground hover:text-foreground" aria-label="Toggle sidebar" />
+        <div className="min-h-screen bg-background text-foreground h-screen flex flex-col w-full overflow-hidden">
+          <header className="py-2 sm:py-4 flex-shrink-0 sticky top-0 bg-background/95 backdrop-blur-sm z-10 border-b">
+            <div className="w-full max-w-4xl mx-auto flex items-center gap-2 px-2 sm:px-4">
+              <SidebarTrigger className="text-muted-foreground hover:text-foreground flex-shrink-0" aria-label="Toggle sidebar" />
               <Header
                 isDarkMode={isDarkMode}
                 toggleDarkMode={toggleDarkMode}

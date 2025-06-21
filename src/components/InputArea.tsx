@@ -71,9 +71,9 @@ const InputArea = forwardRef<HTMLDivElement, InputAreaProps>(({
   };
 
   return (
-    <div ref={ref} className="py-2 sm:py-4 bg-background/90 backdrop-blur-sm">
-      <form onSubmit={handleSubmit} className="flex gap-2 sm:gap-4 items-end">
-        <div className="flex-1 flex items-center p-1 sm:p-2 bg-input border border-input focus-within:ring-2 focus-within:ring-primary transition-all rounded min-w-0">
+    <div ref={ref} className="py-2 sm:py-4 bg-background/90 backdrop-blur-sm w-full">
+      <form onSubmit={handleSubmit} className="flex gap-2 sm:gap-4 items-end w-full">
+        <div className="flex-1 flex items-center p-1 sm:p-2 bg-input border border-input focus-within:ring-2 focus-within:ring-primary transition-all rounded min-w-0 w-full">
           <label htmlFor="chat-input" className="sr-only">Type your message</label>
           <TextareaAutosize 
             id="chat-input" 
@@ -84,7 +84,7 @@ const InputArea = forwardRef<HTMLDivElement, InputAreaProps>(({
             disabled={isLoading} 
             maxRows={5} 
             minRows={1} 
-            className="flex-1 w-full resize-none p-2 bg-transparent text-sm sm:text-base focus:outline-none rounded-none min-w-0" 
+            className="flex-1 w-full resize-none p-2 bg-transparent text-sm sm:text-base focus:outline-none rounded-none min-w-0 overflow-hidden" 
             aria-describedby={validationError ? "input-error" : undefined}
           />
           <Button 

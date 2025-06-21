@@ -141,9 +141,13 @@ const Header = ({
         
         {/* Theme toggle */}
         <div className="flex items-center gap-1 sm:gap-2">
-          <Sun className={`header-icon-hover w-3 h-3 sm:w-4 sm:h-4 ${!isDarkMode ? "text-primary" : "text-muted-foreground"}`} />
-          <Switch checked={isDarkMode} onCheckedChange={toggleDarkMode} className="scale-75 sm:scale-100" />
-          <Moon className={`header-icon-hover w-3 h-3 sm:w-4 sm:h-4 ${isDarkMode ? "text-primary" : "text-muted-foreground"}`} />
+          <Sun className={`header-icon-hover w-3 h-3 sm:w-4 sm:h-4 ${!isDarkMode ? "text-accent" : "text-muted-foreground"}`} />
+          <Switch 
+            checked={isDarkMode} 
+            onCheckedChange={toggleDarkMode} 
+            className="scale-75 sm:scale-100 data-[state=checked]:bg-accent" 
+          />
+          <Moon className={`header-icon-hover w-3 h-3 sm:w-4 sm:h-4 ${isDarkMode ? "text-accent" : "text-muted-foreground"}`} />
         </div>
       </div>
     </div>
