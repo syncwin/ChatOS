@@ -1,732 +1,553 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useSearchParams } from 'next/navigation';
-import { useToast } from "@/hooks/use-toast";
-import { AppSidebar, SidebarInset, SidebarTrigger } from "@/components/AppSidebar";
-import { SidebarProvider } from "@/components/AppSidebar";
-import { Separator } from "@/components/ui/separator";
-import ChatView, { ChatViewRef } from "@/components/ChatView";
-import ApiKeyManager from "@/components/ApiKeyManager";
-import UserProfileDialog from "@/components/UserProfileDialog";
-import SettingsDialog from "@/components/SettingsDialog";
+import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { v4 as uuidv4 } from 'uuid';
+import { useRef } from 'react';
+import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import Header from "@/components/Header";
+import AppSidebar from "@/components/AppSidebar";
+import ChatView, { ChatViewRef } from "@/components/ChatView";
+import { useChat } from "@/hooks/useChat";
+import { useAIProvider } from "@/hooks/useAIProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
-import { createChat, getChats, getChat, updateChat, deleteChat, assignChatToFolder, getFolders, createFolder, getTags, createTag, assignTagToChat, removeTagFromChat } from "@/services/chatService";
-import { createMessage, getMessages, updateMessage, deleteMessage } from "@/services/messageService";
-import { getProviders, getModels } from '@/services/modelProviderService';
-import type { Folder, Chat, Tag } from "@/services/chatService";
+import type { ChatMessage } from "@/services/aiProviderService";
+import type { NewMessage, Message as DbMessage } from "@/services/chatService";
+import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 
-export interface Message {
-  id: string;
-  chat_id: string;
-  user_id: string;
-  created_at: string;
-  role: 'user' | 'assistant';
-  content: string;
-  provider?: string;
-  model?: string;
-  usage?: { prompt_tokens: number; completion_tokens: number };
-  isStreaming?: boolean;
-}
-
-const SUGGESTED_QUESTIONS = [
-  "Explain the theory of relativity.",
-  "What are the main differences between JavaScript and Python?",
-  "How does blockchain technology work?",
-  "Describe the plot of Hamlet.",
-  "What are the benefits of meditation?",
-];
+export type Message = DbMessage & { isStreaming?: boolean };
 
 const Index = () => {
-  const [activeChatId, setActiveChatId] = useState<string | null>(null);
-  const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isAiResponding, setIsAiResponding] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(false);
-  const [showApiKeyManager, setShowApiKeyManager] = useState(false);
-  const [showUserProfile, setShowUserProfile] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [isConnected, setIsConnected] = useState(true);
-  const [connectionError, setConnectionError] = useState<string | null>(null);
-  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-  const [editingContent, setEditingContent] = useState("");
-
-  const [chats, setChats] = useState<Chat[]>([]);
-  const [folders, setFolders] = useState<Folder[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
-  const [chatTags, setChatTags] = useState<Tag[]>([]);
-  const [isLoadingChats, setIsLoadingChats] = useState(false);
-  const [isLoadingFolders, setIsLoadingFolders] = useState(false);
-  const [isLoadingTags, setIsLoadingTags] = useState(false);
-  const [availableProviders, setAvailableProviders] = useState<string[]>([]);
-	const [selectedProvider, setSelectedProvider] = useState<string>('');
-	const [availableModels, setAvailableModels] = useState<any[]>([]);
-	const [selectedModel, setSelectedModel] = useState<string>('');
-	const [isLoadingProviders, setIsLoadingProviders] = useState(false);
-	const [isLoadingModels, setIsLoadingModels] = useState(false);
-	const [modelError, setModelError] = useState<string | null>(null);
-
-  const { toast } = useToast();
-  const { user } = useAuth();
-  const { profile } = useProfile();
+  const { user, isGuest } = useAuth();
+  const { profile, updateProfile } = useProfile();
+  const queryClient = useQueryClient();
   const chatViewRef = useRef<ChatViewRef>(null);
-  const searchParams = useSearchParams();
+  const {
+    chats,
+    isLoadingChats,
+    folders,
+    isLoadingFolders,
+    tags,
+    isLoadingTags,
+    chatTags,
+    activeChatId,
+    setActiveChatId,
+    messages: dbMessages,
+    isLoadingMessages,
+    createChatAsync,
+    addMessage: addMessageMutation,
+    updateChatTitle,
+    deleteMessage,
+    deleteMessagePair,
+    createFolder,
+    updateFolder,
+    deleteFolder,
+    assignChatToFolder,
+    createTag,
+    updateTag,
+    deleteTag,
+    assignTagToChat,
+    removeTagFromChat,
+  } = useChat();
+
+  const messages: Message[] = dbMessages;
+  
+  // Suggested questions for welcome screen
+  const suggestedQuestions = [
+    "What is artificial intelligence?",
+    "How do large language models work?",
+    "Compare AI agents and agentic AI",
+    "What are the latest trends in AI?"
+  ];
+  
+  // Edit functionality state
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingContent, setEditingContent] = useState<string>('');
+
+  const {
+    streamMessage,
+    isAiResponding,
+    selectedProvider,
+    selectedModel,
+    availableProviders,
+    availableModels,
+    switchProvider,
+    switchModel,
+    isLoadingProviders,
+    isLoadingModels,
+    modelError,
+  } = useAIProvider();
+
+  const [input, setInput] = useState("");
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const isDarkMode = profile?.theme !== 'light'; // Default to dark theme
 
   useEffect(() => {
-    const initialChatId = searchParams.get('chatId');
-    if (initialChatId) {
-      setActiveChatId(initialChatId);
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
     }
-  }, [searchParams]);
+  }, [isDarkMode]);
 
+  // Enhanced mobile reload handling
   useEffect(() => {
-    if (!user) return;
-
-    const loadInitialData = async () => {
-      await loadChats();
-      await loadFolders();
-      await loadTags();
-      await loadProviders();
-    };
-
-    loadInitialData();
-  }, [user]);
-
-  useEffect(() => {
-		if (!selectedProvider) return;
-
-		const loadModels = async () => {
-			setIsLoadingModels(true);
-			setModelError(null);
-			try {
-				const models = await getModels(selectedProvider);
-				setAvailableModels(models);
-				if (models && models.length > 0) {
-					setSelectedModel(models[0].id);
-				} else {
-					setSelectedModel('');
-				}
-			} catch (error: any) {
-				console.error("Error fetching models:", error);
-				setModelError(error.message || "Failed to load models.");
-				setAvailableModels([]);
-				setSelectedModel('');
-			} finally {
-				setIsLoadingModels(false);
-			}
-		};
-
-		loadModels();
-	}, [selectedProvider]);
-
-  useEffect(() => {
-    if (!activeChatId) {
-      setMessages([]);
-      return;
-    }
-
-    const loadMessages = async () => {
-      setIsLoading(true);
-      try {
-        const loadedMessages = await getMessages(activeChatId);
-        setMessages(loadedMessages);
-      } catch (error) {
-        console.error("Error fetching messages:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load messages. Please try again.",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
+    const handleReloadState = () => {
+      const savedChatId = sessionStorage.getItem('activeChatId');
+      const isMobile = window.innerWidth < 768;
+      
+      if (savedChatId && !activeChatId && chats.length > 0) {
+        const chatExists = chats.find(chat => chat.id === savedChatId);
+        if (chatExists) {
+          // Force set active chat on mobile after reload
+          if (isMobile) {
+            setTimeout(() => {
+              setActiveChatId(savedChatId);
+            }, 100);
+          } else {
+            setActiveChatId(savedChatId);
+          }
+        }
       }
     };
 
-    loadMessages();
-  }, [activeChatId, toast]);
+    handleReloadState();
+  }, [chats, activeChatId, setActiveChatId]);
 
+  // Enhanced sessionStorage persistence
   useEffect(() => {
-    if (!activeChatId) {
-      setChatTags([]);
-      return;
+    if (activeChatId) {
+      sessionStorage.setItem('activeChatId', activeChatId);
+      // Also store timestamp for mobile reload detection
+      sessionStorage.setItem('activeChatTimestamp', Date.now().toString());
+    } else {
+      sessionStorage.removeItem('activeChatId');
+      sessionStorage.removeItem('activeChatTimestamp');
     }
+  }, [activeChatId]);
 
-    const loadChatTags = async () => {
-      setIsLoadingTags(true);
-      try {
-        const chat = await getChat(activeChatId);
-        setChatTags(chat?.tags || []);
-      } catch (error) {
-        console.error("Error fetching chat tags:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load chat tags. Please try again.",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoadingTags(false);
+  // Restore active chat ID on component mount
+  useEffect(() => {
+    const savedChatId = sessionStorage.getItem('activeChatId');
+    if (savedChatId && !activeChatId && chats.length > 0) {
+      const chatExists = chats.find(chat => chat.id === savedChatId);
+      if (chatExists) {
+        setActiveChatId(savedChatId);
       }
-    };
-
-    loadChatTags();
-  }, [activeChatId, toast]);
-
-  const loadChats = async () => {
-    setIsLoadingChats(true);
-    try {
-      const loadedChats = await getChats();
-      setChats(loadedChats);
-    } catch (error) {
-      console.error("Error fetching chats:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load chats. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoadingChats(false);
     }
-  };
-
-  const loadFolders = async () => {
-    setIsLoadingFolders(true);
-    try {
-      const loadedFolders = await getFolders();
-      setFolders(loadedFolders);
-    } catch (error) {
-      console.error("Error fetching folders:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load folders. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoadingFolders(false);
-    }
-  };
-
-  const loadTags = async () => {
-    setIsLoadingTags(true);
-    try {
-      const loadedTags = await getTags();
-      setTags(loadedTags);
-    } catch (error) {
-      console.error("Error fetching tags:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load tags. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoadingTags(false);
-    }
-  };
-
-  const loadProviders = async () => {
-		setIsLoadingProviders(true);
-		try {
-			const providers = await getProviders();
-			setAvailableProviders(providers);
-			if (providers && providers.length > 0) {
-				setSelectedProvider(providers[0]);
-			}
-		} catch (error: any) {
-			console.error("Error fetching providers:", error);
-			toast({
-				title: "Error",
-				description: error.message || "Failed to load providers.",
-				variant: "destructive"
-			});
-		} finally {
-			setIsLoadingProviders(false);
-		}
-	};
-
-  const createNewChat = async () => {
-    setIsLoading(true);
-    try {
-      const newChat = await createChat();
-      setActiveChatId(newChat.id);
-      setChats(prevChats => [...prevChats, newChat]);
-      setInput("");
-      setMessages([]);
-    } catch (error) {
-      console.error("Error creating chat:", error);
-      toast({
-        title: "Error",
-        description: "Failed to create new chat. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [chats, activeChatId, setActiveChatId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || !activeChatId) return;
-
-    const userMessage = {
-      chat_id: activeChatId,
-      user_id: user?.id,
-      role: 'user',
-      content: input.trim(),
-    } as Omit<Message, 'id' | 'created_at'>;
+    const trimmedInput = input.trim();
+    if (!trimmedInput || isAiResponding) return;
+    if (!user && !isGuest) return;
 
     setInput("");
-    setIsAiResponding(true);
 
-    try {
-      const newMessage = await createMessage(userMessage);
-      setMessages(prevMessages => [...prevMessages, newMessage]);
-      await handleAIResponse([newMessage], newMessage.content);
-    } catch (error) {
-      console.error("Error creating message:", error);
-      toast({
-        title: "Error",
-        description: "Failed to send message. Please try again.",
-        variant: "destructive"
-      });
-      setIsAiResponding(false);
+    let currentChatId = activeChatId;
+
+    if (!currentChatId) {
+      try {
+        const newChat = await createChatAsync(trimmedInput);
+        currentChatId = newChat.id;
+      } catch (error) {
+        toast.error("Could not start a new chat. Please try again.");
+        setInput(trimmedInput);
+        return;
+      }
+    } else if (messages.length === 0) {
+      const title = trimmedInput.length > 30 ? trimmedInput.substring(0, 27) + "..." : trimmedInput;
+      updateChatTitle({ chatId: currentChatId, title: title });
     }
-  };
 
-  const handleAIResponse = async (userMessages: Message[], userContent: string) => {
-    if (!activeChatId) return;
+    if (!currentChatId) return;
 
-    setIsAiResponding(true);
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          chatId: activeChatId,
-          message: userContent,
-          userMessages: userMessages,
+    const userMessage: NewMessage = {
+      chat_id: currentChatId,
+      content: trimmedInput,
+      role: 'user',
+    };
+    addMessageMutation(userMessage);
+
+    const historyForAI: ChatMessage[] = [
+      ...messages.map(m => ({ role: m.role, content: m.content })),
+      { role: 'user', content: trimmedInput }
+    ];
+
+    const assistantId = uuidv4();
+    const assistantPlaceholder: Message = {
+      id: assistantId,
+      chat_id: currentChatId,
+      content: '',
+      role: 'assistant',
+      created_at: new Date().toISOString(),
+      isStreaming: true,
+      user_id: user?.id || '',
+      model: selectedModel,
+      provider: selectedProvider,
+      usage: null,
+    };
+    
+    // Optimistically add placeholder
+    queryClient.setQueryData<Message[]>(['messages', currentChatId], (oldData: Message[] = []) => [
+      ...oldData,
+      assistantPlaceholder
+    ]);
+
+    let finalContent = "";
+
+    await streamMessage(
+      historyForAI,
+      (delta) => { // onDelta
+        finalContent += delta;
+        queryClient.setQueryData<Message[]>(['messages', currentChatId], (oldData: Message[] = []) =>
+          oldData.map(msg => 
+            msg.id === assistantId ? { ...msg, content: finalContent } : msg
+          )
+        );
+      },
+      (usage) => { // onComplete
+        console.log('Creating final assistant message with:', {
           provider: selectedProvider,
           model: selectedModel,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to generate response');
+          usage: usage
+        });
+        const finalAssistantMessage: NewMessage = {
+          chat_id: currentChatId!,
+          content: finalContent,
+          role: 'assistant',
+          provider: selectedProvider,
+          model: selectedModel,
+          usage: usage || {
+            prompt_tokens: 0,
+            completion_tokens: 0,
+            total_tokens: 0
+          }
+        };
+        // Replace placeholder with final message from DB
+        addMessageMutation(finalAssistantMessage, {
+          onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['messages', currentChatId] });
+          }
+        });
+      },
+      (error) => { // onError
+        toast.error(`Error from AI: ${error.message}`);
+        // Remove placeholder on error
+        queryClient.setQueryData<Message[]>(['messages', currentChatId], (oldData: Message[] = []) =>
+          oldData.filter(msg => msg.id !== assistantId)
+        );
       }
-
-      const data = await response.json();
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      const aiMessage = {
-        chat_id: activeChatId,
-        user_id: 'ai',
-        role: 'assistant',
-        content: data.content,
-        provider: selectedProvider,
-        model: selectedModel,
-        usage: data.usage,
-      } as Omit<Message, 'id' | 'created_at'>;
-
-      const newAiMessage = await createMessage(aiMessage);
-      setMessages(prevMessages => [...prevMessages, newAiMessage]);
-    } catch (error: any) {
-      console.error("Error processing AI response:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to generate response. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsAiResponding(false);
-    }
+    );
   };
-
-  const handleSelectChat = async (chatId: string) => {
-    setActiveChatId(chatId);
+  
+  const handleNewChat = () => {
+    setActiveChatId(null);
+    sessionStorage.removeItem('activeChatId');
   };
-
-  const handleUpdateChatTitle = async (chatId: string, title: string) => {
-    try {
-      await updateChat(chatId, { title });
-      setChats(prevChats =>
-        prevChats.map(chat =>
-          chat.id === chatId ? { ...chat, title } : chat
-        )
-      );
-    } catch (error) {
-      console.error("Error updating chat title:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update chat title. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleDeleteChat = async (chatId: string) => {
-    try {
-      await deleteChat(chatId);
-      setChats(prevChats => prevChats.filter(chat => chat.id !== chatId));
-      if (activeChatId === chatId) {
-        setActiveChatId(null);
-        setMessages([]);
-      }
-    } catch (error) {
-      console.error("Error deleting chat:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete chat. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleAssignChatToFolder = async (folderId: string) => {
-    if (!activeChatId) return;
-
-    try {
-      await assignChatToFolder(activeChatId, folderId);
-      setChats(prevChats =>
-        prevChats.map(chat =>
-          chat.id === activeChatId ? { ...chat, folder_id: folderId } : chat
-        )
-      );
-    } catch (error) {
-      console.error("Error assigning chat to folder:", error);
-      toast({
-        title: "Error",
-        description: "Failed to assign chat to folder. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleCreateFolder = async (name: string) => {
-    try {
-      const newFolder = await createFolder(name);
-      setFolders(prevFolders => [...prevFolders, newFolder]);
-    } catch (error) {
-      console.error("Error creating folder:", error);
-      toast({
-        title: "Error",
-        description: "Failed to create folder. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleAssignTagToChat = async (tagId: string) => {
-    if (!activeChatId) return;
-
-    try {
-      await assignTagToChat(activeChatId, tagId);
-      setChatTags(prevChatTags => [...prevChatTags, tags.find(tag => tag.id === tagId)!]);
-    } catch (error) {
-      console.error("Error assigning tag to chat:", error);
-      toast({
-        title: "Error",
-        description: "Failed to assign tag to chat. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleRemoveTagFromChat = async (tagId: string) => {
-    if (!activeChatId) return;
-
-    try {
-      await removeTagFromChat(activeChatId, tagId);
-      setChatTags(prevChatTags => prevChatTags.filter(tag => tag.id !== tagId));
-    } catch (error) {
-      console.error("Error removing tag from chat:", error);
-      toast({
-        title: "Error",
-        description: "Failed to remove tag from chat. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleCreateTag = async (name: string, color?: string) => {
-    try {
-      const newTag = await createTag(name, color);
-      setTags(prevTags => [...prevTags, newTag]);
-    } catch (error) {
-      console.error("Error creating tag:", error);
-      toast({
-        title: "Error",
-        description: "Failed to create tag. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleSelectProvider = (provider: string) => {
-		setSelectedProvider(provider);
-	};
-
-	const handleSelectModel = (model: string) => {
-		setSelectedModel(model);
-	};
 
   const handleOpenSettings = () => {
-    setShowSettings(true);
+    setIsSettingsOpen(true);
   };
 
-  const handleDeleteMessage = async (messageId: string) => {
-    if (!activeChatId) return;
+  // Format chats for the sidebar - include tag information
+  const sidebarChats = chats.map((chat) => ({
+    ...chat,
+    date: formatDistanceToNow(new Date(chat.updated_at), { addSuffix: true }),
+    messages: [], // Not needed for sidebar
+    tags: [], // Tags will be loaded separately per chat when needed
+  }));
 
-    try {
-      const messageToDelete = messages.find(m => m.id === messageId);
-      if (!messageToDelete) return;
-
-      // Find all messages after this one (including potential assistant response)
-      const messageIndex = messages.findIndex(m => m.id === messageId);
-      const messagesToDelete = [messageToDelete];
-      
-      // If deleting a user message, also delete the following assistant message if it exists
-      if (messageToDelete.role === 'user' && messageIndex + 1 < messages.length) {
-        const nextMessage = messages[messageIndex + 1];
-        if (nextMessage.role === 'assistant') {
-          messagesToDelete.push(nextMessage);
-        }
-      }
-      // If deleting an assistant message, also delete the preceding user message if it exists
-      else if (messageToDelete.role === 'assistant' && messageIndex - 1 >= 0) {
-        const prevMessage = messages[messageIndex - 1];
-        if (prevMessage.role === 'user') {
-          messagesToDelete.unshift(prevMessage);
-        }
-      }
-
-      // Delete from backend
-      for (const msg of messagesToDelete) {
-        await deleteMessage(msg.id);
-      }
-
-      // Update local state
-      setMessages(prev => prev.filter(m => !messagesToDelete.some(del => del.id === m.id)));
-
-      // Clear editing state if we're deleting the message being edited
-      if (editingMessageId && messagesToDelete.some(m => m.id === editingMessageId)) {
-        setEditingMessageId(null);
-        setEditingContent("");
-      }
-
-    } catch (error) {
-      console.error('Error deleting message:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete message. Please try again.",
-        variant: "destructive"
-      });
-    }
+  const handleSelectChat = (chat: { id: string }) => {
+    setActiveChatId(chat.id);
   };
 
+  // Edit functionality handlers
   const handleEditMessage = (messageId: string) => {
-    // Prevent editing if another edit is in progress
-    if (editingMessageId && editingMessageId !== messageId) {
-      toast({
-        title: "Edit in progress",
-        description: "Please finish or cancel the current edit before starting a new one.",
-      });
-      return;
+    const clickedMessage = messages.find(msg => msg.id === messageId);
+    
+    if (!clickedMessage) return;
+    
+    let messageToEdit;
+    
+    if (clickedMessage.role === 'user') {
+      // Direct edit of user message
+      messageToEdit = clickedMessage;
+    } else if (clickedMessage.role === 'assistant') {
+      // For assistant messages, find the previous user message
+      const messageIndex = messages.findIndex(msg => msg.id === messageId);
+      const previousUserMessage = messages.slice(0, messageIndex).reverse().find(msg => msg.role === 'user');
+      messageToEdit = previousUserMessage;
     }
-
-    const messageToEdit = messages.find(m => m.id === messageId);
-    if (!messageToEdit) return;
-
-    // For assistant messages, find and edit the previous user message instead
-    if (messageToEdit.role === 'assistant') {
-      const messageIndex = messages.findIndex(m => m.id === messageId);
-      if (messageIndex > 0) {
-        const previousMessage = messages[messageIndex - 1];
-        if (previousMessage.role === 'user') {
-          setEditingMessageId(previousMessage.id);
-          setEditingContent(previousMessage.content);
-        }
-      }
-    } else {
-      setEditingMessageId(messageId);
+    
+    if (messageToEdit) {
+      setEditingMessageId(messageToEdit.id);
       setEditingContent(messageToEdit.content);
-    }
-  };
-
-  const handleSaveEdit = async () => {
-    if (!editingMessageId || !editingContent.trim() || !activeChatId) return;
-
-    try {
-      // Update the message content
-      await updateMessage(editingMessageId, editingContent.trim());
-      
-      // Find the message index
-      const messageIndex = messages.findIndex(m => m.id === editingMessageId);
-      if (messageIndex === -1) return;
-
-      // Update local state
-      const updatedMessages = [...messages];
-      updatedMessages[messageIndex].content = editingContent.trim();
-      
-      // Remove any assistant messages that come after this user message
-      const messagesToKeep = updatedMessages.slice(0, messageIndex + 1);
-      setMessages(messagesToKeep);
-
-      // Clear editing state
-      setEditingMessageId(null);
-      setEditingContent("");
-
-      // Auto-generate new response
-      const newUserMessage = updatedMessages[messageIndex];
-      await handleAIResponse([newUserMessage], newUserMessage.content);
-
-    } catch (error) {
-      console.error('Error updating message:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update message. Please try again.",
-        variant: "destructive"
-      });
+      // Scroll to input area after a short delay to ensure the edit UI is rendered
+      setTimeout(() => {
+        chatViewRef.current?.scrollToInput();
+      }, 100);
     }
   };
 
   const handleCancelEdit = () => {
     setEditingMessageId(null);
-    setEditingContent("");
+    setEditingContent('');
   };
 
-  const isDarkMode = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
-  const [darkMode, setDarkMode] = useState(isDarkMode);
-
-  useEffect(() => {
-    // Check initial state on mount
-    const isDark = document.documentElement.classList.contains('dark');
-    setDarkMode(isDark);
-
-    // Listen for changes
-    const observer = new MutationObserver(mutations => {
-      mutations.forEach(mutation => {
-        if (mutation.attributeName === 'class') {
-          const isDark = (mutation.target as HTMLElement).classList.contains('dark');
-          setDarkMode(isDark);
+  const handleSaveEdit = async () => {
+    if (!editingMessageId || !editingContent.trim()) return;
+    
+    const trimmedContent = editingContent.trim();
+    const messageIndex = messages.findIndex(msg => msg.id === editingMessageId);
+    
+    if (messageIndex === -1) return;
+    
+    // Find the assistant message that follows this user message
+    const assistantMessageIndex = messageIndex + 1;
+    const hasAssistantResponse = assistantMessageIndex < messages.length && 
+                                messages[assistantMessageIndex].role === 'assistant';
+    
+    // Update the user message content
+    const updatedUserMessage = { ...messages[messageIndex], content: trimmedContent };
+    
+    // Update messages in the query cache
+    const updatedMessages = [...messages];
+    updatedMessages[messageIndex] = updatedUserMessage;
+    
+    // If there's an assistant response, remove it as we'll regenerate
+    if (hasAssistantResponse) {
+      updatedMessages.splice(assistantMessageIndex, 1);
+    }
+    
+    queryClient.setQueryData<Message[]>(['messages', activeChatId], updatedMessages);
+    
+    // Clear edit state
+    setEditingMessageId(null);
+    setEditingContent('');
+    
+    // Regenerate AI response with the edited message
+    if (activeChatId) {
+      const historyForAI: ChatMessage[] = updatedMessages
+        .slice(0, messageIndex + 1)
+        .map(m => ({ role: m.role, content: m.content }));
+      
+      const assistantId = uuidv4();
+      const assistantPlaceholder: Message = {
+        id: assistantId,
+        chat_id: activeChatId,
+        content: '',
+        role: 'assistant',
+        created_at: new Date().toISOString(),
+        isStreaming: true,
+        user_id: user?.id || '',
+        model: selectedModel,
+        provider: selectedProvider,
+        usage: null,
+      };
+      
+      // Add placeholder
+      queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) => [
+        ...oldData,
+        assistantPlaceholder
+      ]);
+      
+      let finalContent = "";
+      
+      await streamMessage(
+        historyForAI,
+        (delta) => {
+          finalContent += delta;
+          queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) =>
+            oldData.map(msg => 
+              msg.id === assistantId ? { ...msg, content: finalContent } : msg
+            )
+          );
+        },
+        (usage) => {
+          const finalAssistantMessage: NewMessage = {
+            chat_id: activeChatId!,
+            content: finalContent,
+            role: 'assistant',
+            provider: selectedProvider,
+            model: selectedModel,
+            usage: usage || {
+              prompt_tokens: 0,
+              completion_tokens: 0,
+              total_tokens: 0
+            }
+          };
+          addMessageMutation(finalAssistantMessage, {
+            onSuccess: () => {
+              queryClient.invalidateQueries({ queryKey: ['messages', activeChatId] });
+            }
+          });
+        },
+        (error) => {
+          toast.error(`Error from AI: ${error.message}`);
+          queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) =>
+            oldData.filter(msg => msg.id !== assistantId)
+          );
         }
-      });
-    });
+      );
+    }
+  };
 
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class'],
-    });
+  // Helper function to find message pairs (user input + assistant output)
+  const findMessagePair = (messages: Message[], targetMessageId: string): string[] => {
+    const targetIndex = messages.findIndex(msg => msg.id === targetMessageId);
+    if (targetIndex === -1) return [targetMessageId];
+    
+    const targetMessage = messages[targetIndex];
+    const messagesToDelete: string[] = [];
+    
+    if (targetMessage.role === 'user') {
+      // If user message, find the next assistant message
+      messagesToDelete.push(targetMessage.id);
+      if (targetIndex + 1 < messages.length && messages[targetIndex + 1].role === 'assistant') {
+        messagesToDelete.push(messages[targetIndex + 1].id);
+      }
+    } else if (targetMessage.role === 'assistant') {
+      // If assistant message, find the previous user message
+      if (targetIndex > 0 && messages[targetIndex - 1].role === 'user') {
+        messagesToDelete.push(messages[targetIndex - 1].id);
+      }
+      messagesToDelete.push(targetMessage.id);
+    }
+    
+    return messagesToDelete;
+  };
 
-    return () => observer.disconnect();
-  }, []);
+  const handleDeleteMessage = async (messageId: string) => {
+    // Store the original messages for potential rollback
+    const originalMessages = queryClient.getQueryData<Message[]>(['messages', activeChatId]);
+    
+    if (!originalMessages) return;
+    
+    // Find all messages in the pair to delete
+    const messageIdsToDelete = findMessagePair(originalMessages, messageId);
+    
+    try {
+      // Optimistically remove the message pair from the UI
+      const updatedMessages = originalMessages.filter(msg => !messageIdsToDelete.includes(msg.id));
+      queryClient.setQueryData<Message[]>(['messages', activeChatId], updatedMessages);
+      
+      // Delete all messages in the pair using the efficient batch delete
+        if (messageIdsToDelete.length > 1) {
+          await deleteMessagePair(messageIdsToDelete);
+        } else {
+          await deleteMessage(messageIdsToDelete[0]);
+        }
+    } catch (error) {
+      // If deletion fails, restore the original messages
+      queryClient.setQueryData<Message[]>(['messages', activeChatId], originalMessages);
+      toast.error('Failed to delete message pair');
+    }
+  };
+
+  const activeChat = chats.find(c => c.id === activeChatId);
+
+  const handleAssignChatToFolder = (folderId: string) => {
+    if (activeChatId) {
+      assignChatToFolder({ chatId: activeChatId, folderId: folderId === 'none' ? null : folderId });
+    }
+  };
+
+  const handleAssignTagToChat = (tagId: string) => {
+    if (activeChatId) {
+      assignTagToChat({ chatId: activeChatId, tagId });
+    }
+  };
+
+  const handleRemoveTagFromChat = (tagId: string) => {
+    if (activeChatId) {
+      removeTagFromChat({ chatId: activeChatId, tagId });
+    }
+  };
+
+  const isLoading = isLoadingChats || isLoadingMessages || isLoadingFolders;
 
   const toggleDarkMode = () => {
-    const html = document.documentElement;
-    const newMode = !darkMode;
-
-    if (newMode) {
-      html.classList.add('dark');
-    } else {
-      html.classList.remove('dark');
+    if (profile) {
+      updateProfile({ theme: isDarkMode ? 'light' : 'dark' });
     }
-
-    setDarkMode(newMode);
   };
 
   return (
-    <SidebarProvider defaultOpen={false}>
-      <div className="chat-container">
-        <AppSidebar 
-          chats={chats}
-          activeChatId={activeChatId}
-          isLoading={isLoadingChats}
-          onSelectChat={handleSelectChat}
-          onCreateNewChat={createNewChat}
-          onUpdateChatTitle={handleUpdateChatTitle}
-          onDeleteChat={handleDeleteChat}
-          folders={folders}
-          isLoadingFolders={isLoadingFolders}
-        />
-        
-        <SidebarInset className="flex flex-col w-full overflow-hidden">
-          <header className="flex h-12 sm:h-14 shrink-0 items-center gap-1 sm:gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-2 sm:px-4">
-            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
-              <SidebarTrigger 
-                className="-ml-1 h-6 w-6 sm:h-8 sm:w-8 hover:bg-muted rounded-sm transition-colors" 
-                onClick={() => setShowSidebar(!showSidebar)}
+    <>
+      <AppSidebar 
+        isDarkMode={isDarkMode}
+        toggleDarkMode={toggleDarkMode}
+        chats={sidebarChats}
+        folders={folders}
+        activeChatId={activeChatId}
+        onNewChat={handleNewChat}
+        onSelectChat={handleSelectChat}
+        createFolder={createFolder}
+        updateFolder={updateFolder}
+        deleteFolder={deleteFolder}
+        tags={tags}
+        createTag={createTag}
+        updateTag={updateTag}
+        deleteTag={deleteTag}
+        onOpenSettings={handleOpenSettings}
+      />
+      <SidebarInset>
+        <div className="min-h-screen min-h-[100dvh] bg-background text-foreground h-screen h-[100dvh] flex flex-col w-full overflow-hidden">
+          <header className="py-1 xs:py-2 sm:py-4 flex-shrink-0 sticky top-0 bg-background/95 backdrop-blur-sm z-10 border-b">
+            <div className="w-full max-w-4xl mx-auto flex items-center gap-1 xs:gap-2 px-1 xs:px-2 sm:px-4">
+              <SidebarTrigger className="text-muted-foreground hover:text-foreground flex-shrink-0" aria-label="Toggle sidebar" />
+              <Header
+                isDarkMode={isDarkMode}
+                toggleDarkMode={toggleDarkMode}
+                availableProviders={availableProviders}
+                selectedProvider={selectedProvider}
+                onSelectProvider={switchProvider}
+                availableModels={availableModels}
+                selectedModel={selectedModel}
+                onSelectModel={switchModel}
+                isLoadingProviders={isLoadingProviders}
+                isLoadingModels={isLoadingModels}
+                modelError={modelError}
+                folders={folders}
+                isLoadingFolders={isLoadingFolders}
+                activeChat={activeChat}
+                onAssignChatToFolder={handleAssignChatToFolder}
+                tags={tags}
+                chatTags={chatTags}
+                isLoadingTags={isLoadingTags}
+                onAssignTagToChat={handleAssignTagToChat}
+                onRemoveTagFromChat={handleRemoveTagFromChat}
+                onCreateFolder={createFolder}
+                onCreateTag={createTag}
+                onOpenSettings={handleOpenSettings}
               />
-              <Separator orientation="vertical" className="mr-1 sm:mr-2 h-4" />
             </div>
-            
-            <Header 
-              isDarkMode={darkMode}
-              toggleDarkMode={toggleDarkMode}
-              availableProviders={availableProviders}
-              selectedProvider={selectedProvider}
-              onSelectProvider={handleSelectProvider}
-              availableModels={availableModels}
-              selectedModel={selectedModel}
-              onSelectModel={handleSelectModel}
-              isLoadingProviders={isLoadingProviders}
-              isLoadingModels={isLoadingModels}
-              modelError={modelError}
-              folders={folders}
-              isLoadingFolders={isLoadingFolders}
-              onAssignChatToFolder={handleAssignChatToFolder}
-              activeChat={chats.find(chat => chat.id === activeChatId)}
-              tags={tags}
-              chatTags={chatTags}
-              isLoadingTags={isLoadingTags}
-              onAssignTagToChat={handleAssignTagToChat}
-              onRemoveTagFromChat={handleRemoveTagFromChat}
-              onCreateFolder={handleCreateFolder}
-              onCreateTag={handleCreateTag}
-              onOpenSettings={handleOpenSettings}
-            />
           </header>
 
           <ChatView
-            ref={chatViewRef}
-            messages={messages}
-            isLoading={isLoading}
-            isAiResponding={isAiResponding}
-            input={input}
-            setInput={setInput}
-            onSubmit={handleSubmit}
-            onNewChat={createNewChat}
-            suggestedQuestions={SUGGESTED_QUESTIONS}
-            activeChatId={activeChatId}
-            editingMessageId={editingMessageId}
-            editingContent={editingContent}
-            setEditingContent={setEditingContent}
-            onEditMessage={handleEditMessage}
-            onSaveEdit={handleSaveEdit}
-            onCancelEdit={handleCancelEdit}
-            onDeleteMessage={handleDeleteMessage}
-          />
-        </SidebarInset>
-
-        <ApiKeyManager 
-          isOpen={showApiKeyManager} 
-          onClose={() => setShowApiKeyManager(false)} 
+          ref={chatViewRef}
+          messages={messages}
+          isLoading={isLoadingMessages}
+          isAiResponding={isAiResponding}
+          input={input}
+          setInput={setInput}
+          onSubmit={handleSubmit}
+          onNewChat={handleNewChat}
+          suggestedQuestions={suggestedQuestions}
+          activeChatId={activeChatId}
+          editingMessageId={editingMessageId}
+          editingContent={editingContent}
+          setEditingContent={setEditingContent}
+          onEditMessage={handleEditMessage}
+          onSaveEdit={handleSaveEdit}
+          onCancelEdit={handleCancelEdit}
+          onDeleteMessage={handleDeleteMessage}
         />
-        
-        <UserProfileDialog 
-          isOpen={showUserProfile} 
-          onClose={() => setShowUserProfile(false)} 
-        />
-        
-        <SettingsDialog 
-          isOpen={showSettings}
-          onClose={() => setShowSettings(false)}
-        />
-      </div>
-    </SidebarProvider>
+        </div>
+      </SidebarInset>
+    </>
   );
 };
 
