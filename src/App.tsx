@@ -32,7 +32,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <SidebarProvider>
-            <div className="min-h-screen flex w-full overflow-hidden">
+            <div className="h-screen flex w-full overflow-hidden">
               <Routes>
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/update-password" element={<UpdatePassword />} />

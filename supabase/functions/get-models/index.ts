@@ -3,7 +3,7 @@ import { corsHeaders } from '../ai-chat/_shared/cors.ts';
 import { getApiKey } from '../ai-chat/auth/apiKeyHandler.ts';
 import { getAvailableGeminiModels } from '../ai-chat/providers/gemini.ts';
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }

@@ -71,7 +71,7 @@ const InputArea = forwardRef<HTMLDivElement, InputAreaProps>(({
   };
 
   return (
-    <div ref={ref} className="py-2 sm:py-4 bg-background/90 backdrop-blur-sm w-full">
+    <div ref={ref} className="py-2 sm:py-4 w-full">
       <form onSubmit={handleSubmit} className="flex gap-2 sm:gap-4 items-end w-full">
         <div className="flex-1 flex items-center p-1 sm:p-2 bg-input border border-input focus-within:ring-2 focus-within:ring-primary transition-all rounded min-w-0 w-full">
           <label htmlFor="chat-input" className="sr-only">Type your message</label>
@@ -98,7 +98,7 @@ const InputArea = forwardRef<HTMLDivElement, InputAreaProps>(({
             }`} 
             aria-label="Send message"
           >
-            <Send className="w-3 h-3 sm:w-4 sm:h-4" />
+            <Send className="w-3 h-3 sm:w-4 sm:h-4 text-primary-foreground dark:text-foreground" />
           </Button>
         </div>
       </form>

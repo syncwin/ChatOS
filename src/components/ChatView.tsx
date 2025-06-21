@@ -77,48 +77,54 @@ const ChatView = forwardRef<ChatViewRef, ChatViewProps>(({
   const isInputLoading = isLoading || isAiResponding;
 
   return (
-    <main className="flex-1 flex flex-col h-full w-full overflow-hidden">
-      {showWelcomeScreen ? (
-        <div className="flex-1 flex w-full px-1 xs:px-2 sm:px-4 overflow-hidden">
-          <WelcomeScreen 
-            suggestedQuestions={suggestedQuestions}
-            onQuestionSelect={onQuestionSelect}
+    <>
+      {/* Chat Content Area */}
+      <main className="flex-1 flex flex-col min-h-0 w-full overflow-hidden">
+        {showWelcomeScreen ? (
+          <div className="flex-1 flex w-full max-w-4xl mx-auto px-1 xs:px-2 sm:px-4 overflow-hidden">
+            <WelcomeScreen 
+              suggestedQuestions={suggestedQuestions}
+              onQuestionSelect={onQuestionSelect}
+            />
+          </div>
+        ) : (
+          <ScrollArea className="flex-1 w-full">
+            <div className="w-full max-w-4xl mx-auto py-1 xs:py-2 sm:py-4 px-1 xs:px-2 sm:px-4">
+              <div className="space-y-2 xs:space-y-3 sm:space-y-4 lg:space-y-6 w-full">
+                {messages.map((message) => (
+                  <div key={message.id} className="w-full">
+                    <ChatMessage 
+                      message={message}
+                      isEditing={editingMessageId === message.id}
+                      editingContent={editingContent}
+                      setEditingContent={setEditingContent}
+                      onEditMessage={onEditMessage}
+                      onSaveEdit={onSaveEdit}
+                      onCancelEdit={onCancelEdit}
+                      onDeleteMessage={onDeleteMessage}
+                    />
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </div>
+            </div>
+          </ScrollArea>
+        )}
+      </main>
+
+      {/* Sticky Footer Input Area */}
+      <footer className="flex-shrink-0 sticky bottom-0 bg-background/90 backdrop-blur-sm border-t border-border/50">
+        <div className="w-full max-w-4xl mx-auto px-1 xs:px-2 sm:px-4">
+          <InputArea 
+            ref={inputAreaRef}
+            input={input}
+            setInput={setInput}
+            onSubmit={onSubmit}
+            isLoading={isInputLoading}
           />
         </div>
-      ) : (
-        <ScrollArea className="flex-1 w-full overflow-hidden">
-          <div className="w-full max-w-4xl mx-auto py-1 xs:py-2 sm:py-4 px-1 xs:px-2 sm:px-4">
-            <div className="space-y-2 xs:space-y-3 sm:space-y-4 lg:space-y-6 w-full">
-              {messages.map((message) => (
-                <div key={message.id} className="w-full max-w-full overflow-hidden">
-                  <ChatMessage 
-                    message={message}
-                    isEditing={editingMessageId === message.id}
-                    editingContent={editingContent}
-                    setEditingContent={setEditingContent}
-                    onEditMessage={onEditMessage}
-                    onSaveEdit={onSaveEdit}
-                    onCancelEdit={onCancelEdit}
-                    onDeleteMessage={onDeleteMessage}
-                  />
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-          </div>
-        </ScrollArea>
-      )}
-
-      <div className="w-full max-w-4xl mx-auto px-1 xs:px-2 sm:px-4 py-1 xs:py-2 flex-shrink-0">
-        <InputArea 
-          ref={inputAreaRef}
-          input={input}
-          setInput={setInput}
-          onSubmit={onSubmit}
-          isLoading={isInputLoading}
-        />
-      </div>
-    </main>
+      </footer>
+    </>
   );
 });
 

@@ -85,7 +85,7 @@ const ProviderIconSelector = ({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 hover:bg-muted"
+            className="header-icon-hover h-8 w-8"
             disabled
           >
             <Bot className="w-4 h-4" />
@@ -120,7 +120,7 @@ const ProviderIconSelector = ({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 hover:bg-muted relative"
+              className="header-icon-hover h-8 w-8 relative"
             >
               <SelectedIcon className="w-4 h-4" />
               {selectedProvider && selectedModel && (

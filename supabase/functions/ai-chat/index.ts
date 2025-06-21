@@ -1,13 +1,13 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+// Using Deno's built-in serve API (available in Deno 1.9+)
 import { corsHeaders } from './_shared/cors.ts';
 import type { ChatRequest, NormalizedResponse } from './_shared/types.ts';
 import { createOpenAINormalizer } from './streaming/openaiNormalizer.ts';
 import { getApiKey } from './auth/apiKeyHandler.ts';
 import { providerHandlers, defaultModels } from './providers/_registry.ts';
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }

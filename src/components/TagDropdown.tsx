@@ -78,7 +78,7 @@ const TagDropdown = ({
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 relative hover:bg-muted"
+              className="header-icon-hover h-8 w-8 relative"
               disabled={!activeChat || isLoading}
             >
               <Tag className="w-4 h-4" />

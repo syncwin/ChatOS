@@ -68,55 +68,61 @@ const Header = ({
   };
 
   return (
-    <div className="header-main flex items-center justify-between w-full gap-1 xs:gap-2 sm:gap-4 px-1 xs:px-2 sm:px-0">
+    <div className="header-main flex items-center w-full gap-1 xs:gap-2 sm:gap-4 px-1 xs:px-2 sm:px-0">
       {/* Mobile Logo - only show on mobile */}
-      <div className="flex items-center gap-1 xs:gap-2 md:hidden">
-        <ChatOsIcon className="header-icon-hover w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 text-primary" />
+      <div className="flex items-center gap-1 xs:gap-2 md:hidden flex-shrink-0">
+        <ChatOsIcon className="header-icon-hover mobile-logo w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 text-primary" />
       </div>
       
       {/* Main controls - conditional based on screen size */}
-      <div className="header-controls flex items-center justify-center gap-0.5 xs:gap-1 sm:gap-2 flex-1 overflow-hidden min-w-0">
+      <div className="header-controls flex items-center justify-center gap-0.5 xs:gap-1 sm:gap-2 flex-1 min-w-0">
         {isMobile ? (
           /* Mobile: Empty center space */
           <div className="flex-1"></div>
         ) : (
-          /* Desktop: Individual selectors */
-          <>
-            <ProviderIconSelector
-              availableProviders={availableProviders}
-              selectedProvider={selectedProvider}
-              onSelectProvider={onSelectProvider}
-              availableModels={availableModels}
-              selectedModel={selectedModel}
-              onSelectModel={onSelectModel}
-              isLoadingProviders={isLoadingProviders}
-              isLoadingModels={isLoadingModels}
-              modelError={modelError}
-            />
+          /* Desktop: Individual selectors with responsive layout */
+          <div className="flex items-center justify-center gap-1 xs:gap-2 sm:gap-3 md:gap-4 flex-wrap">
+            <div className="flex-shrink-0">
+              <ProviderIconSelector
+                availableProviders={availableProviders}
+                selectedProvider={selectedProvider}
+                onSelectProvider={onSelectProvider}
+                availableModels={availableModels}
+                selectedModel={selectedModel}
+                onSelectModel={onSelectModel}
+                isLoadingProviders={isLoadingProviders}
+                isLoadingModels={isLoadingModels}
+                modelError={modelError}
+              />
+            </div>
 
-            <FolderDropdown 
-              folders={folders} 
-              activeChat={activeChat} 
-              onAssignChatToFolder={onAssignChatToFolder} 
-              onCreateFolder={onCreateFolder} 
-              isLoading={isLoadingFolders} 
-            />
+            <div className="flex-shrink-0">
+              <FolderDropdown 
+                folders={folders} 
+                activeChat={activeChat} 
+                onAssignChatToFolder={onAssignChatToFolder} 
+                onCreateFolder={onCreateFolder} 
+                isLoading={isLoadingFolders} 
+              />
+            </div>
 
-            <TagDropdown 
-              tags={tags} 
-              chatTags={chatTags} 
-              activeChat={activeChat} 
-              onAssignTagToChat={onAssignTagToChat} 
-              onRemoveTagFromChat={onRemoveTagFromChat} 
-              onCreateTag={onCreateTag} 
-              isLoading={isLoadingTags} 
-            />
-          </>
+            <div className="flex-shrink-0">
+              <TagDropdown 
+                tags={tags} 
+                chatTags={chatTags} 
+                activeChat={activeChat} 
+                onAssignTagToChat={onAssignTagToChat} 
+                onRemoveTagFromChat={onRemoveTagFromChat} 
+                onCreateTag={onCreateTag} 
+                isLoading={isLoadingTags} 
+              />
+            </div>
+          </div>
         )}
       </div>
       
       {/* Right side controls */}
-      <div className="flex items-center gap-1 xs:gap-2 sm:gap-3 flex-shrink-0">
+      <div className="flex items-center gap-2 xs:gap-3 sm:gap-4 flex-shrink-0">
         {/* Mobile modal - positioned on the right */}
         {isMobile && (
           <MobileSelectionModal
@@ -143,15 +149,15 @@ const Header = ({
           />
         )}
         
-        {/* Theme toggle with improved mobile appearance */}
-        <div className="flex items-center gap-0.5 xs:gap-1 sm:gap-2">
-          <Sun className={`header-icon-hover w-3 h-3 xs:w-4 xs:h-4 sm:w-4 sm:h-4 ${!isDarkMode ? "text-primary" : "text-muted-foreground"}`} />
+        {/* Theme toggle with improved spacing and consistent styling */}
+        <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 px-1.5 xs:px-2 py-1 xs:py-1.5 rounded-md bg-muted/20 hover:bg-muted/40 transition-all duration-200">
+          <Sun className={`w-3.5 h-3.5 xs:w-4 xs:h-4 transition-colors duration-200 ${!isDarkMode ? "text-primary" : "text-muted-foreground hover:text-foreground"}`} />
           <Switch 
             checked={isDarkMode} 
             onCheckedChange={handleThemeToggle}
-            className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input" 
+            className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input scale-90 xs:scale-100" 
           />
-          <Moon className={`header-icon-hover w-3 h-3 xs:w-4 xs:h-4 sm:w-4 sm:h-4 ${isDarkMode ? "text-primary" : "text-muted-foreground"}`} />
+          <Moon className={`w-3.5 h-3.5 xs:w-4 xs:h-4 transition-colors duration-200 ${isDarkMode ? "text-primary" : "text-muted-foreground hover:text-foreground"}`} />
         </div>
       </div>
     </div>

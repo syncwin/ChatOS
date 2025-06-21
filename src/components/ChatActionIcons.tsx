@@ -108,6 +108,7 @@ interface ChatActionIconsProps {
   rewriteVariations?: string[];
   currentVariationIndex?: number;
   onVariationChange?: (index: number) => void;
+  variant?: 'info' | 'actions';
 }
 
 const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
@@ -121,6 +122,7 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
   rewriteVariations = [],
   currentVariationIndex = 0,
   onVariationChange,
+  variant = 'actions',
 }) => {
   // Debug logging to check message data
   console.log('ChatActionIcons received message:', {
@@ -581,10 +583,10 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
         <Button
           size="sm"
           variant="ghost"
-          className={`h-8 w-8 p-0 ${
+          className={`h-8 w-8 p-0 transition-colors opacity-60 hover:opacity-100 ${
             variant === 'destructive' 
-              ? 'hover:bg-destructive/10 hover:text-destructive' 
-              : 'hover:bg-muted/80 hover:text-foreground transition-colors'
+              ? 'hover:bg-destructive/20 hover:text-destructive' 
+              : 'hover:bg-muted/80 hover:text-foreground'
           }`}
           onClick={onClick}
           disabled={disabled}
@@ -607,21 +609,21 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
   // Get provider icon
   const ProviderIcon = providerIcons[message.provider] || Bot;
 
-  return (
-    <TooltipProvider>
-      <div className="flex items-center justify-between mt-3 px-1">
-        {/* Left side - Info icons */}
-        <div className="flex items-center gap-2">
+  // Return info icons for inside chat bubble
+  if (variant === 'info') {
+    return (
+      <TooltipProvider>
+        <div className="flex items-center gap-2 mt-2">
           {/* Provider Icon */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-8 w-8 p-0 hover:bg-muted/80 hover:text-foreground transition-colors"
+                className="h-6 w-6 p-0 hover:bg-muted/80 hover:text-foreground transition-colors opacity-60 hover:opacity-100"
                 aria-label="Provider and model information"
               >
-                <ProviderIcon className="w-4 h-4" />
+                <ProviderIcon className="w-3 h-3" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -645,10 +647,10 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-8 w-8 p-0 hover:bg-muted/80 hover:text-foreground transition-colors"
+                className="h-6 w-6 p-0 hover:bg-muted/80 hover:text-foreground transition-colors opacity-60 hover:opacity-100"
                 aria-label="Message timestamp"
               >
-                <Clock className="w-4 h-4" />
+                <Clock className="w-3 h-3" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -659,14 +661,19 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
             </TooltipContent>
           </Tooltip>
         </div>
+      </TooltipProvider>
+    );
+  }
 
-        {/* Right side - Action icons */}
-        <div className="flex items-center gap-1">
+  // Return action icons for outside chat bubble
+  return (
+      <TooltipProvider>
+        <div className="flex items-center gap-1 mt-2">
           {/* Copy - only for assistant messages */}
           {message.role === 'assistant' && !message.isStreaming && message.content && (
             <ActionIcon
               icon={copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-              tooltip={copied ? "Copied!" : "Copy message"}
+              tooltip={copied ? "Copied!" : "Copy"}
               onClick={onCopy}
             />
           )}
@@ -680,16 +687,23 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
 
           {/* Export */}
           <Popover open={isExportPopoverOpen} onOpenChange={setIsExportPopoverOpen}>
-            <PopoverTrigger asChild>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 p-0 hover:bg-muted/80 hover:text-foreground transition-colors"
-                aria-label="Export options"
-              >
-                <Download className="w-4 h-4" />
-              </Button>
-            </PopoverTrigger>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <PopoverTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0 hover:bg-muted/80 hover:text-foreground transition-colors opacity-60 hover:opacity-100"
+                    aria-label="Export options"
+                  >
+                    <Download className="w-4 h-4" />
+                  </Button>
+                </PopoverTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Export</p>
+              </TooltipContent>
+            </Tooltip>
             <PopoverContent className="w-48 p-2">
               <div className="space-y-1">
                 <Button
@@ -759,19 +773,26 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
 
           {/* Delete */}
           <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-            <DialogTrigger asChild>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 p-0 hover:bg-destructive/20 hover:text-destructive transition-colors"
-                aria-label="Delete message"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </DialogTrigger>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DialogTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 p-0 hover:bg-destructive/20 hover:text-destructive transition-colors opacity-60 hover:opacity-100"
+                    aria-label="Delete"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Delete</p>
+              </TooltipContent>
+            </Tooltip>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Delete Message</DialogTitle>
+                <DialogTitle>Delete the Input & Output Message</DialogTitle>
                 <DialogDescription>
                   Are you sure you want to delete this message? This action cannot be undone.
                 </DialogDescription>
@@ -790,9 +811,8 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
             </DialogContent>
           </Dialog>
         </div>
-      </div>
-    </TooltipProvider>
-  );
+      </TooltipProvider>
+    );
 };
 
 export default ChatActionIcons;

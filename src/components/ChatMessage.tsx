@@ -108,19 +108,19 @@ const ChatMessage = ({
   };
 
   return (
-    <div className="flex flex-col gap-1 sm:gap-2 w-full max-w-full">
-      <div className={`flex gap-2 sm:gap-3 group w-full max-w-full ${message.role === "user" ? "justify-end" : "flex-row"} ${isEditing ? 'ring-2 ring-primary/20 rounded-lg p-2 sm:p-3 bg-primary/5' : ''}`}>
+    <div className="flex flex-col gap-1 sm:gap-2 w-full">
+      <div className={`flex gap-2 sm:gap-3 group w-full ${message.role === "user" ? "justify-end" : "flex-row"} ${isEditing ? 'ring-2 ring-primary/20 rounded-lg p-2 sm:p-3 bg-primary/5' : ''}`}>
       {message.role === "assistant" && (
         <Avatar className="w-6 h-6 sm:w-8 sm:h-8 mt-1 flex-shrink-0">
-          <AvatarFallback className="bg-primary text-primary-foreground flex items-center justify-center">
+          <AvatarFallback className="bg-muted/50 text-foreground flex items-center justify-center">
             <ChatOsIcon className="w-3 h-3 sm:w-4 sm:h-4" />
           </AvatarFallback>
         </Avatar>
       )}
       <div className={`chat-bubble p-2 sm:p-3 lg:p-4 rounded-lg shadow-md relative group break-words overflow-wrap-anywhere ${
           message.role === "user"
-            ? "max-w-[85%] sm:max-w-[80%] lg:max-w-[75%] bg-primary text-primary-foreground"
-            : "max-w-[90%] sm:max-w-[85%] lg:max-w-[80%] bg-card border"
+            ? "max-w-[85%] bg-muted text-foreground"
+            : "max-w-[90%] bg-card border"
         }`}
       >
         <div className="text-xs sm:text-sm lg:text-base leading-relaxed">
@@ -245,25 +245,9 @@ const ChatMessage = ({
               )}
             </>
           )}
-        </div>
-      </div>
-      {message.role === "user" && (
-        <Avatar className="w-6 h-6 sm:w-8 sm:h-8 mt-1 flex-shrink-0">
-          <AvatarImage src={profile?.avatar_url || undefined} alt="User avatar" />
-          <AvatarFallback className="bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center">
-            {profile?.avatar_url ? null : <User className="w-3 h-3 sm:w-4 sm:h-4" />}
-            {!profile?.avatar_url && getInitials()}
-          </AvatarFallback>
-        </Avatar>
-      )}
-      </div>
-      
-      {/* Action bar below the chat bubble - with proper mobile constraints */}
-      {message.role === "assistant" && (
-        <div className="flex flex-row w-full max-w-full">
-          <div className="w-6 sm:w-8 flex-shrink-0" /> {/* Spacer for avatar alignment */}
-          <div className="flex-1 min-w-0 max-w-full overflow-hidden">
-            <div className="max-w-[90%] sm:max-w-[85%] lg:max-w-[80%]">
+          {/* Info icons inside assistant message bubble - positioned on the right */}
+          {message.role === "assistant" && !message.isStreaming && (
+            <div className="flex justify-end">
               <ChatActionIcons 
                 message={message}
                 onCopy={handleCopy}
@@ -283,28 +267,56 @@ const ChatMessage = ({
                   // TODO: Implement export functionality
                   console.log('Export message:', messageId, 'as', format);
                 }}
+                variant="info"
+              />
+            </div>
+          )}
+        </div>
+      </div>
+      {message.role === "user" && (
+        <Avatar className="w-6 h-6 sm:w-8 sm:h-8 mt-1 flex-shrink-0">
+          <AvatarImage src={profile?.avatar_url || undefined} alt="User avatar" />
+          <AvatarFallback className="bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center">
+            {profile?.avatar_url ? null : <User className="w-3 h-3 sm:w-4 sm:h-4" />}
+            {!profile?.avatar_url && getInitials()}
+          </AvatarFallback>
+        </Avatar>
+      )}
+      </div>
+      
+      {/* Action icons below the chat bubble - with proper mobile constraints */}
+      {message.role === "assistant" && !message.isStreaming && (
+        <div className="flex flex-row w-full">
+          <div className="w-6 sm:w-8 flex-shrink-0" /> {/* Spacer for avatar alignment */}
+          <div className="flex-1 min-w-0">
+            <div className="max-w-[90%]">
+              <ChatActionIcons 
+                message={message}
+                onCopy={handleCopy}
+                copied={copied}
+                onRewrite={(messageId) => {
+                  // TODO: Implement rewrite functionality
+                  console.log('Rewrite message:', messageId);
+                }}
+                onEdit={(messageId) => {
+                  // For assistant messages, edit the previous user message for UX consistency
+                  onEditMessage?.(messageId);
+                }}
+                onDelete={(messageId) => {
+                  onDeleteMessage?.(messageId);
+                }}
+                onExport={(messageId, format) => {
+                  // TODO: Implement export functionality
+                  console.log('Export message:', messageId, 'as', format);
+                }}
+                variant="actions"
               />
             </div>
           </div>
         </div>
       )}
       
-      {/* Edit button for user messages - positioned on the right side with proper mobile constraints */}
-      {message.role === "user" && !isEditing && (
-        <div className="flex justify-end w-full max-w-full">
-          <div className="flex items-start gap-1 sm:gap-2 max-w-[85%] sm:max-w-[80%] lg:max-w-[75%]">
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-6 w-6 sm:h-8 sm:w-8 p-0 hover:bg-muted/80 hover:text-foreground transition-colors opacity-60 hover:opacity-100 mt-1 flex-shrink-0"
-              onClick={() => onEditMessage?.(message.id)}
-              aria-label="Edit this message"
-            >
-              <Edit3 className="w-3 h-3 sm:w-4 sm:h-4" />
-            </Button>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };

@@ -391,22 +391,46 @@
     background: hsl(var(--muted-foreground) / 0.6);
   }
 
-  /* Header icon hover states - prevent dark colors on dark backgrounds */
+  /* Header icon hover states with consistent background styling */
   .header-icon-hover {
-    transition: color 0.2s ease;
+    transition: all 0.2s ease;
+    padding: 0.375rem;
+    border-radius: 0.375rem;
+    background-color: hsl(var(--muted) / 0.2);
+    color: hsl(var(--muted-foreground));
   }
 
   .header-icon-hover:hover {
-    color: hsl(var(--primary)) !important;
+    background-color: hsl(var(--muted) / 0.4);
+    color: hsl(var(--foreground));
+  }
+
+  .dark .header-icon-hover {
+    background-color: hsl(var(--muted) / 0.3);
+    color: hsl(var(--muted-foreground));
   }
 
   .dark .header-icon-hover:hover {
-    color: hsl(var(--primary)) !important;
+    background-color: hsl(var(--muted) / 0.5);
+    color: hsl(var(--foreground));
   }
 }
 
-/* Add extra small breakpoint utility */
+/* Add extra small breakpoint utility and mobile-specific improvements */
 @media (max-width: 374px) {
+  /* Improved switch scaling for very small screens */
+  .scale-90 {
+    transform: scale(0.9);
+  }
+  
+  /* Better touch targets for mobile */
+  .xs\:min-h-\[44px\] {
+    min-height: 44px;
+  }
+  
+  .xs\:min-w-\[44px\] {
+    min-width: 44px;
+  }
   .xs\:block {
     display: block;
   }
@@ -491,5 +515,31 @@
   
   .xs\:data-\[state\=checked\]\:translate-x-4:data-[state=checked] {
     transform: translateX(1rem);
+  }
+}
+
+/* Mobile-specific improvements for screens up to 640px */
+@media (max-width: 640px) {
+  /* Ensure proper scaling for switch component */
+  .scale-90 {
+    transform: scale(0.9);
+  }
+  
+  /* Better touch targets */
+  .mobile-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improved header spacing on mobile */
+  .header-main {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  /* Better ChatOS icon visibility */
+  .mobile-logo {
+    min-width: 1.75rem;
+    min-height: 1.75rem;
   }
 }

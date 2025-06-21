@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Enhanced
+- **Chat Action Icons Layout**: Repositioned action icons for improved UX
+  - **Info Icons**: Moved provider and timestamp icons inside chat bubble at bottom left
+  - **Action Icons**: Moved copy, share, export, rewrite, edit, and delete icons outside chat bubble at bottom right
+  - **Tooltips**: Added tooltips to export and delete icons for better accessibility
+  - **Visual Consistency**: Reduced icon sizes and added opacity effects for cleaner appearance
+  - **Mobile Optimization**: Ensured proper layout and spacing on all device sizes
+
 ### Added
 - **PDF Export**: Complete overhaul with HTML rendering, input/output separation, ChatOS logo integration, enhanced styling, `html2pdf.js` integration, metadata exclusion, and error handling
 - **Share Button**: Comprehensive implementation with URL generation, clipboard integration, toast notifications, and error handling

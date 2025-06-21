@@ -63,9 +63,9 @@ const MobileSelectionModal = ({
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6 xs:h-7 xs:w-7 sm:h-8 sm:w-8 hover:bg-muted rounded-md transition-colors"
+          className="h-7 w-7 xs:h-8 xs:w-8 sm:h-8 sm:w-8 hover:bg-muted rounded-md transition-colors mobile-touch-target"
         >
-          <Filter className="w-3 h-3 xs:w-4 xs:h-4 text-primary dark:text-white" />
+          <Filter className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-primary dark:text-white" />
         </Button>
       </DialogTrigger>
       <DialogContent className="w-[95vw] max-w-md mx-auto p-0 gap-0 max-h-[90vh] overflow-hidden">
