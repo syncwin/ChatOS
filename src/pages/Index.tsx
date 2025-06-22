@@ -518,6 +518,7 @@ const Index = () => {
                 isLoadingTags={isLoadingTags}
                 onAssignTagToChat={handleAssignTagToChat}
                 onRemoveTagFromChat={handleRemoveTagFromChat}
+                messages={messages}
                 onCreateFolder={createFolder}
                 onCreateTag={createTag}
                 onOpenSettings={handleOpenSettings}

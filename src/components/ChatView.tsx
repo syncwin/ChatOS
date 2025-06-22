@@ -95,6 +95,7 @@ const ChatView = forwardRef<ChatViewRef, ChatViewProps>(({
                   <div key={message.id} className="w-full">
                     <ChatMessage 
                       message={message}
+                      messages={messages}
                       isEditing={editingMessageId === message.id}
                       editingContent={editingContent}
                       setEditingContent={setEditingContent}

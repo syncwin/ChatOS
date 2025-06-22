@@ -177,6 +177,7 @@ export type Database = {
           model_selection: Json | null
           theme: string
           updated_at: string | null
+          username: string | null
           website: string | null
         }
         Insert: {
@@ -186,6 +187,7 @@ export type Database = {
           model_selection?: Json | null
           theme?: string
           updated_at?: string | null
+          username?: string | null
           website?: string | null
         }
         Update: {
@@ -195,6 +197,7 @@ export type Database = {
           model_selection?: Json | null
           theme?: string
           updated_at?: string | null
+          username?: string | null
           website?: string | null
         }
         Relationships: []

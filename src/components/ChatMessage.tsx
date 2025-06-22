@@ -32,6 +32,7 @@ interface Message {
 
 interface ChatMessageProps {
   message: Message;
+  messages?: Message[];
   isEditing?: boolean;
   editingContent?: string;
   setEditingContent?: (value: string) => void;
@@ -43,6 +44,7 @@ interface ChatMessageProps {
 
 const ChatMessage = ({ 
   message, 
+  messages,
   isEditing = false, 
   editingContent = '', 
   setEditingContent, 
@@ -250,6 +252,7 @@ const ChatMessage = ({
             <div className="flex justify-end">
               <ChatActionIcons 
                 message={message}
+                messages={messages}
                 onCopy={handleCopy}
                 copied={copied}
                 onRewrite={(messageId) => {
@@ -292,6 +295,7 @@ const ChatMessage = ({
             <div className="max-w-[90%]">
               <ChatActionIcons 
                 message={message}
+                messages={messages}
                 onCopy={handleCopy}
                 copied={copied}
                 onRewrite={(messageId) => {
