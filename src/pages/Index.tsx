@@ -1,4 +1,4 @@
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from '@tanstack/react-query';
 import { v4 as uuidv4 } from 'uuid';
 import { useRef, useState, useEffect } from 'react';
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -10,7 +10,8 @@ import { useAIProvider } from "@/hooks/useAIProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import type { ChatMessage } from "@/services/aiProviderService";
-import type { NewMessage, Message as DbMessage } from "@/services/chatService";
+import type { NewMessage, Message as DbMessage, MessageVariation } from "@/services/chatService";
+import { createMessageVariation, getMessageVariations, setActiveVariation } from "@/services/chatService";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 
@@ -62,6 +63,10 @@ const Index = () => {
   // Edit functionality state
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editingContent, setEditingContent] = useState<string>('');
+  
+  // Message variations state
+  const [messageVariations, setMessageVariations] = useState<Record<string, MessageVariation[]>>({});
+  const [currentVariationIndex, setCurrentVariationIndex] = useState<Record<string, number>>({});
 
   const {
     streamMessage,
@@ -393,6 +398,194 @@ const Index = () => {
     }
   };
 
+  // Rewrite functionality handlers
+  const handleRewrite = async (messageId: string) => {
+    const message = messages.find(msg => msg.id === messageId);
+    if (!message || message.role !== 'assistant' || !activeChatId) return;
+
+    // Check if user is in guest mode
+    if (isGuest) {
+      toast.error('Rewrite functionality is not available in guest mode. Please sign in to use this feature.');
+      return;
+    }
+
+    // Check if user is authenticated
+    if (!user) {
+      toast.error('You must be signed in to use the rewrite feature.');
+      return;
+    }
+
+    // Find the conversation history up to this message
+    const messageIndex = messages.findIndex(msg => msg.id === messageId);
+    const historyForAI: ChatMessage[] = messages
+      .slice(0, messageIndex)
+      .map(m => ({ role: m.role, content: m.content }));
+
+    // Add the user message that prompted this assistant response
+    const userMessage = messages[messageIndex - 1];
+    if (userMessage && userMessage.role === 'user') {
+      historyForAI.push({ role: 'user', content: userMessage.content });
+    }
+
+    const assistantId = uuidv4();
+    const assistantPlaceholder: Message = {
+      id: assistantId,
+      chat_id: activeChatId,
+      content: '',
+      role: 'assistant',
+      created_at: new Date().toISOString(),
+      isStreaming: true,
+      user_id: user?.id || '',
+      model: selectedModel,
+      provider: selectedProvider,
+      usage: null,
+    };
+
+    // Add placeholder for the new variation
+    queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) => [
+      ...oldData,
+      assistantPlaceholder
+    ]);
+
+    let finalContent = "";
+
+    await streamMessage(
+      historyForAI,
+      (delta) => {
+        finalContent += delta;
+        queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) =>
+          oldData.map(msg => 
+            msg.id === assistantId ? { ...msg, content: finalContent } : msg
+          )
+        );
+      },
+      async (usage) => {
+        // Create the message variation in the database
+        const variationId = await createMessageVariation(
+          messageId,
+          finalContent,
+          selectedModel,
+          selectedProvider,
+          usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
+        );
+
+        if (variationId) {
+          // Load all variations for this message
+          const variations = await getMessageVariations(messageId);
+          setMessageVariations(prev => ({
+            ...prev,
+            [messageId]: variations
+          }));
+
+          // Set the new variation as active
+          const newVariationIndex = variations.length - 1;
+          setCurrentVariationIndex(prev => ({
+            ...prev,
+            [messageId]: newVariationIndex
+          }));
+
+          // Update the message content to show the new variation
+          queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) =>
+            oldData.map(msg => 
+              msg.id === messageId ? { ...msg, content: finalContent } : msg
+            ).filter(msg => msg.id !== assistantId) // Remove placeholder
+          );
+
+          toast.success('New variation created successfully!');
+        } else {
+          // Remove placeholder on error
+          queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) =>
+            oldData.filter(msg => msg.id !== assistantId)
+          );
+          console.error('Failed to create message variation for message:', {
+            messageId,
+            selectedModel,
+            selectedProvider,
+            contentLength: finalContent?.length,
+            usage
+          });
+          toast.error('Failed to create message variation. Check console for details.');
+        }
+      },
+      (error) => {
+        toast.error(`Error generating rewrite: ${error.message}`);
+        // Remove placeholder on error
+        queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) =>
+          oldData.filter(msg => msg.id !== assistantId)
+        );
+      }
+    );
+  };
+
+  const handleVariationChange = async (messageId: string, newIndex: number) => {
+    const variations = messageVariations[messageId];
+    if (!variations || newIndex < 0 || newIndex >= variations.length) return;
+
+    // Check if user is in guest mode
+    if (isGuest) {
+      toast.error('Variation navigation is not available in guest mode. Please sign in to use this feature.');
+      return;
+    }
+
+    // Check if user is authenticated
+    if (!user) {
+      toast.error('You must be signed in to use variation navigation.');
+      return;
+    }
+
+    // Update the active variation in the database
+    const success = await setActiveVariation(messageId, newIndex);
+    if (success) {
+      // Update local state
+      setCurrentVariationIndex(prev => ({
+        ...prev,
+        [messageId]: newIndex
+      }));
+
+      // Update the message content in the UI
+      const selectedVariation = variations[newIndex];
+      queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) =>
+        oldData.map(msg => 
+          msg.id === messageId ? { ...msg, content: selectedVariation.content } : msg
+        )
+      );
+    } else {
+      toast.error('Failed to switch variation');
+    }
+  };
+
+  // Load message variations when messages change
+  useEffect(() => {
+    const loadVariations = async () => {
+      // Only load variations for authenticated users
+      if (isGuest || !user) {
+        setMessageVariations({});
+        setCurrentVariationIndex({});
+        return;
+      }
+
+      const assistantMessages = messages.filter(msg => msg.role === 'assistant');
+      const variationsData: Record<string, MessageVariation[]> = {};
+      const indexData: Record<string, number> = {};
+
+      for (const message of assistantMessages) {
+        const variations = await getMessageVariations(message.id);
+        if (variations.length > 0) {
+          variationsData[message.id] = variations;
+          const activeVariation = variations.find(v => v.is_active_variation);
+          indexData[message.id] = activeVariation ? activeVariation.variation_index : 0;
+        }
+      }
+
+      setMessageVariations(variationsData);
+      setCurrentVariationIndex(indexData);
+    };
+
+    if (messages.length > 0) {
+      loadVariations();
+    }
+  }, [messages, isGuest, user]);
+
   // Helper function to find message pairs (user input + assistant output)
   const findMessagePair = (messages: Message[], targetMessageId: string): string[] => {
     const targetIndex = messages.findIndex(msg => msg.id === targetMessageId);
@@ -544,6 +737,10 @@ const Index = () => {
           onSaveEdit={handleSaveEdit}
           onCancelEdit={handleCancelEdit}
           onDeleteMessage={handleDeleteMessage}
+          onRewrite={handleRewrite}
+          messageVariations={messageVariations}
+          currentVariationIndex={currentVariationIndex}
+          onVariationChange={handleVariationChange}
         />
         </div>
       </SidebarInset>

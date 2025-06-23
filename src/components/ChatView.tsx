@@ -5,6 +5,7 @@ import ChatMessage from "./ChatMessage";
 import InputArea from "./InputArea";
 import WelcomeScreen from "./WelcomeScreen";
 import type { Message } from "@/pages/Index";
+import type { MessageVariation } from "@/services/chatService";
 
 export interface ChatViewRef {
   scrollToInput: () => void;
@@ -27,6 +28,10 @@ interface ChatViewProps {
   onSaveEdit: () => void;
   onCancelEdit: () => void;
   onDeleteMessage: (messageId: string) => void;
+  onRewrite: (messageId: string) => void;
+  messageVariations: Record<string, MessageVariation[]>;
+  currentVariationIndex: Record<string, number>;
+  onVariationChange: (messageId: string, index: number) => void;
 }
 
 const ChatView = forwardRef<ChatViewRef, ChatViewProps>(({ 
@@ -45,7 +50,11 @@ const ChatView = forwardRef<ChatViewRef, ChatViewProps>(({
   onEditMessage,
   onSaveEdit,
   onCancelEdit,
-  onDeleteMessage
+  onDeleteMessage,
+  onRewrite,
+  messageVariations,
+  currentVariationIndex,
+  onVariationChange
 }, ref) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputAreaRef = useRef<HTMLDivElement>(null);
@@ -103,6 +112,10 @@ const ChatView = forwardRef<ChatViewRef, ChatViewProps>(({
                       onSaveEdit={onSaveEdit}
                       onCancelEdit={onCancelEdit}
                       onDeleteMessage={onDeleteMessage}
+                      onRewrite={onRewrite}
+                      messageVariations={messageVariations[message.id] || []}
+                      currentVariationIndex={currentVariationIndex[message.id] || 0}
+                      onVariationChange={(index) => onVariationChange(message.id, index)}
                     />
                   </div>
                 ))}

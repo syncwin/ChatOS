@@ -592,3 +592,101 @@ export const getAuthenticatedUserApiKey = async (provider: string, userId: strin
     return null;
   }
 };
+
+// Message Variation Functions
+export interface MessageVariation {
+  id: string;
+  content: string;
+  model?: string;
+  provider?: string;
+  usage?: Usage;
+  variation_index: number;
+  is_active_variation: boolean;
+  created_at: string;
+}
+
+/**
+ * Create a new variation of an assistant message
+ */
+export const createMessageVariation = async (
+  parentMessageId: string,
+  content: string,
+  model?: string,
+  provider?: string,
+  usage?: Usage
+): Promise<string | null> => {
+  try {
+    const { data, error } = await supabase.rpc('create_message_variation', {
+      p_parent_message_id: parentMessageId,
+      p_content: content,
+      p_model: model || null,
+      p_provider: provider || null,
+      p_usage: usage ? JSON.stringify(usage) : null
+    });
+
+    if (error) {
+      console.error('Failed to create message variation:', {
+        error,
+        parentMessageId,
+        contentLength: content?.length,
+        model,
+        provider,
+        usage
+      });
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error creating message variation:', error);
+    return null;
+  }
+};
+
+/**
+ * Set the active variation for a message
+ */
+export const setActiveVariation = async (
+  parentMessageId: string,
+  variationIndex: number
+): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase.rpc('set_active_variation', {
+      p_parent_message_id: parentMessageId,
+      p_variation_index: variationIndex
+    });
+
+    if (error) {
+      console.error('Failed to set active variation:', error);
+      return false;
+    }
+
+    return data === true;
+  } catch (error) {
+    console.error('Error setting active variation:', error);
+    return false;
+  }
+};
+
+/**
+ * Get all variations for a message
+ */
+export const getMessageVariations = async (
+  parentMessageId: string
+): Promise<MessageVariation[]> => {
+  try {
+    const { data, error } = await supabase.rpc('get_message_variations', {
+      p_parent_message_id: parentMessageId
+    });
+
+    if (error) {
+      console.error('Failed to get message variations:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error getting message variations:', error);
+    return [];
+  }
+};

@@ -11,6 +11,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { decodeHtmlEntities } from "@/lib/utils";
+import type { MessageVariation } from "@/services/chatService";
 
 interface Usage {
   prompt_tokens: number;
@@ -40,6 +41,10 @@ interface ChatMessageProps {
   onSaveEdit?: () => void;
   onCancelEdit?: () => void;
   onDeleteMessage?: (messageId: string) => void;
+  onRewrite?: (messageId: string) => void;
+  messageVariations?: MessageVariation[];
+  currentVariationIndex?: number;
+  onVariationChange?: (index: number) => void;
 }
 
 const ChatMessage = ({ 
@@ -51,7 +56,11 @@ const ChatMessage = ({
   onEditMessage, 
   onSaveEdit, 
   onCancelEdit,
-  onDeleteMessage 
+  onDeleteMessage,
+  onRewrite,
+  messageVariations = [],
+  currentVariationIndex = 0,
+  onVariationChange
 }: ChatMessageProps) => {
   const [copied, setCopied] = useState(false);
   const { profile } = useProfile();
@@ -111,7 +120,7 @@ const ChatMessage = ({
 
   return (
     <div className="flex flex-col gap-1 sm:gap-2 w-full">
-      <div className={`flex gap-2 sm:gap-3 group w-full ${message.role === "user" ? "justify-end" : "flex-row"} ${isEditing ? 'ring-2 ring-primary/20 rounded-lg p-2 sm:p-3 bg-primary/5' : ''}`}>
+      <div className={`flex gap-2 sm:gap-3 group w-full ${message.role === "user" ? "justify-end" : "flex-row"}`}>
       {message.role === "assistant" && (
         <Avatar className="w-6 h-6 sm:w-8 sm:h-8 mt-1 flex-shrink-0">
           <AvatarFallback className="bg-muted/50 text-foreground flex items-center justify-center">
@@ -255,10 +264,7 @@ const ChatMessage = ({
                 messages={messages}
                 onCopy={handleCopy}
                 copied={copied}
-                onRewrite={(messageId) => {
-                  // TODO: Implement rewrite functionality
-                  console.log('Rewrite message:', messageId);
-                }}
+                onRewrite={onRewrite}
                 onEdit={(messageId) => {
                   // For assistant messages, edit the previous user message for UX consistency
                   onEditMessage?.(messageId);
@@ -270,6 +276,9 @@ const ChatMessage = ({
                   // TODO: Implement export functionality
                   console.log('Export message:', messageId, 'as', format);
                 }}
+                rewriteVariations={messageVariations?.map(v => v.content) || []}
+                currentVariationIndex={currentVariationIndex || 0}
+                onVariationChange={onVariationChange}
                 variant="info"
               />
             </div>
@@ -298,10 +307,7 @@ const ChatMessage = ({
                 messages={messages}
                 onCopy={handleCopy}
                 copied={copied}
-                onRewrite={(messageId) => {
-                  // TODO: Implement rewrite functionality
-                  console.log('Rewrite message:', messageId);
-                }}
+                onRewrite={onRewrite}
                 onEdit={(messageId) => {
                   // For assistant messages, edit the previous user message for UX consistency
                   onEditMessage?.(messageId);
@@ -313,6 +319,9 @@ const ChatMessage = ({
                   // TODO: Implement export functionality
                   console.log('Export message:', messageId, 'as', format);
                 }}
+                rewriteVariations={messageVariations?.map(v => v.content) || []}
+                currentVariationIndex={currentVariationIndex || 0}
+                onVariationChange={onVariationChange}
                 variant="actions"
               />
             </div>

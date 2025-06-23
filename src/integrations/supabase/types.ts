@@ -39,33 +39,42 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          is_active_variation: boolean | null
           model: string | null
+          parent_message_id: string | null
           provider: string | null
           role: Database["public"]["Enums"]["message_role"]
           usage: Json | null
           user_id: string
+          variation_index: number | null
         }
         Insert: {
           chat_id: string
           content: string
           created_at?: string
           id?: string
+          is_active_variation?: boolean | null
           model?: string | null
+          parent_message_id?: string | null
           provider?: string | null
           role: Database["public"]["Enums"]["message_role"]
           usage?: Json | null
           user_id: string
+          variation_index?: number | null
         }
         Update: {
           chat_id?: string
           content?: string
           created_at?: string
           id?: string
+          is_active_variation?: boolean | null
           model?: string | null
+          parent_message_id?: string | null
           provider?: string | null
           role?: Database["public"]["Enums"]["message_role"]
           usage?: Json | null
           user_id?: string
+          variation_index?: number | null
         }
         Relationships: [
           {
@@ -249,7 +258,38 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_message_variation: {
+        Args: {
+          p_parent_message_id: string
+          p_content: string
+          p_model?: string
+          p_provider?: string
+          p_usage?: Json
+        }
+        Returns: string
+      }
+      set_active_variation: {
+        Args: {
+          p_parent_message_id: string
+          p_variation_index: number
+        }
+        Returns: boolean
+      }
+      get_message_variations: {
+        Args: {
+          p_parent_message_id: string
+        }
+        Returns: {
+          id: string
+          content: string
+          model: string | null
+          provider: string | null
+          usage: Json | null
+          variation_index: number
+          is_active_variation: boolean
+          created_at: string
+        }[]
+      }
     }
     Enums: {
       api_provider:
