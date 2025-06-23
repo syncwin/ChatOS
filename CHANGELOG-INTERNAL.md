@@ -2,6 +2,34 @@
 
 This file documents internal changes, fixes, and refactoring steps for the ChatOS project.
 
+## [2025-01-26] - Database Schema & RLS Policy Fixes
+
+### Fixed
+- **Critical Database Issues**: Resolved missing schema columns and RLS policies preventing rewrite and delete functionality
+  - Applied `add_message_variations` migration to add required columns: `parent_message_id`, `variation_index`, `is_active_variation`
+  - Added missing RLS policies for `chat_messages` table: `UPDATE` and `DELETE` permissions
+  - Created `create_message_variation` RPC function for secure message variation creation
+  - Created `set_active_variation` RPC function for switching between message variations
+  - Added database indexes for improved performance on variation queries
+
+### Database Schema Changes
+- **chat_messages table**: Added columns for message variation support
+  - `parent_message_id UUID` - References parent message for variations
+  - `variation_index INTEGER` - Index of variation within a group
+  - `is_active_variation BOOLEAN` - Marks currently active variation
+- **RLS Policies**: Added comprehensive security policies
+  - `Users can update their own messages` - Allows message content updates
+  - `Users can delete their own messages` - Enables message deletion
+- **RPC Functions**: Created secure server-side functions
+  - `create_message_variation()` - Creates new message variations with proper ownership validation
+  - `set_active_variation()` - Switches active variation with security checks
+
+### Technical Details
+- **Root Cause**: Missing database migration prevented rewrite/delete features from functioning
+- **Migration Applied**: `20250125000000-add-message-variations.sql`
+- **Security**: All functions use `SECURITY DEFINER` with proper user authentication
+- **Performance**: Added indexes on `parent_message_id` and `is_active_variation` columns
+
 ## [2025-01-26] - Rewrite Functionality Bug Fixes
 
 ### Fixed
