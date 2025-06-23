@@ -6,8 +6,6 @@ import {
   Edit3,
   Trash2,
   Clock,
-  ChevronLeft,
-  ChevronRight,
   FileText,
   FileDown,
   Copy,
@@ -176,7 +174,9 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
   };
 
   const formatTimestamp = (timestamp: string) => {
+    if (!timestamp) return '-';
     const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return '-';
     return date.toLocaleString([], {
       year: 'numeric',
       month: 'short',
@@ -274,9 +274,9 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
         <Button
           size="sm"
           variant="ghost"
-          className={`h-8 w-8 p-0 transition-colors opacity-70 hover:opacity-100 ${
+          className={`h-8 w-8 p-0 transition-colors opacity-80 hover:opacity-100 ${
             variant === 'destructive' 
-              ? 'hover:bg-destructive/30 hover:text-destructive' 
+              ? 'hover:bg-destructive/40 hover:text-destructive-foreground' 
               : 'hover:bg-accent hover:text-accent-foreground'
           }`}
           onClick={onClick}
@@ -297,8 +297,28 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
     return null;
   }
 
+  // Helper function to get current variation data
+  const getCurrentVariationData = () => {
+    if (rewriteVariations.length > 1 && currentVariationIndex < rewriteVariations.length) {
+      // For variations, we need to get the full variation object from the parent
+      // This assumes the parent component passes the full variation data
+      return {
+        provider: message.provider, // Will be updated by parent when variation changes
+        model: message.model,       // Will be updated by parent when variation changes
+        usage: message.usage        // Will be updated by parent when variation changes
+      };
+    }
+    return {
+      provider: message.provider,
+      model: message.model,
+      usage: message.usage
+    };
+  };
+
+  const currentData = getCurrentVariationData();
+  
   // Get provider icon
-  const ProviderIcon = getProviderIcon(message.provider);
+  const ProviderIcon = getProviderIcon(currentData.provider);
 
   // Return info icons for inside chat bubble
   if (variant === 'info') {
@@ -311,21 +331,37 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-6 w-6 p-0 hover:bg-accent hover:text-accent-foreground transition-colors opacity-70 hover:opacity-100"
+                className="h-6 w-6 p-0 hover:bg-accent hover:text-accent-foreground transition-colors opacity-80 hover:opacity-100"
                 aria-label="Provider and model information"
               >
                 <ProviderIcon className="w-3 h-3" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>
-              <div className="text-sm">
-                <p className="font-medium">{message.provider || 'Unknown Provider'}</p>
-                <p className="text-muted-foreground">{message.model || 'Unknown Model'}</p>
-                {message.usage && (
-                  <div className="mt-1 text-xs text-muted-foreground space-y-1">
-                    <p>Input: {message.usage.prompt_tokens} tokens</p>
-                    <p>Output: {message.usage.completion_tokens} tokens</p>
-                    <p>Total: {message.usage.prompt_tokens + message.usage.completion_tokens} tokens</p>
+            <TooltipContent className="max-w-sm">
+              <div className="space-y-3">
+                <div className="flex items-start gap-2">
+                  <ProviderIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-sm break-words">{currentData.provider || 'Unknown Provider'}</p>
+                    <p className="text-xs text-muted-foreground break-words">{currentData.model || 'Unknown Model'}</p>
+                  </div>
+                </div>
+                {currentData.usage && (
+                  <div className="border-t pt-2">
+                    <p className="text-xs font-medium mb-2">Token Usage</p>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="bg-muted/50 rounded px-2 py-1">
+                        <p className="text-muted-foreground">Input</p>
+                        <p className="font-medium">{currentData.usage?.prompt_tokens?.toLocaleString() || '-'}</p>
+                      </div>
+                      <div className="bg-muted/50 rounded px-2 py-1">
+                        <p className="text-muted-foreground">Output</p>
+                        <p className="font-medium">{currentData.usage?.completion_tokens?.toLocaleString() || '-'}</p>
+                      </div>
+                    </div>
+                    <div className="mt-2 text-center">
+                      <p className="text-xs text-muted-foreground">Total: <span className="font-medium">{((currentData.usage?.prompt_tokens || 0) + (currentData.usage?.completion_tokens || 0)).toLocaleString()}</span> tokens</p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -338,16 +374,19 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-6 w-6 p-0 hover:bg-accent hover:text-accent-foreground transition-colors opacity-70 hover:opacity-100"
+                className="h-6 w-6 p-0 hover:bg-accent hover:text-accent-foreground transition-colors opacity-80 hover:opacity-100"
                 aria-label="Message timestamp"
               >
                 <Clock className="w-3 h-3" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <div className="text-sm">
-                <p className="font-medium">Date & Time</p>
-                <p>{formatTimestamp(message.created_at)}</p>
+              <div className="text-sm space-y-1">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  <p className="font-medium">Message Time</p>
+                </div>
+                <p className="text-muted-foreground">{formatTimestamp(message.created_at)}</p>
               </div>
             </TooltipContent>
           </Tooltip>
@@ -384,7 +423,7 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-8 w-8 p-0 hover:bg-accent hover:text-accent-foreground transition-colors opacity-70 hover:opacity-100"
+                    className="h-8 w-8 p-0 hover:bg-accent hover:text-accent-foreground transition-colors opacity-80 hover:opacity-100"
                     aria-label="Export options"
                   >
                     <Download className="w-4 h-4" />
@@ -419,41 +458,12 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
             </PopoverContent>
           </Popover>
 
-          {/* Rewrite with pagination */}
-          <div className="flex items-center">
-            <ActionIcon
-              icon={<RotateCcw className="w-4 h-4" />}
-              tooltip="Rewrite"
-              onClick={() => onRewrite?.(message.id)}
-            />
-            {rewriteVariations.length > 1 && (
-              <div className="flex items-center ml-1">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-6 w-6 p-0"
-                  onClick={() => onVariationChange?.(Math.max(0, currentVariationIndex - 1))}
-                  disabled={currentVariationIndex === 0}
-                  aria-label="Previous variation"
-                >
-                  <ChevronLeft className="w-3 h-3" />
-                </Button>
-                <span className="text-xs text-muted-foreground px-1">
-                  {currentVariationIndex + 1}/{rewriteVariations.length}
-                </span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-6 w-6 p-0"
-                  onClick={() => onVariationChange?.(Math.min(rewriteVariations.length - 1, currentVariationIndex + 1))}
-                  disabled={currentVariationIndex === rewriteVariations.length - 1}
-                  aria-label="Next variation"
-                >
-                  <ChevronRight className="w-3 h-3" />
-                </Button>
-              </div>
-            )}
-          </div>
+          {/* Rewrite */}
+          <ActionIcon
+            icon={<RotateCcw className="w-4 h-4" />}
+            tooltip="Rewrite"
+            onClick={() => onRewrite?.(message.id)}
+          />
 
           {/* Edit */}
           <ActionIcon
@@ -470,7 +480,7 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-8 w-8 p-0 hover:bg-destructive/30 hover:text-destructive transition-colors opacity-70 hover:opacity-100"
+                    className="h-8 w-8 p-0 hover:bg-destructive/40 hover:text-destructive-foreground transition-colors opacity-80 hover:opacity-100"
                     aria-label="Delete"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -501,6 +511,8 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
               </DialogFooter>
             </DialogContent>
           </Dialog>
+
+
         </div>
       </TooltipProvider>
     );

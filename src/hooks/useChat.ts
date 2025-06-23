@@ -37,6 +37,7 @@ import {
   addGuestMessage,
   updateGuestChatTitle as updateGuestChatTitleLogic,
   deleteGuestChat as deleteGuestChatLogic,
+  checkAndAddErrorBubbleForGuest,
   type GuestChat,
 } from '@/features/chat/guestChat';
 
@@ -94,7 +95,8 @@ export const useChat = () => {
   const addMessageMutation = useMutation({
     mutationFn: addMessage,
     onSuccess: (newMessage) => {
-      queryClient.invalidateQueries({ queryKey: ['messages', newMessage.chat_id] });
+      // Don't automatically invalidate messages query to preserve UI state
+      // Manual invalidation should be done where needed
       queryClient.invalidateQueries({ queryKey: ['chats', user?.id] });
     },
     onError: (error: Error) => {
@@ -381,5 +383,6 @@ export const useChat = () => {
     deleteTag: deleteTagMutation.mutate,
     assignTagToChat: assignTagToChatMutation.mutate,
     removeTagFromChat: removeTagFromChatMutation.mutate,
+    checkAndAddErrorBubbleForGuest: isGuest ? (chatId: string) => checkAndAddErrorBubbleForGuest(chatId, guestChats, setGuestChats) : () => {},
   };
 };

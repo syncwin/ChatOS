@@ -200,6 +200,7 @@ export const useAIProvider = () => {
     onDelta: (chunk: string) => void,
     onComplete: (usage?: { prompt_tokens: number; completion_tokens: number; total_tokens?: number }) => void,
     onError: (error: Error) => void,
+    signal?: AbortSignal
   ) => {
     if (!selectedProvider) {
       onError(new Error('Please select an AI provider first'));
@@ -207,6 +208,12 @@ export const useAIProvider = () => {
     }
 
     setIsAiResponding(true);
+
+    // Check if already aborted
+    if (signal?.aborted) {
+      onError(new Error('Request was cancelled'));
+      return;
+    }
 
     try {
       const request: ChatRequest = {
@@ -228,23 +235,42 @@ export const useAIProvider = () => {
       // Try streaming first, but gracefully fallback to non-streaming
       if (selectedProvider === 'OpenAI') {
         try {
-          await streamChatMessage(request, onDelta, onError);
+          let streamingCompleted = false;
+          await streamChatMessage(
+            request, 
+            onDelta, 
+            (error) => {
+              // Only call onError if we haven't completed streaming successfully
+              // This prevents premature error display during fallback attempts
+              if (streamingCompleted) {
+                onError(error);
+              } else {
+                throw error; // Let the catch block handle fallback
+              }
+            }, 
+            signal
+          );
+          streamingCompleted = true;
           // For streaming, we don't have usage data immediately, so pass empty usage
           onComplete();
         } catch (streamError) {
           console.warn('Streaming failed, falling back to non-streaming:', streamError);
-          // Fallback to non-streaming
-          const fallbackResponse = await sendChatMessage(request);
-          if (fallbackResponse) {
-            onDelta(fallbackResponse.content);
-            onComplete(fallbackResponse.usage);
-          } else {
-            onError(new Error("Both streaming and non-streaming failed."));
+          // Fallback to non-streaming without showing error to user
+          try {
+            const fallbackResponse = await sendChatMessage(request, signal);
+            if (fallbackResponse) {
+              onDelta(fallbackResponse.content);
+              onComplete(fallbackResponse.usage);
+            } else {
+              onError(new Error("Both streaming and non-streaming failed."));
+            }
+          } catch (fallbackError) {
+            onError(new Error(`Both streaming and non-streaming failed. Last error: ${fallbackError instanceof Error ? fallbackError.message : 'Unknown error'}`));
           }
         }
       } else {
         // For non-OpenAI providers, use non-streaming directly
-        const fallbackResponse = await sendChatMessage(request);
+        const fallbackResponse = await sendChatMessage(request, signal);
         if (fallbackResponse) {
           onDelta(fallbackResponse.content);
           onComplete(fallbackResponse.usage);

@@ -77,3 +77,52 @@ export const deleteGuestChat = (
   }
   toast.success("Chat deleted for this session.");
 };
+
+export const checkAndAddErrorBubbleForGuest = (
+  chatId: string,
+  guestChats: GuestChat[],
+  setGuestChats: React.Dispatch<React.SetStateAction<GuestChat[]>>
+) => {
+  const chat = guestChats.find(c => c.id === chatId);
+  if (!chat || !chat.messages.length) return;
+
+  const lastMessage = chat.messages[chat.messages.length - 1];
+  
+  // If the last message is from user and there's no assistant response following it,
+  // and it's not already an error message, add an error bubble
+  if (lastMessage.role === 'user') {
+    const hasErrorBubble = chat.messages.some(msg => 
+      msg.role === 'assistant' && 
+      msg.error && 
+      new Date(msg.created_at) > new Date(lastMessage.created_at)
+    );
+    
+    if (!hasErrorBubble) {
+      const errorMessage: GuestMessage = {
+        id: uuidv4(),
+        chat_id: chatId,
+        content: '',
+        role: 'assistant',
+        created_at: new Date().toISOString(),
+        isStreaming: false,
+        user_id: '',
+        model: undefined,
+        provider: undefined,
+        usage: null,
+        error: 'Response was interrupted. Please try sending your message again.'
+      };
+      
+      setGuestChats(prev =>
+        prev.map(c =>
+          c.id === chatId
+            ? {
+                ...c,
+                messages: [...c.messages, errorMessage],
+                updated_at: new Date().toISOString(),
+              }
+            : c
+        )
+      );
+    }
+  }
+};

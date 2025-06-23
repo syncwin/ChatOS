@@ -36,11 +36,14 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error('Missing required Supabase environment variables for AI provider service.');
 }
 
-async function invokeAiChatWithRetry(request: ChatRequest, retries = 3, delay = 1000): Promise<Response> {
+async function invokeAiChatWithRetry(request: ChatRequest, signal?: AbortSignal, retries = 3, delay = 1000): Promise<Response> {
   for (let i = 0; i < retries; i++) {
     try {
-      return await invokeAiChat(request);
+      return await invokeAiChat(request, signal);
     } catch (error) {
+      if (signal?.aborted) {
+        throw new DOMException('Request was cancelled', 'AbortError');
+      }
       if (i === retries - 1) throw error;
       await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
     }
@@ -48,7 +51,7 @@ async function invokeAiChatWithRetry(request: ChatRequest, retries = 3, delay = 
   throw new Error('Failed to invoke AI chat after multiple retries');
 }
 
-async function invokeAiChat(request: ChatRequest): Promise<Response> {
+async function invokeAiChat(request: ChatRequest, signal?: AbortSignal): Promise<Response> {
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
 
@@ -68,6 +71,7 @@ async function invokeAiChat(request: ChatRequest): Promise<Response> {
     method: 'POST',
     headers,
     body: JSON.stringify(request),
+    signal,
   });
 
   if (!response.ok) {
@@ -91,18 +95,19 @@ async function invokeAiChat(request: ChatRequest): Promise<Response> {
   return response;
 }
 
-export const sendChatMessage = async (request: ChatRequest): Promise<NormalizedResponse> => {
-  const response = await invokeAiChatWithRetry({ ...request, stream: false });
+export const sendChatMessage = async (request: ChatRequest, signal?: AbortSignal): Promise<NormalizedResponse> => {
+  const response = await invokeAiChatWithRetry({ ...request, stream: false }, signal);
   return await response.json();
 };
 
 export const streamChatMessage = async (
   request: ChatRequest,
   onDelta: (chunk: string) => void,
-  onError: (error: Error) => void
+  onError: (error: Error) => void,
+  signal?: AbortSignal
 ): Promise<void> => {
   try {
-    const response = await invokeAiChatWithRetry({ ...request, stream: true });
+    const response = await invokeAiChatWithRetry({ ...request, stream: true }, signal);
 
     if (!response.body) {
       throw new Error('Response body is null');
@@ -112,6 +117,12 @@ export const streamChatMessage = async (
     const decoder = new TextDecoder();
 
     while (true) {
+      // Check for abort signal before each read
+      if (signal?.aborted) {
+        reader.cancel();
+        throw new DOMException('Request was cancelled', 'AbortError');
+      }
+      
       const { done, value } = await reader.read();
       if (done) {
         break;

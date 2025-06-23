@@ -1,5 +1,5 @@
 
-import { User, Copy, Check, Send, X, Edit3 } from "lucide-react";
+import { User, Copy, Check, Send, X, Edit3, ChevronLeft, ChevronRight, AlertTriangle } from "lucide-react";
 import TextareaAutosize from 'react-textarea-autosize';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ interface Message {
   model?: string;
   usage?: Usage;
   isStreaming?: boolean;
+  error?: string;
 }
 
 interface ChatMessageProps {
@@ -77,6 +78,15 @@ const ChatMessage = ({
     return "U";
   };
 
+  // Helper function to get the current variation content
+  const getCurrentVariationContent = () => {
+    if (messageVariations && messageVariations.length > 0 && currentVariationIndex !== undefined) {
+      const variation = messageVariations[currentVariationIndex];
+      return variation ? variation.content : message.content;
+    }
+    return message.content;
+  };
+
   const handleCopy = async () => {
     try {
       // Decode HTML entities and normalize special characters for clean markdown output
@@ -122,15 +132,17 @@ const ChatMessage = ({
     <div className="flex flex-col gap-1 sm:gap-2 w-full">
       <div className={`flex gap-2 sm:gap-3 group w-full ${message.role === "user" ? "justify-end" : "flex-row"}`}>
       {message.role === "assistant" && (
-        <Avatar className="w-6 h-6 sm:w-8 sm:h-8 mt-1 flex-shrink-0">
+        <Avatar className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 mt-1 flex-shrink-0">
           <AvatarFallback className="bg-muted/50 text-foreground flex items-center justify-center">
-            <ChatOsIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+            <ChatOsIcon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
           </AvatarFallback>
         </Avatar>
       )}
       <div className={`chat-bubble p-2 sm:p-3 lg:p-4 rounded-lg shadow-md relative group break-words overflow-wrap-anywhere ${
           message.role === "user"
             ? "max-w-[85%] bg-muted text-foreground"
+            : message.error
+            ? "max-w-[90%] bg-destructive/10 border border-destructive/20"
             : "max-w-[90%] bg-card border"
         }`}
       >
@@ -164,7 +176,7 @@ const ChatMessage = ({
                   size="sm"
                   variant="outline"
                   onClick={onCancelEdit}
-                  className="flex items-center gap-1 hover:bg-muted/80 transition-colors text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
+                  className="flex items-center gap-1 hover:bg-muted hover:text-muted-foreground border-muted-foreground/30 hover:border-muted-foreground/50 transition-all text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2"
                   aria-label="Cancel editing"
                 >
                   <X className="w-3 h-3" />
@@ -188,7 +200,15 @@ const ChatMessage = ({
             </div>
           ) : (
             <>
-              {message.role === "assistant" ? (
+              {message.error ? (
+                <div className="flex items-start gap-2 text-destructive">
+                  <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="font-medium text-sm mb-1">Error occurred</p>
+                    <p className="text-xs opacity-90">{message.error}</p>
+                  </div>
+                </div>
+              ) : message.role === "assistant" ? (
                 <ReactMarkdown
                   components={{
                     code(props) {
@@ -244,52 +264,91 @@ const ChatMessage = ({
                     ),
                   }}
                 >
-                  {message.content}
+                  {getCurrentVariationContent()}
                 </ReactMarkdown>
               ) : (
                 <span className="whitespace-pre-wrap break-words overflow-wrap-anywhere">
-                  {message.content}
+                  {getCurrentVariationContent()}
                 </span>
               )}
               {message.isStreaming && (
-                <span className="inline-block w-1 sm:w-2 h-3 sm:h-4 bg-current ml-1 animate-pulse" />
+                <div className="flex items-center gap-2 mt-2 text-muted-foreground">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-current rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                    <div className="w-2 h-2 bg-current rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                    <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
+                  </div>
+                  <span className="text-sm italic">Generating response...</span>
+                </div>
               )}
             </>
           )}
-          {/* Info icons inside assistant message bubble - positioned on the right */}
+          {/* Variation controls and info icons inside assistant message bubble */}
           {message.role === "assistant" && !message.isStreaming && (
-            <div className="flex justify-end">
-              <ChatActionIcons 
-                message={message}
-                messages={messages}
-                onCopy={handleCopy}
-                copied={copied}
-                onRewrite={onRewrite}
-                onEdit={(messageId) => {
-                  // For assistant messages, edit the previous user message for UX consistency
-                  onEditMessage?.(messageId);
-                }}
-                onDelete={(messageId) => {
-                  onDeleteMessage?.(messageId);
-                }}
-                onExport={(messageId, format) => {
-                  // TODO: Implement export functionality
-                  console.log('Export message:', messageId, 'as', format);
-                }}
-                rewriteVariations={messageVariations?.map(v => v.content) || []}
-                currentVariationIndex={currentVariationIndex || 0}
-                onVariationChange={onVariationChange}
-                variant="info"
-              />
+            <div className="flex justify-between items-center mt-2">
+              {/* Variation Controls - positioned on the left */}
+              {!message.error && messageVariations && messageVariations.length > 1 && (
+                <div className="flex items-center">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 w-6 p-0"
+                    onClick={() => onVariationChange?.(Math.max(0, (currentVariationIndex || 0) - 1))}
+                    disabled={(currentVariationIndex || 0) === 0}
+                    aria-label="Previous variation"
+                  >
+                    <ChevronLeft className="w-3 h-3" />
+                  </Button>
+                  <span className="text-xs text-muted-foreground px-1 min-w-[2rem] text-center">
+                    {(currentVariationIndex || 0) + 1}/{messageVariations.length}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 w-6 p-0"
+                    onClick={() => onVariationChange?.(Math.min(messageVariations.length - 1, (currentVariationIndex || 0) + 1))}
+                    disabled={(currentVariationIndex || 0) === messageVariations.length - 1}
+                    aria-label="Next variation"
+                  >
+                    <ChevronRight className="w-3 h-3" />
+                  </Button>
+                </div>
+              )}
+              
+              {/* Info icons - positioned on the right */}
+              <div className="flex justify-end">
+                <ChatActionIcons 
+                  message={message}
+                  messages={messages}
+                  onCopy={handleCopy}
+                  copied={copied}
+                  onRewrite={onRewrite}
+                  onEdit={(messageId) => {
+                    // For assistant messages, edit the previous user message for UX consistency
+                    onEditMessage?.(messageId);
+                  }}
+                  onDelete={(messageId) => {
+                    onDeleteMessage?.(messageId);
+                  }}
+                  onExport={(messageId, format) => {
+                    // TODO: Implement export functionality
+                    console.log('Export message:', messageId, 'as', format);
+                  }}
+                  rewriteVariations={[]}
+                  currentVariationIndex={0}
+                  onVariationChange={undefined}
+                  variant="info"
+                />
+              </div>
             </div>
           )}
         </div>
       </div>
       {message.role === "user" && (
-        <Avatar className="w-6 h-6 sm:w-8 sm:h-8 mt-1 flex-shrink-0">
+        <Avatar className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 mt-1 flex-shrink-0">
           <AvatarImage src={profile?.avatar_url || undefined} alt="User avatar" />
-          <AvatarFallback className="bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center">
-            {profile?.avatar_url ? null : <User className="w-3 h-3 sm:w-4 sm:h-4" />}
+          <AvatarFallback className="bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center text-sm sm:text-base lg:text-lg font-medium">
+            {profile?.avatar_url ? null : <User className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />}
             {!profile?.avatar_url && getInitials()}
           </AvatarFallback>
         </Avatar>
@@ -299,7 +358,7 @@ const ChatMessage = ({
       {/* Action icons below the chat bubble - with proper mobile constraints */}
       {message.role === "assistant" && !message.isStreaming && (
         <div className="flex flex-row w-full">
-          <div className="w-6 sm:w-8 flex-shrink-0" /> {/* Spacer for avatar alignment */}
+          <div className="w-8 sm:w-10 lg:w-12 flex-shrink-0" /> {/* Spacer for avatar alignment */}
           <div className="flex-1 min-w-0">
             <div className="max-w-[90%]">
               <ChatActionIcons 

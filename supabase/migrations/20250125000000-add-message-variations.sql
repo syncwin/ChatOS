@@ -42,10 +42,26 @@ BEGIN
     RAISE EXCEPTION 'Parent message not found';
   END IF;
   
-  -- Get the next variation index
-  SELECT COALESCE(MAX(variation_index), 0) + 1 INTO v_next_variation_index
+  -- Check if this is the first variation (no existing variations)
+  SELECT COUNT(*) INTO v_next_variation_index
   FROM public.chat_messages
   WHERE parent_message_id = p_parent_message_id;
+  
+  -- If this is the first variation, convert the original message to variation 0
+  IF v_next_variation_index = 0 THEN
+    UPDATE public.chat_messages
+    SET parent_message_id = p_parent_message_id,
+        variation_index = 0,
+        is_active_variation = false
+    WHERE id = p_parent_message_id;
+    
+    v_next_variation_index := 1;
+  ELSE
+    -- Get the next variation index
+    SELECT COALESCE(MAX(variation_index), 0) + 1 INTO v_next_variation_index
+    FROM public.chat_messages
+    WHERE parent_message_id = p_parent_message_id;
+  END IF;
   
   -- Set all existing variations as inactive
   UPDATE public.chat_messages

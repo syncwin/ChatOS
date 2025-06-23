@@ -53,6 +53,8 @@ export interface Message {
   provider?: string;
   model?: string;
   usage: Usage;
+  error?: string;
+  isStreaming?: boolean;
 }
 
 export interface NewMessage {
@@ -149,6 +151,7 @@ export const getMessages = async (chatId: string): Promise<Message[]> => {
     .from('chat_messages')
     .select(`id, chat_id, user_id, created_at, role, content, provider, model, usage`)
     .eq('chat_id', chatId)
+    .is('parent_message_id', null) // Only load main messages, not variations
     .order('created_at', { ascending: true });
 
   if (error) throw error;
@@ -614,7 +617,38 @@ export const createMessageVariation = async (
   model?: string,
   provider?: string,
   usage?: Usage
-): Promise<string | null> => {
+): Promise<string> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+
+  // Validate required parameters
+  if (!parentMessageId || !content) {
+    console.error('createMessageVariation: Missing required parameters', {
+      parentMessageId: !!parentMessageId,
+      content: !!content
+    });
+    throw new Error('Parent message ID and content are required');
+  }
+
+  // Verify parent message exists before creating variation
+  const { data: parentMessage, error: parentError } = await supabase
+    .from('chat_messages')
+    .select('id')
+    .eq('id', parentMessageId)
+    .eq('user_id', user.id)
+    .single();
+
+  if (parentError || !parentMessage) {
+    console.error('createMessageVariation: Parent message not found', {
+      parentMessageId,
+      parentError: parentError?.message,
+      userId: user.id
+    });
+    throw new Error(`Parent message not found: ${parentMessageId}`);
+  }
+
   try {
     const { data, error } = await supabase.rpc('create_message_variation', {
       p_parent_message_id: parentMessageId,
@@ -626,20 +660,36 @@ export const createMessageVariation = async (
 
     if (error) {
       console.error('Failed to create message variation:', {
-        error,
+        error: {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        },
         parentMessageId,
         contentLength: content?.length,
         model,
         provider,
-        usage
+        usage,
+        userId: user.id
       });
-      return null;
+      throw new Error(`Database error: ${error.message || 'Unknown error'}`);
+    }
+
+    if (!data) {
+      console.error('createMessageVariation: No data returned from RPC');
+      throw new Error('No variation ID returned');
     }
 
     return data;
   } catch (error) {
-    console.error('Error creating message variation:', error);
-    return null;
+    console.error('Error creating message variation:', {
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+      parentMessageId,
+      contentLength: content?.length
+    });
+    throw error;
   }
 };
 
@@ -657,7 +707,14 @@ export const setActiveVariation = async (
     });
 
     if (error) {
-      console.error('Failed to set active variation:', error);
+      console.error('Failed to set active variation:', {
+        error,
+        parentMessageId,
+        variationIndex,
+        errorMessage: error.message,
+        errorCode: error.code,
+        errorDetails: error.details
+      });
       return false;
     }
 
@@ -675,18 +732,43 @@ export const getMessageVariations = async (
   parentMessageId: string
 ): Promise<MessageVariation[]> => {
   try {
+    // Validate input parameter
+    if (!parentMessageId || typeof parentMessageId !== 'string') {
+      console.warn('getMessageVariations: Invalid parentMessageId provided:', parentMessageId);
+      return [];
+    }
+
     const { data, error } = await supabase.rpc('get_message_variations', {
       p_parent_message_id: parentMessageId
     });
 
     if (error) {
-      console.error('Failed to get message variations:', error);
+      console.error('Failed to get message variations:', {
+        parentMessageId,
+        error: error.message || error,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
       return [];
     }
 
-    return data || [];
+    // Transform the data to ensure proper typing, especially for usage property
+    return (data || []).map(variation => ({
+      ...variation,
+      usage: variation.usage ? 
+        (typeof variation.usage === 'string' ? 
+          JSON.parse(variation.usage) : 
+          variation.usage as unknown as Usage
+        ) : 
+        { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
+    }));
   } catch (error) {
-    console.error('Error getting message variations:', error);
+    console.error('Error getting message variations:', {
+      parentMessageId,
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined
+    });
     return [];
   }
 };

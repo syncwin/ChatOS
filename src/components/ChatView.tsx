@@ -18,6 +18,7 @@ interface ChatViewProps {
   input: string;
   setInput: (value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
+  onStop?: () => void;
   onNewChat: () => void;
   suggestedQuestions: string[];
   activeChatId: string | null;
@@ -41,6 +42,7 @@ const ChatView = forwardRef<ChatViewRef, ChatViewProps>(({
   input,
   setInput,
   onSubmit,
+  onStop,
   onNewChat,
   suggestedQuestions,
   activeChatId,
@@ -134,7 +136,9 @@ const ChatView = forwardRef<ChatViewRef, ChatViewProps>(({
             input={input}
             setInput={setInput}
             onSubmit={onSubmit}
+            onStop={onStop}
             isLoading={isInputLoading}
+            isAiResponding={isAiResponding}
           />
         </div>
       </footer>

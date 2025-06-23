@@ -1,5 +1,5 @@
 
-import { Send } from "lucide-react";
+import { Send, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import TextareaAutosize from 'react-textarea-autosize';
 import { useState, useEffect, forwardRef } from 'react';
@@ -10,7 +10,9 @@ interface InputAreaProps {
   input: string;
   setInput: (value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
+  onStop?: () => void;
   isLoading: boolean;
+  isAiResponding?: boolean;
 }
 
 // Rate limiter for message sending (10 messages per minute)
@@ -20,7 +22,9 @@ const InputArea = forwardRef<HTMLDivElement, InputAreaProps>(({
   input,
   setInput,
   onSubmit,
-  isLoading
+  onStop,
+  isLoading,
+  isAiResponding = false
 }, ref) => {
   const [validationError, setValidationError] = useState<string>('');
 
@@ -36,6 +40,12 @@ const InputArea = forwardRef<HTMLDivElement, InputAreaProps>(({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // If AI is responding, handle stop action
+    if (isAiResponding && onStop) {
+      onStop();
+      return;
+    }
     
     // Validate input
     const validation = validateInput(messageContentSchema, input);
@@ -90,15 +100,21 @@ const InputArea = forwardRef<HTMLDivElement, InputAreaProps>(({
           <Button 
             type="submit" 
             size="icon" 
-            disabled={!input.trim() || isLoading || !!validationError} 
+            disabled={isAiResponding ? false : (!input.trim() || isLoading || !!validationError)} 
             className={`h-8 w-8 sm:h-9 sm:w-9 rounded-md transition-all flex-shrink-0 ml-1 sm:ml-2 ${
-              input.trim() && !isLoading && !validationError 
+              isAiResponding 
+                ? 'bg-destructive hover:bg-destructive/90 text-destructive-foreground' 
+                : input.trim() && !isLoading && !validationError 
                 ? 'bg-accent hover:bg-accent/90 text-accent-foreground' 
                 : 'bg-muted hover:bg-muted/90 text-muted-foreground'
             }`} 
-            aria-label="Send message"
+            aria-label={isAiResponding ? "Stop generation" : "Send message"}
           >
-            <Send className="w-3 h-3 sm:w-4 sm:h-4 text-primary-foreground dark:text-foreground" />
+            {isAiResponding ? (
+              <Square className="w-3 h-3 sm:w-4 sm:h-4" />
+            ) : (
+              <Send className="w-3 h-3 sm:w-4 sm:h-4 text-primary-foreground dark:text-foreground" />
+            )}
           </Button>
         </div>
       </form>
