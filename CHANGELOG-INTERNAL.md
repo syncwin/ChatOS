@@ -28,22 +28,6 @@ This file documents internal changes, fixes, and refactoring steps for the ChatO
   - Removed deno.lock file that was causing incorrect Deno project detection
   - Configured proper build and start commands for production deployment
   - Set NODE_ENV=production for optimal performance
-  - **ENHANCED**: Updated Nixpacks configuration to prevent persistent Deno detection
-    - Changed nixPkgs to use specific "nodejs_18" instead of generic "nodejs"
-    - Separated install and build phases for better control
-    - Added NIXPACKS_NO_CACHE=1 to prevent caching issues
-    - Created .node-version file to explicitly indicate Node.js 18 project
-  - **CRITICAL FIX**: Resolved persistent Deno detection causing npm command not found
-    - Created .nixpacksignore file to exclude supabase/ directory (contains Deno Edge Functions)
-    - Added explicit [build] provider = "node" in .nixpacks.toml
-    - Created .nvmrc file as additional Node.js version indicator
-    - Root cause: Supabase Edge Functions use Deno runtime, confusing Nixpacks detection
-  - **COMPREHENSIVE DEPLOYMENT FIX**: Complete solution for Coolify deployment failures
-    - Created .dockerignore to exclude supabase/ from Docker build context entirely
-    - Enhanced .nixpacks.toml with explicit provider disabling (deno, python, go)
-    - Added engines field to package.json specifying Node.js >=18.0.0 and npm >=8.0.0
-    - Created custom Dockerfile using node:18-alpine for guaranteed Node.js environment
-    - Multiple layers of protection against incorrect runtime detection
 
 ### Fixed
 - Message state synchronization issues between UI and backend

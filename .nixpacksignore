@@ -1,9 +1,0 @@
-# Ignore Supabase Edge Functions (Deno) to prevent incorrect project detection
-supabase/
-supabase/**
-
-# Ignore other non-Node.js directories
-.vscode/
-docs/
-scripts/
-*.md
