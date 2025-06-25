@@ -37,6 +37,8 @@ This file documents internal changes, fixes, and refactoring steps for the ChatO
   - Configured health checks and proper port mapping (4173) for Vite preview
   - Included optional local Supabase stack configuration for development
   - Fixed Docker Compose file extension from .yml to .yaml for Coolify compatibility
+  - Removed .nixpacks.toml file as Docker Compose is now the primary deployment method
+  - **CRITICAL FIX**: Fixed 'vite: not found' error in Docker build by installing all dependencies (including devDependencies) during build stage, then only production dependencies in final stage
 
 ### Fixed
 - Message state synchronization issues between UI and backend
