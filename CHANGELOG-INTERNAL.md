@@ -28,6 +28,15 @@ This file documents internal changes, fixes, and refactoring steps for the ChatO
   - Removed deno.lock file that was causing incorrect Deno project detection
   - Configured proper build and start commands for production deployment
   - Set NODE_ENV=production for optimal performance
+- **Docker Compose Setup**: Added comprehensive Docker Compose configuration for Coolify deployment
+  - Created docker-compose.yaml with frontend service configuration (renamed from .yml for Coolify compatibility)
+  - Added multi-stage Dockerfile for optimized production builds
+  - Created .dockerignore for efficient build context
+  - Added .env.production template for production environment variables
+  - Created comprehensive DOCKER_COMPOSE_SETUP.md guide with step-by-step instructions
+  - Configured health checks and proper port mapping (4173) for Vite preview
+  - Included optional local Supabase stack configuration for development
+  - Fixed Docker Compose file extension from .yml to .yaml for Coolify compatibility
 
 ### Fixed
 - Message state synchronization issues between UI and backend

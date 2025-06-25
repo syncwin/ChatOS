@@ -78,7 +78,7 @@ services:
 
 - [ ] Commit all Docker files to your repository:
   ```bash
-  git add docker-compose.yml Dockerfile .dockerignore .env.production DOCKER_COMPOSE_SETUP.md
+  git add docker-compose.yaml Dockerfile .dockerignore .env.production DOCKER_COMPOSE_SETUP.md
   git commit -m "Add Docker Compose setup for Coolify deployment"
   git push origin main
   ```
@@ -100,7 +100,7 @@ services:
 
 3. **Build Configuration:**
    - [ ] **IMPORTANT:** Select "Docker Compose" as build pack
-   - [ ] Set Docker Compose file path: `/docker-compose.yml`
+   - [ ] Set Docker Compose file path: `/docker-compose.yaml`
    - [ ] Set base directory: `/` (root)
 
 4. **Service Configuration:**
