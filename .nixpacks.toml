@@ -8,6 +8,16 @@ node = "18"
 [build]
 provider = "node"
 
+# Explicitly disable other providers
+[providers.deno]
+enabled = false
+
+[providers.python]
+enabled = false
+
+[providers.go]
+enabled = false
+
 [phases.setup]
 nixPkgs = ["nodejs_18", "npm"]
 

@@ -38,6 +38,12 @@ This file documents internal changes, fixes, and refactoring steps for the ChatO
     - Added explicit [build] provider = "node" in .nixpacks.toml
     - Created .nvmrc file as additional Node.js version indicator
     - Root cause: Supabase Edge Functions use Deno runtime, confusing Nixpacks detection
+  - **COMPREHENSIVE DEPLOYMENT FIX**: Complete solution for Coolify deployment failures
+    - Created .dockerignore to exclude supabase/ from Docker build context entirely
+    - Enhanced .nixpacks.toml with explicit provider disabling (deno, python, go)
+    - Added engines field to package.json specifying Node.js >=18.0.0 and npm >=8.0.0
+    - Created custom Dockerfile using node:18-alpine for guaranteed Node.js environment
+    - Multiple layers of protection against incorrect runtime detection
 
 ### Fixed
 - Message state synchronization issues between UI and backend
