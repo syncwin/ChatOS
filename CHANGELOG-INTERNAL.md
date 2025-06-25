@@ -33,6 +33,11 @@ This file documents internal changes, fixes, and refactoring steps for the ChatO
     - Separated install and build phases for better control
     - Added NIXPACKS_NO_CACHE=1 to prevent caching issues
     - Created .node-version file to explicitly indicate Node.js 18 project
+  - **CRITICAL FIX**: Resolved persistent Deno detection causing npm command not found
+    - Created .nixpacksignore file to exclude supabase/ directory (contains Deno Edge Functions)
+    - Added explicit [build] provider = "node" in .nixpacks.toml
+    - Created .nvmrc file as additional Node.js version indicator
+    - Root cause: Supabase Edge Functions use Deno runtime, confusing Nixpacks detection
 
 ### Fixed
 - Message state synchronization issues between UI and backend

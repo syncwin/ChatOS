@@ -1,8 +1,12 @@
 # Nixpacks configuration for ChatOS
 # Force Nixpacks to use Node.js provider and prevent Deno detection
+# Explicitly disable Deno detection
 
 [providers]
 node = "18"
+
+[build]
+provider = "node"
 
 [phases.setup]
 nixPkgs = ["nodejs_18", "npm"]
