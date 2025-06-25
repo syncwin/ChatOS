@@ -23,6 +23,11 @@ This file documents internal changes, fixes, and refactoring steps for the ChatO
   - Updated all TypeScript interfaces and Supabase types
   - Updated all UI components, forms, and validation messages
   - Updated all service layers and utility functions to use nickname instead of full_name
+- **Coolify Deployment Configuration**: Fixed deployment issues with Nixpacks auto-detection
+  - Added .nixpacks.toml configuration file to force Node.js 18 environment
+  - Removed deno.lock file that was causing incorrect Deno project detection
+  - Configured proper build and start commands for production deployment
+  - Set NODE_ENV=production for optimal performance
 
 ### Fixed
 - Message state synchronization issues between UI and backend
