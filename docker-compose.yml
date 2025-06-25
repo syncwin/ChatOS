@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # Frontend - Vite React Application
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=production
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+      - VITE_ANTHROPIC_API_KEY=${VITE_ANTHROPIC_API_KEY:-}
+      - VITE_SENTRY_DSN=${VITE_SENTRY_DSN:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    volumes:
+      - ./public:/app/public:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Supabase Local Stack (Optional - for development)
+  # Uncomment if you want to run Supabase locally instead of using hosted version
+  # supabase-db:
+  #   image: supabase/postgres:15.1.0.117
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-your-super-secret-and-long-postgres-password}
+  #     POSTGRES_DB: postgres
+  #   volumes:
+  #     - supabase-db-data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U postgres"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  # supabase-studio:
+  #   image: supabase/studio:20240101-ce42139
+  #   environment:
+  #     SUPABASE_URL: http://supabase-kong:8000
+  #     SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+  #     STUDIO_PG_META_URL: http://supabase-meta:8080
+  #   depends_on:
+  #     - supabase-db
+  #   restart: unless-stopped
+
+  # supabase-kong:
+  #   image: kong:2.8.1
+  #   environment:
+  #     KONG_DATABASE: "off"
+  #     KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
+  #     KONG_DNS_ORDER: LAST,A,CNAME
+  #     KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth
+  #   volumes:
+  #     - ./supabase/kong.yml:/var/lib/kong/kong.yml:ro
+  #   depends_on:
+  #     - supabase-db
+  #   restart: unless-stopped
+
+# Volumes for persistent data (if using local Supabase)
+# volumes:
+#   supabase-db-data:
+
+# Networks
+networks:
+  default:
+    name: chatos-network
+    driver: bridge
