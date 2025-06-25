@@ -13,6 +13,16 @@ This file documents internal changes, fixes, and refactoring steps for the ChatO
 - Improved error boundaries and user feedback
 - Security enhancements for API key management
 - Enhanced chat persistence with better error recovery
+- **Email Change Confirmation Flow**: Implemented proper email change confirmation with verification links
+  - Added dedicated EmailConfirmation page component with loading, success, error, and expired states
+  - Updated ProfileForm to use Supabase's updateUser with emailRedirectTo for proper confirmation flow
+  - Added /confirm-email route to handle email verification tokens
+  - Enhanced user experience with clear status messages and automatic redirects
+- **Profile Field Rename**: Renamed 'Full Name' to 'Nickname' throughout the application
+  - Updated database schema: renamed profiles.full_name column to profiles.nickname
+  - Updated all TypeScript interfaces and Supabase types
+  - Updated all UI components, forms, and validation messages
+  - Updated all service layers and utility functions to use nickname instead of full_name
 
 ### Fixed
 - Message state synchronization issues between UI and backend
@@ -48,6 +58,37 @@ This file documents internal changes, fixes, and refactoring steps for the ChatO
     - Ensured proper React reconciliation to prevent unnecessary re-renders and duplicate component creation.
 - **LATEST**: Enhanced duplicate prevention system for rewrite operations:
     - **useRewrite.ts**: Added message deduplication in optimistic updates during rewrite operations
+- **NEW**: Added username support to user profiles:
+    - Added `username` column to `profiles` table with UNIQUE constraint and length validation (minimum 3 characters)
+    - Updated RLS policies to allow authenticated users to update their own username
+    - Added foreign key index for improved performance
+    - Enhanced ProfileForm component with username field validation and UI
+- **NEW**: Implemented email update functionality:
+    - Added email field to ProfileForm component with proper validation
+    - Integrated Supabase's `updateUser()` method for secure email updates
+    - Added proper error handling and user feedback for email change confirmation
+    - Email updates require confirmation via new email address
+
+### Database Security & Performance Fixes (Supabase)
+- **SECURITY**: Fixed Row Level Security (RLS) policies:
+  - Added RLS policies for `public.sample_table` to allow authenticated user access
+  - Fixed mutable `search_path` vulnerabilities in database functions:
+    - Updated `public.set_active_variation` function with `SET search_path = public`
+    - Updated `public.get_message_variations` function with `SET search_path = public`
+    - Updated `public.create_message_variation` function with `SET search_path = public`
+    - Updated `public.sync_chat_tags_user_id` function with `SET search_path = public` (including trigger recreation)
+  - Optimized RLS policies to prevent auth function re-evaluation:
+    - Replaced `auth.uid()` with `(SELECT auth.uid())` in all table policies
+    - Applied to tables: profiles, api_keys, chats, chat_messages, folders, tags, chat_tags
+- **PERFORMANCE**: Added database indexes for foreign keys:
+  - Added index `idx_chat_tags_tag_id` on `public.chat_tags(tag_id)`
+  - Added index `idx_chat_tags_user_id` on `public.chat_tags(user_id)`
+  - Added index `idx_chats_folder_id` on `public.chats(folder_id)`
+  - Added index `idx_folders_user_id` on `public.folders(user_id)`
+  - Added index `idx_chat_messages_chat_id` on `public.chat_messages(chat_id)`
+  - Added index `idx_chat_messages_user_id` on `public.chat_messages(user_id)`
+  - Added index `idx_chat_messages_parent_message_id` on `public.chat_messages(parent_message_id)`
+  - Added composite index `idx_chat_messages_parent_variation` on `public.chat_messages(parent_message_id, variation_index)`
     - **ChatView.tsx**: Implemented message deduplication filter before rendering to prevent duplicate messages at component level
     - **Index.tsx**: Enhanced variation change handlers with duplicate prevention for both optimistic updates and revert operations
     - **Technical Pattern**: Consistent deduplication using `arr.findIndex(m => m.id === msg.id) === index` across all query cache updates

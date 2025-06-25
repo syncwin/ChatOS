@@ -86,8 +86,8 @@ const ChatMessage = ({
   const { toast } = useToast();
 
   const getInitials = () => {
-    if (profile?.full_name) {
-      return profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase();
+    if (profile?.nickname) {
+      return profile.nickname.split(' ').map(n => n[0]).join('').toUpperCase();
     }
     if (user?.email) {
       return user.email[0].toUpperCase();

@@ -181,7 +181,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
-          full_name: string | null
+          nickname: string | null
           id: string
           model_selection: Json | null
           theme: string
@@ -191,7 +191,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
-          full_name?: string | null
+          nickname?: string | null
           id: string
           model_selection?: Json | null
           theme?: string
@@ -200,15 +200,15 @@ export type Database = {
           website?: string | null
         }
         Update: {
-          avatar_url?: string | null
-          full_name?: string | null
-          id?: string
-          model_selection?: Json | null
-          theme?: string
-          updated_at?: string | null
-          username?: string | null
-          website?: string | null
-        }
+            avatar_url?: string | null
+            nickname?: string | null
+            id?: string
+            model_selection?: Json | null
+            theme?: string | null
+            updated_at?: string | null
+            username?: string | null
+            website?: string | null
+          }
         Relationships: []
       }
       sample_table: {

@@ -19,7 +19,7 @@ export interface ConversationPair {
 
 export interface Profile {
   username?: string;
-  full_name?: string;
+  nickname?: string;
 }
 
 /**
@@ -109,7 +109,7 @@ export const exportAsMarkdown = (
   conversationPairs: ConversationPair[],
   profile: Profile | null
 ): void => {
-  const userName = profile?.username || profile?.full_name || 'User';
+  const userName = profile?.username || profile?.nickname || 'User';
   
   let markdownContent = `# ChatOS - Single Message Export\n\n`;
   markdownContent += `**Export Date:** ${new Date().toLocaleString()}\n\n`;
@@ -160,7 +160,7 @@ export const createPdfContent = (
   conversationPairs: ConversationPair[],
   profile: Profile | null
 ): string => {
-  const userName = profile?.username || profile?.full_name || 'User';
+  const userName = profile?.username || profile?.nickname || 'User';
   
   let pdfContent = `
     <header style="margin-bottom: 40px; padding-bottom: 30px; border-bottom: 3px solid #3f00ff;">

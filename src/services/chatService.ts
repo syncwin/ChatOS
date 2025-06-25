@@ -20,7 +20,7 @@ export interface Usage {
 }
 
 interface ProfileUpdates {
-  full_name?: string;
+  nickname?: string;
   avatar_url?: string;
   theme?: 'light' | 'dark';
 }
@@ -89,7 +89,7 @@ export const getProfile = async (): Promise<UserProfile | null> => {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select(`id, full_name, avatar_url, theme`)
+    .select(`id, nickname, avatar_url, theme`)
     .eq('id', user.id)
     .single();
 
@@ -98,7 +98,7 @@ export const getProfile = async (): Promise<UserProfile | null> => {
   return {
     id: profile.id,
     email: user.email || '',
-    name: profile.full_name || undefined,
+    name: profile.nickname || undefined,
     avatar_url: profile.avatar_url || undefined,
     theme: profile.theme as 'light' | 'dark' || 'dark'
   };
@@ -118,7 +118,7 @@ export const updateProfile = async (updates: { name?: string; avatar_url?: strin
   }
 
   const profileUpdates: ProfileUpdates = {};
-  if (updates.name !== undefined) profileUpdates.full_name = updates.name;
+  if (updates.name !== undefined) profileUpdates.nickname = updates.name;
   if (updates.avatar_url !== undefined) profileUpdates.avatar_url = updates.avatar_url;
   if (updates.theme !== undefined) profileUpdates.theme = updates.theme;
 

@@ -14,8 +14,11 @@ import { Pencil } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
 
 const profileFormSchema = z.object({
-  full_name: z.string().min(2, { message: "Full name must be at least 2 characters." }).max(50).or(z.literal('')),
+  nickname: z.string().min(2, { message: "Nickname must be at least 2 characters." }).max(50).or(z.literal('')),
   username: z.string().min(3, { message: "Username must be at least 3 characters." }).max(30).regex(/^[a-zA-Z0-9_]+$/, { message: "Username can only contain letters, numbers, and underscores." }).or(z.literal('')),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  avatar_url: z.string().url().optional().or(z.literal('')),
+  website: z.string().url().optional().or(z.literal('')),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -35,8 +38,11 @@ const ProfileForm = ({ profile, onSuccess }: ProfileFormProps) => {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      full_name: profile.full_name || '',
+      nickname: profile.nickname || '',
       username: profile.username || '',
+      email: user?.email || '',
+      avatar_url: profile.avatar_url || '',
+      website: profile.website || '',
     },
     mode: 'onChange',
   });
@@ -58,10 +64,12 @@ const ProfileForm = ({ profile, onSuccess }: ProfileFormProps) => {
 
   const onSubmit = async (data: ProfileFormValues) => {
     const updates: TablesUpdate<'profiles'> = { 
-      full_name: data.full_name || '',
-      username: data.username || null
+      nickname: data.nickname || '',
+      username: data.username || null,
+      website: data.website || '',
     };
 
+    // Handle avatar upload
     if (avatarFile) {
       try {
         const newAvatarUrl = await handleAvatarUpload(avatarFile);
@@ -74,9 +82,37 @@ const ProfileForm = ({ profile, onSuccess }: ProfileFormProps) => {
         return;
       }
     }
+
+    // Handle email update if changed
+    const emailChanged = data.email !== user?.email;
+    if (emailChanged) {
+      try {
+        const { error: emailError } = await supabase.auth.updateUser(
+          { email: data.email },
+          {
+            emailRedirectTo: `${window.location.origin}/confirm-email`
+          }
+        );
+        
+        if (emailError) {
+          toast.error(`Failed to update email: ${emailError.message}`);
+          return;
+        }
+        
+        toast.success('Email change confirmation sent! Please check your new email address and click the confirmation link to complete the change.');
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        toast.error(`Failed to update email: ${errorMessage}`);
+        return;
+      }
+    }
     
+    // Update profile data
     updateProfile(updates, {
       onSuccess: () => {
+        if (!emailChanged) {
+          toast.success('Profile updated successfully!');
+        }
         if (onSuccess) {
           onSuccess();
         }
@@ -94,13 +130,13 @@ const ProfileForm = ({ profile, onSuccess }: ProfileFormProps) => {
 
   const getInitials = () => {
     const username = form.getValues().username;
-    const fullName = form.getValues().full_name;
+    const nickname = form.getValues().nickname;
     
     if (username) {
-      return username.slice(0, 2).toUpperCase();
+      return username.charAt(0).toUpperCase();
     }
-    if (fullName) {
-      return fullName.split(' ').map(n => n[0]).join('').toUpperCase();
+    if (nickname) {
+      return nickname.split(' ').map(n => n[0]).join('').toUpperCase();
     }
     if (user?.email) {
       return user.email[0].toUpperCase();
@@ -147,12 +183,25 @@ const ProfileForm = ({ profile, onSuccess }: ProfileFormProps) => {
           />
           <FormField
             control={form.control}
-            name="full_name"
+            name="nickname"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Full Name</FormLabel>
+                <FormLabel>Nickname</FormLabel>
                 <FormControl>
-                  <Input placeholder="Your full name" {...field} />
+                  <Input placeholder="Your nickname" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input type="email" placeholder="Your email address" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

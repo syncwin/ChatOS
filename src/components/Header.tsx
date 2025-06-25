@@ -144,7 +144,7 @@ const Header = ({
       }
 
       // Get user name for proper labeling
-      const userName = profile?.username || profile?.full_name || 'User';
+      const userName = profile?.username || profile?.nickname || 'User';
       
       // Get conversation pairs (user input + AI response)
       const getConversationPairs = () => {

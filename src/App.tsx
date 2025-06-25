@@ -11,6 +11,7 @@ import { AuthProvider } from "./contexts/AuthProvider";
 import Auth from "./pages/Auth";
 import ProtectedRoute from "./components/ProtectedRoute";
 import UpdatePassword from "./pages/UpdatePassword";
+import EmailConfirmation from "./pages/EmailConfirmation";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,6 +37,7 @@ const App = () => (
               <Routes>
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/update-password" element={<UpdatePassword />} />
+                <Route path="/confirm-email" element={<EmailConfirmation />} />
                 <Route element={<ProtectedRoute />}>
                   <Route path="/" element={<Index />} />
                 </Route>

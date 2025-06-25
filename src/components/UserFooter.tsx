@@ -21,8 +21,8 @@ const UserFooter = ({ isGuest, user, onOpenProfile }: UserFooterProps) => {
   const isCollapsed = state === 'collapsed';
 
   const getInitials = () => {
-    if (profile?.full_name) {
-      return profile.full_name.split(' ').map(n => n[0]).join('').toUpperCase();
+    if (profile?.nickname) {
+      return profile.nickname.split(' ').map(n => n[0]).join('').toUpperCase();
     }
     if (user?.email) {
       return user.email[0].toUpperCase();
@@ -31,7 +31,7 @@ const UserFooter = ({ isGuest, user, onOpenProfile }: UserFooterProps) => {
   };
 
   const getDisplayName = () => {
-    return profile?.full_name || user?.email || "Guest";
+    return profile?.nickname || user?.email || "Guest";
   };
 
   if (isGuest) {

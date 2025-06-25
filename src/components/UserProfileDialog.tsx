@@ -60,7 +60,8 @@ const UserProfileDialog = ({ isOpen, onOpenChange, isDarkMode }: UserProfileDial
               profile={{ 
                 id: user.id, 
                 avatar_url: null, 
-                full_name: '', 
+                nickname: '', 
+                username: null,
                 website: null, 
                 updated_at: null,
                 theme: 'dark',
