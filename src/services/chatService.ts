@@ -4,14 +4,14 @@ import {
   chatTitleSchema, 
   folderNameSchema, 
   tagNameSchema, 
-  messageContentSchema,
-  profileNameSchema,
-  profileWebsiteSchema,
-  validateInput,
+  messageContentSchema, 
+  profileNameSchema, 
+  profileWebsiteSchema, 
+  validateInput, 
   sanitizeHtml 
 } from '@/lib/validation';
 import { secureGuestStorage } from '@/lib/secureStorage';
-import type { Database } from '@/integrations/supabase/types';
+import type { Database, Json } from '@/integrations/supabase/types';
 
 export interface Usage {
   prompt_tokens: number;
@@ -159,7 +159,7 @@ export const getMessages = async (chatId: string): Promise<Message[]> => {
   // Transform the data to ensure proper typing
   return (data || []).map(msg => ({
     ...msg,
-    usage: (msg.usage as any) || { prompt_tokens: 0, completion_tokens: 0 }
+    usage: (msg.usage as unknown as Usage) || { prompt_tokens: 0, completion_tokens: 0 }
   }));
 };
 
@@ -197,6 +197,11 @@ export const createChat = async (title: string): Promise<Chat> => {
   };
 };
 
+// Alias for addMessage to match useRewrite.ts import
+export const saveMessage = async (message: NewMessage): Promise<Message> => {
+  return addMessage(message);
+};
+
 export const addMessage = async (message: NewMessage): Promise<Message> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
@@ -209,27 +214,7 @@ export const addMessage = async (message: NewMessage): Promise<Message> => {
   const sanitizedContent = sanitizeHtml(validation.data);
 
   const newMessageId = uuidv4();
-
-  const { error } = await supabase.from('chat_messages').insert({
-    id: newMessageId,
-    chat_id: message.chat_id,
-    user_id: user.id,
-    role: message.role,
-    content: sanitizedContent,
-    provider: message.provider,
-    model: message.model,
-    usage: message.usage as any,
-  });
-
-  if (error) throw error;
-
-  // Update the chat's updated_at timestamp
-  await supabase
-    .from('chats')
-    .update({ updated_at: new Date().toISOString() })
-    .eq('id', message.chat_id);
-
-  return {
+  const newMessage: Message = {
     id: newMessageId,
     chat_id: message.chat_id,
     user_id: user.id,
@@ -240,6 +225,52 @@ export const addMessage = async (message: NewMessage): Promise<Message> => {
     model: message.model,
     usage: message.usage || { prompt_tokens: 0, completion_tokens: 0 },
   };
+
+  try {
+    const { error } = await supabase.from('chat_messages').insert({
+      id: newMessageId,
+      chat_id: message.chat_id,
+      user_id: user.id,
+      role: message.role,
+      content: sanitizedContent,
+      provider: message.provider,
+      model: message.model,
+      usage: message.usage as unknown as Json,
+    });
+
+    if (error) throw error;
+
+    // Update the chat's updated_at timestamp
+    await supabase
+      .from('chats')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', message.chat_id);
+
+    return newMessage;
+  } catch (error) {
+    console.warn('Failed to save message to Supabase, using localStorage fallback:', error);
+    
+    // Fallback to localStorage
+    try {
+      const pendingMessages = JSON.parse(localStorage.getItem('pending_messages') || '[]');
+      pendingMessages.push({
+        ...newMessage,
+        _pending: true,
+        _timestamp: Date.now()
+      });
+      localStorage.setItem('pending_messages', JSON.stringify(pendingMessages));
+      
+      // Also save to local messages cache
+      const localMessages = JSON.parse(localStorage.getItem(`messages_${message.chat_id}`) || '[]');
+      localMessages.push(newMessage);
+      localStorage.setItem(`messages_${message.chat_id}`, JSON.stringify(localMessages));
+      
+      return newMessage;
+    } catch (storageError) {
+      console.error('Failed to save to localStorage:', storageError);
+      throw error; // Re-throw original error
+    }
+  }
 };
 
 export const updateChatTitle = async (chatId: string, title: string): Promise<void> => {
@@ -260,6 +291,153 @@ export const updateChatTitle = async (chatId: string, title: string): Promise<vo
     .eq('user_id', user.id);
 
   if (error) throw error;
+};
+
+export const updateMessage = async (messageId: string, updates: { content?: string; error?: string }): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  // Validate and sanitize content if provided
+  const updateData: any = {};
+  if (updates.content !== undefined) {
+    const validation = validateInput(messageContentSchema, updates.content);
+    if (!validation.success) {
+      throw new Error(validation.error || 'Invalid message content');
+    }
+    updateData.content = sanitizeHtml(validation.data);
+  }
+  if (updates.error !== undefined) {
+    updateData.error = updates.error;
+  }
+
+  try {
+    const { error } = await supabase
+      .from('chat_messages')
+      .update(updateData)
+      .eq('id', messageId)
+      .eq('user_id', user.id);
+
+    if (error) throw error;
+  } catch (error) {
+    console.warn('Failed to update message in Supabase, using localStorage fallback:', error);
+    
+    // Fallback to localStorage
+    try {
+      const pendingUpdates = JSON.parse(localStorage.getItem('pending_updates') || '[]');
+      pendingUpdates.push({
+        messageId,
+        updates: updateData,
+        _timestamp: Date.now(),
+        userId: user.id
+      });
+      localStorage.setItem('pending_updates', JSON.stringify(pendingUpdates));
+      
+      // Also update local messages cache if it exists
+      const chatId = await getChatIdForMessage(messageId);
+      if (chatId) {
+        const localMessages = JSON.parse(localStorage.getItem(`messages_${chatId}`) || '[]');
+        const messageIndex = localMessages.findIndex((msg: any) => msg.id === messageId);
+        if (messageIndex !== -1) {
+          localMessages[messageIndex] = { ...localMessages[messageIndex], ...updateData };
+          localStorage.setItem(`messages_${chatId}`, JSON.stringify(localMessages));
+        }
+      }
+    } catch (storageError) {
+      console.error('Failed to save update to localStorage:', storageError);
+      throw error; // Re-throw original error
+    }
+  }
+};
+
+// Helper function to get chat ID for a message
+const getChatIdForMessage = async (messageId: string): Promise<string | null> => {
+  try {
+    // First try to find in localStorage caches
+    const allKeys = Object.keys(localStorage);
+    for (const key of allKeys) {
+      if (key.startsWith('messages_')) {
+        const messages = JSON.parse(localStorage.getItem(key) || '[]');
+        const message = messages.find((msg: any) => msg.id === messageId);
+        if (message) {
+          return message.chat_id;
+        }
+      }
+    }
+    
+    // Fallback to Supabase query
+    const { data, error } = await supabase
+      .from('chat_messages')
+      .select('chat_id')
+      .eq('id', messageId)
+      .single();
+    
+    if (error) throw error;
+    return data?.chat_id || null;
+  } catch (error) {
+    console.warn('Failed to get chat ID for message:', error);
+    return null;
+  }
+};
+
+// Function to sync pending messages and updates when connection is restored
+export const syncPendingData = async (): Promise<void> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Sync pending messages
+    const pendingMessages = JSON.parse(localStorage.getItem('pending_messages') || '[]');
+    for (const pendingMessage of pendingMessages) {
+      if (pendingMessage._pending && pendingMessage.user_id === user.id) {
+        try {
+          const { error } = await supabase.from('chat_messages').insert({
+            id: pendingMessage.id,
+            chat_id: pendingMessage.chat_id,
+            user_id: pendingMessage.user_id,
+            role: pendingMessage.role,
+            content: pendingMessage.content,
+            provider: pendingMessage.provider,
+            model: pendingMessage.model,
+            usage: pendingMessage.usage as unknown as Json,
+          });
+          
+          if (!error) {
+            // Remove from pending list
+            const updatedPending = pendingMessages.filter((msg: any) => msg.id !== pendingMessage.id);
+            localStorage.setItem('pending_messages', JSON.stringify(updatedPending));
+          }
+        } catch (syncError) {
+          console.warn('Failed to sync pending message:', syncError);
+        }
+      }
+    }
+
+    // Sync pending updates
+    const pendingUpdates = JSON.parse(localStorage.getItem('pending_updates') || '[]');
+    for (const pendingUpdate of pendingUpdates) {
+      if (pendingUpdate.userId === user.id) {
+        try {
+          const { error } = await supabase
+            .from('chat_messages')
+            .update(pendingUpdate.updates)
+            .eq('id', pendingUpdate.messageId)
+            .eq('user_id', user.id);
+          
+          if (!error) {
+            // Remove from pending list
+            const updatedPending = pendingUpdates.filter((update: any) => 
+              !(update.messageId === pendingUpdate.messageId && update._timestamp === pendingUpdate._timestamp)
+            );
+            localStorage.setItem('pending_updates', JSON.stringify(updatedPending));
+          }
+        } catch (syncError) {
+          console.warn('Failed to sync pending update:', syncError);
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to sync pending data:', error);
+  }
 };
 
 export const deleteMessage = async (messageId: string): Promise<void> => {

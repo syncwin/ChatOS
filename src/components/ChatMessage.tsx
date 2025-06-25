@@ -7,6 +7,7 @@ import { useState } from "react";
 import ReactMarkdown from 'react-markdown';
 import ChatOsIcon from "./icons/ChatOsIcon";
 import ChatActionIcons from "./ChatActionIcons";
+import ChatBubbleLoader from "./ChatBubbleLoader";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -43,6 +44,14 @@ interface ChatMessageProps {
   onCancelEdit?: () => void;
   onDeleteMessage?: (messageId: string) => void;
   onRewrite?: (messageId: string) => void;
+  onCancelRewrite?: () => void;
+  onRetryRewrite?: (messageId: string) => void;
+  onClearRewriteError?: () => void;
+  isRewriting?: boolean;
+  rewriteError?: string | null;
+  rewritingMessageId?: string | null;
+  timeoutError?: boolean;
+  canCancel?: boolean;
   messageVariations?: MessageVariation[];
   currentVariationIndex?: number;
   onVariationChange?: (index: number) => void;
@@ -59,6 +68,14 @@ const ChatMessage = ({
   onCancelEdit,
   onDeleteMessage,
   onRewrite,
+  onCancelRewrite,
+  onRetryRewrite,
+  onClearRewriteError,
+  isRewriting = false,
+  rewriteError,
+  rewritingMessageId,
+  timeoutError = false,
+  canCancel = false,
   messageVariations = [],
   currentVariationIndex = 0,
   onVariationChange
@@ -129,12 +146,12 @@ const ChatMessage = ({
   };
 
   return (
-    <div className="flex flex-col gap-1 sm:gap-2 w-full">
+    <div key={`message-container-${message.id}`} className="flex flex-col gap-1 sm:gap-2 w-full">
       <div className={`flex gap-2 sm:gap-3 group w-full ${message.role === "user" ? "justify-end" : "flex-row"}`}>
       {message.role === "assistant" && (
-        <Avatar className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 mt-1 flex-shrink-0">
-          <AvatarFallback className="bg-muted/50 text-foreground flex items-center justify-center">
-            <ChatOsIcon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
+        <Avatar key={`${message.id}-assistant-avatar`} className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 mt-1 flex-shrink-0">
+          <AvatarFallback key={`${message.id}-assistant-avatar-fallback`} className="bg-muted/50 text-foreground flex items-center justify-center">
+            <ChatOsIcon key={`${message.id}-assistant-icon`} className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />
           </AvatarFallback>
         </Avatar>
       )}
@@ -272,24 +289,35 @@ const ChatMessage = ({
                 </span>
               )}
               {message.isStreaming && (
-                <div className="flex items-center gap-2 mt-2 text-muted-foreground">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-current rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                    <div className="w-2 h-2 bg-current rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                    <div className="w-2 h-2 bg-current rounded-full animate-bounce"></div>
-                  </div>
-                  <span className="text-sm italic">Generating response...</span>
-                </div>
+                <ChatBubbleLoader 
+                  key={`${message.id}-bubble-loader-new`}
+                  type="new" 
+                  messageId={message.id} 
+                />
+              )}
+              {isRewriting && rewritingMessageId === message.id && (
+                <ChatBubbleLoader 
+                  key={`${message.id}-bubble-loader-rewrite`}
+                  type="rewrite" 
+                  messageId={message.id} 
+                />
               )}
             </>
           )}
-          {/* Variation controls and info icons inside assistant message bubble */}
+          {/* 
+            Variation controls and info icons inside assistant message bubble
+            This section renders inside the chat bubble and shows:
+            - Variation navigation controls (left side)
+            - Info icons for provider, model, usage, and timestamp (right side)
+            The variant="info" ensures only informational icons are shown here
+          */}
           {message.role === "assistant" && !message.isStreaming && (
-            <div className="flex justify-between items-center mt-2">
+            <div key={`${message.id}-bubble-controls`} className="flex justify-between items-center mt-2">
               {/* Variation Controls - positioned on the left */}
               {!message.error && messageVariations && messageVariations.length > 1 && (
-                <div className="flex items-center">
+                <div key={`${message.id}-variation-controls`} className="flex items-center">
                   <Button
+                    key={`${message.id}-prev-variation`}
                     size="sm"
                     variant="ghost"
                     className="h-6 w-6 p-0"
@@ -299,10 +327,11 @@ const ChatMessage = ({
                   >
                     <ChevronLeft className="w-3 h-3" />
                   </Button>
-                  <span className="text-xs text-muted-foreground px-1 min-w-[2rem] text-center">
+                  <span key={`${message.id}-variation-counter`} className="text-xs text-muted-foreground px-1 min-w-[2rem] text-center">
                     {(currentVariationIndex || 0) + 1}/{messageVariations.length}
                   </span>
                   <Button
+                    key={`${message.id}-next-variation`}
                     size="sm"
                     variant="ghost"
                     className="h-6 w-6 p-0"
@@ -316,13 +345,22 @@ const ChatMessage = ({
               )}
               
               {/* Info icons - positioned on the right */}
-              <div className="flex justify-end">
+              <div key={`${message.id}-info-icons-wrapper`} className="flex justify-end">
                 <ChatActionIcons 
+                  key={`${message.id}-info-icons`}
                   message={message}
                   messages={messages}
                   onCopy={handleCopy}
                   copied={copied}
                   onRewrite={onRewrite}
+                  onCancelRewrite={onCancelRewrite}
+                  onRetryRewrite={onRetryRewrite}
+                  onClearRewriteError={onClearRewriteError}
+                  isRewriting={isRewriting}
+                  rewriteError={rewriteError}
+                  rewritingMessageId={rewritingMessageId}
+                  timeoutError={timeoutError}
+                  canCancel={canCancel}
                   onEdit={(messageId) => {
                     // For assistant messages, edit the previous user message for UX consistency
                     onEditMessage?.(messageId);
@@ -345,31 +383,57 @@ const ChatMessage = ({
         </div>
       </div>
       {message.role === "user" && (
-        <Avatar className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 mt-1 flex-shrink-0">
-          <AvatarImage src={profile?.avatar_url || undefined} alt="User avatar" />
-          <AvatarFallback className="bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center text-sm sm:text-base lg:text-lg font-medium">
-            {profile?.avatar_url ? null : <User className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />}
+        <Avatar key={`${message.id}-user-avatar`} className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 mt-1 flex-shrink-0">
+          <AvatarImage key={`${message.id}-user-avatar-image`} src={profile?.avatar_url || undefined} alt="User avatar" />
+          <AvatarFallback key={`${message.id}-user-avatar-fallback`} className="bg-gradient-to-br from-blue-600 to-purple-600 text-white flex items-center justify-center text-sm sm:text-base lg:text-lg font-medium">
+            {profile?.avatar_url ? null : <User key={`${message.id}-user-icon`} className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" />}
             {!profile?.avatar_url && getInitials()}
           </AvatarFallback>
         </Avatar>
       )}
       </div>
       
-      {/* Action icons below the chat bubble - with proper mobile constraints */}
+      {/* 
+        Action icons outside the chat bubble
+        This section renders below the chat bubble and shows:
+        - Copy, share, export, edit, delete actions
+        - Rewrite controls for assistant messages
+        The variant="actions" ensures only action buttons are shown here
+        These icons appear on hover for a clean UI experience
+      */}
       {message.role === "assistant" && !message.isStreaming && (
-        <div className="flex flex-row w-full">
+        <div key={`${message.id}-action-icons-container`} className="flex flex-row w-full">
           <div className="w-8 sm:w-10 lg:w-12 flex-shrink-0" /> {/* Spacer for avatar alignment */}
           <div className="flex-1 min-w-0">
             <div className="max-w-[90%]">
               <ChatActionIcons 
+                key={`${message.id}-action-icons`}
                 message={message}
                 messages={messages}
                 onCopy={handleCopy}
                 copied={copied}
                 onRewrite={onRewrite}
+                onCancelRewrite={onCancelRewrite}
+                onRetryRewrite={onRetryRewrite}
+                onClearRewriteError={onClearRewriteError}
+                isRewriting={isRewriting}
+                rewriteError={rewriteError}
+                rewritingMessageId={rewritingMessageId}
+                timeoutError={timeoutError}
+                canCancel={canCancel}
                 onEdit={(messageId) => {
-                  // For assistant messages, edit the previous user message for UX consistency
-                  onEditMessage?.(messageId);
+                  if (message.role === "user") {
+                    onEditMessage?.(messageId);
+                  } else {
+                    // For assistant messages, edit the previous user message for UX consistency
+                    const currentIndex = messages.findIndex(m => m.id === messageId);
+                    if (currentIndex > 0) {
+                      const previousMessage = messages[currentIndex - 1];
+                      if (previousMessage.role === "user") {
+                        onEditMessage?.(previousMessage.id);
+                      }
+                    }
+                  }
                 }}
                 onDelete={(messageId) => {
                   onDeleteMessage?.(messageId);

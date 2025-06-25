@@ -30,6 +30,14 @@ interface ChatViewProps {
   onCancelEdit: () => void;
   onDeleteMessage: (messageId: string) => void;
   onRewrite: (messageId: string) => void;
+  onCancelRewrite: () => void;
+  onRetryRewrite: (messageId: string) => void;
+  onClearRewriteError: () => void;
+  isRewriting: boolean;
+  rewriteError: string | null;
+  rewritingMessageId: string | null;
+  timeoutError: boolean;
+  canCancel: boolean;
   messageVariations: Record<string, MessageVariation[]>;
   currentVariationIndex: Record<string, number>;
   onVariationChange: (messageId: string, index: number) => void;
@@ -54,6 +62,14 @@ const ChatView = forwardRef<ChatViewRef, ChatViewProps>(({
   onCancelEdit,
   onDeleteMessage,
   onRewrite,
+  onCancelRewrite,
+  onRetryRewrite,
+  onClearRewriteError,
+  isRewriting,
+  rewriteError,
+  rewritingMessageId,
+  timeoutError,
+  canCancel,
   messageVariations,
   currentVariationIndex,
   onVariationChange
@@ -84,7 +100,14 @@ const ChatView = forwardRef<ChatViewRef, ChatViewProps>(({
     setInput(question);
   };
   
-  const showWelcomeScreen = messages.length === 0 && !isLoading && !isAiResponding;
+  // Remove duplicates and sort by creation time to ensure proper chronological order
+  // This prevents React key warnings and ensures user messages appear before AI responses
+  // even when state updates occur out of order due to race conditions
+  const uniqueMessages = messages
+    .filter((msg, index, arr) => arr.findIndex(m => m.id === msg.id) === index)
+    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  
+  const showWelcomeScreen = uniqueMessages.length === 0 && !isLoading && !isAiResponding;
   const isInputLoading = isLoading || isAiResponding;
 
   return (
@@ -102,25 +125,110 @@ const ChatView = forwardRef<ChatViewRef, ChatViewProps>(({
           <ScrollArea className="flex-1 w-full">
             <div className="w-full max-w-4xl mx-auto py-1 xs:py-2 sm:py-4 px-1 xs:px-2 sm:px-4">
               <div className="space-y-2 xs:space-y-3 sm:space-y-4 lg:space-y-6 w-full">
-                {messages.map((message) => (
-                  <div key={message.id} className="w-full">
-                    <ChatMessage 
-                      message={message}
-                      messages={messages}
-                      isEditing={editingMessageId === message.id}
-                      editingContent={editingContent}
-                      setEditingContent={setEditingContent}
-                      onEditMessage={onEditMessage}
-                      onSaveEdit={onSaveEdit}
-                      onCancelEdit={onCancelEdit}
-                      onDeleteMessage={onDeleteMessage}
-                      onRewrite={onRewrite}
-                      messageVariations={messageVariations[message.id] || []}
-                      currentVariationIndex={currentVariationIndex[message.id] || 0}
-                      onVariationChange={(index) => onVariationChange(message.id, index)}
-                    />
-                  </div>
-                ))}
+
+                {(() => {
+                  // Group messages into user-assistant pairs to prevent jumping
+                  // This ensures user messages always appear first, followed by their responses
+                  const messageGroups: Array<{ user: typeof uniqueMessages[0]; assistant?: typeof uniqueMessages[0] }> = [];
+                  const processedAssistantIds = new Set<string>();
+                  
+                  for (let i = 0; i < uniqueMessages.length; i++) {
+                    const message = uniqueMessages[i];
+                    
+                    if (message.role === 'user') {
+                      // Find the corresponding assistant message (next assistant message after this user message)
+                      const assistantMessage = uniqueMessages.find((msg, idx) => 
+                        idx > i && msg.role === 'assistant' && 
+                        new Date(msg.created_at).getTime() > new Date(message.created_at).getTime() &&
+                        !processedAssistantIds.has(msg.id)
+                      );
+                      
+                      if (assistantMessage) {
+                        processedAssistantIds.add(assistantMessage.id);
+                      }
+                      
+                      messageGroups.push({
+                        user: message,
+                        assistant: assistantMessage
+                      });
+                    }
+                  }
+                  
+                  // Handle any standalone assistant messages that weren't paired
+                  const standaloneAssistants = uniqueMessages.filter(msg => 
+                    msg.role === 'assistant' && !processedAssistantIds.has(msg.id)
+                  );
+                  
+                  // Add standalone assistant messages as separate groups (shouldn't happen in normal flow)
+                  standaloneAssistants.forEach(assistantMsg => {
+                    messageGroups.push({
+                      user: null as any, // This shouldn't happen in normal chat flow
+                      assistant: assistantMsg
+                    });
+                  });
+                  
+                  return messageGroups.map((group) => (
+                    <React.Fragment key={group.user?.id || group.assistant?.id}>
+                      {/* User Message - Always rendered first (if exists) */}
+                      {group.user && (
+                        <div className="w-full">
+                          <ChatMessage 
+                            message={group.user}
+                            messages={uniqueMessages}
+                            isEditing={editingMessageId === group.user.id}
+                            editingContent={editingContent}
+                            setEditingContent={setEditingContent}
+                            onEditMessage={onEditMessage}
+                            onSaveEdit={onSaveEdit}
+                            onCancelEdit={onCancelEdit}
+                            onDeleteMessage={onDeleteMessage}
+                            onRewrite={onRewrite}
+                            onCancelRewrite={onCancelRewrite}
+                            onRetryRewrite={onRetryRewrite}
+                            onClearRewriteError={onClearRewriteError}
+                            isRewriting={isRewriting}
+                            rewriteError={rewriteError}
+                            rewritingMessageId={rewritingMessageId}
+                            timeoutError={timeoutError}
+                            canCancel={canCancel}
+                            messageVariations={messageVariations[group.user.id] || []}
+                            currentVariationIndex={currentVariationIndex[group.user.id] || 0}
+                            onVariationChange={(index) => onVariationChange(group.user.id, index)}
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Assistant Message or Streaming Indicator - Always rendered below user message */}
+                      {group.assistant && (
+                        <div className="w-full">
+                          <ChatMessage 
+                            message={group.assistant}
+                            messages={uniqueMessages}
+                            isEditing={editingMessageId === group.assistant.id}
+                            editingContent={editingContent}
+                            setEditingContent={setEditingContent}
+                            onEditMessage={onEditMessage}
+                            onSaveEdit={onSaveEdit}
+                            onCancelEdit={onCancelEdit}
+                            onDeleteMessage={onDeleteMessage}
+                            onRewrite={onRewrite}
+                            onCancelRewrite={onCancelRewrite}
+                            onRetryRewrite={onRetryRewrite}
+                            onClearRewriteError={onClearRewriteError}
+                            isRewriting={isRewriting}
+                            rewriteError={rewriteError}
+                            rewritingMessageId={rewritingMessageId}
+                            timeoutError={timeoutError}
+                            canCancel={canCancel}
+                            messageVariations={messageVariations[group.assistant.id] || []}
+                            currentVariationIndex={currentVariationIndex[group.assistant.id] || 0}
+                            onVariationChange={(index) => onVariationChange(group.assistant.id, index)}
+                          />
+                        </div>
+                      )}
+                    </React.Fragment>
+                  ));
+                })()}
                 <div ref={messagesEndRef} />
               </div>
             </div>

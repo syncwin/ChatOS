@@ -136,6 +136,24 @@ export const streamChatMessage = async (
   }
 };
 
+// Generate AI response function for rewrite functionality
+export const generateAIResponse = async (
+  messages: ChatMessage[],
+  provider: string,
+  model: string,
+  apiKey?: string
+): Promise<string> => {
+  const request: ChatRequest = {
+    provider,
+    model,
+    messages,
+    apiKey
+  };
+
+  const response = await sendChatMessage(request);
+  return response.content;
+};
+
 export const getAvailableProviders = async (): Promise<string[]> => {
   const { data, error } = await supabase
     .from('api_keys')

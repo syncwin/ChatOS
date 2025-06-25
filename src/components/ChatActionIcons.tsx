@@ -43,6 +43,7 @@ import {
 } from '@/lib/exportUtils';
 import { getProviderIcon } from '@/lib/providerIcons';
 import { calculateCost, formatCost, type Usage } from '@/lib/pricingUtils';
+import { RewriteControls } from './RewriteControls';
 
 // Component interfaces
 
@@ -68,6 +69,14 @@ interface ChatActionIconsProps {
   onCopy?: () => void;
   copied?: boolean;
   onRewrite?: (messageId: string) => void;
+  onCancelRewrite?: () => void;
+  onRetryRewrite?: (messageId: string) => void;
+  onClearRewriteError?: () => void;
+  isRewriting?: boolean;
+  rewriteError?: string | null;
+  rewritingMessageId?: string | null;
+  timeoutError?: boolean;
+  canCancel?: boolean;
   onEdit?: (messageId: string) => void;
   onDelete?: (messageId: string) => void;
   onExport?: (messageId: string, format: 'pdf' | 'markdown') => void;
@@ -83,6 +92,14 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
   onCopy,
   copied = false,
   onRewrite,
+  onCancelRewrite,
+  onRetryRewrite,
+  onClearRewriteError,
+  isRewriting = false,
+  rewriteError,
+  rewritingMessageId,
+  timeoutError = false,
+  canCancel = false,
   onEdit,
   onDelete,
   onExport,
@@ -324,11 +341,12 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
   if (variant === 'info') {
     return (
       <TooltipProvider>
-        <div className="flex items-center gap-2 mt-2">
+        <div key={`${message.id}-info-container`} className="flex items-center gap-2 mt-2">
           {/* Provider Icon */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
+                key={`${message.id}-provider-info`}
                 size="sm"
                 variant="ghost"
                 className="h-6 w-6 p-0 hover:bg-accent hover:text-accent-foreground transition-colors opacity-80 hover:opacity-100"
@@ -372,6 +390,7 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
+                key={`${message.id}-timestamp-info`}
                 size="sm"
                 variant="ghost"
                 className="h-6 w-6 p-0 hover:bg-accent hover:text-accent-foreground transition-colors opacity-80 hover:opacity-100"
@@ -398,10 +417,11 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
   // Return action icons for outside chat bubble
   return (
       <TooltipProvider>
-        <div className="flex items-center gap-1 mt-2">
+        <div key={`${message.id}-actions-container`} className="flex items-center gap-1 mt-2">
           {/* Copy - only for assistant messages */}
           {message.role === 'assistant' && !message.isStreaming && message.content && (
             <ActionIcon
+              key={`${message.id}-copy-action`}
               icon={copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
               tooltip={copied ? "Copied!" : "Copy"}
               onClick={onCopy}
@@ -410,6 +430,7 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
 
           {/* Share */}
           <ActionIcon
+            key={`${message.id}-share-action`}
             icon={<Share2 className="w-4 h-4" />}
             tooltip="Share"
             onClick={handleShare}
@@ -421,6 +442,7 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
               <TooltipTrigger asChild>
                 <PopoverTrigger asChild>
                   <Button
+                    key={`${message.id}-export-trigger`}
                     size="sm"
                     variant="ghost"
                     className="h-8 w-8 p-0 hover:bg-accent hover:text-accent-foreground transition-colors opacity-80 hover:opacity-100"
@@ -437,6 +459,7 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
             <PopoverContent className="w-48 p-2">
               <div className="space-y-1">
                 <Button
+                  key={`${message.id}-export-pdf`}
                   variant="ghost"
                   size="sm"
                   className="w-full justify-start gap-2"
@@ -446,6 +469,7 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
                   Export as PDF
                 </Button>
                 <Button
+                  key={`${message.id}-export-markdown`}
                   variant="ghost"
                   size="sm"
                   className="w-full justify-start gap-2"
@@ -459,14 +483,23 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
           </Popover>
 
           {/* Rewrite */}
-          <ActionIcon
-            icon={<RotateCcw className="w-4 h-4" />}
-            tooltip="Rewrite"
-            onClick={() => onRewrite?.(message.id)}
+          <RewriteControls
+            key={`${message.id}-rewrite-controls`}
+            messageId={message.id}
+            onRewrite={onRewrite}
+            onCancel={onCancelRewrite}
+            onRetry={onRetryRewrite}
+            onClearError={onClearRewriteError}
+            isRewriting={isRewriting && rewritingMessageId === message.id}
+            rewriteError={rewriteError}
+            timeoutError={timeoutError}
+            canCancel={canCancel && rewritingMessageId === message.id}
+            rewritingMessageId={rewritingMessageId}
           />
 
           {/* Edit */}
           <ActionIcon
+            key={`${message.id}-edit-action`}
             icon={<Edit3 className="w-4 h-4" />}
             tooltip="Edit"
             onClick={() => onEdit?.(message.id)}
@@ -478,6 +511,7 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
               <TooltipTrigger asChild>
                 <DialogTrigger asChild>
                   <Button
+                    key={`${message.id}-delete-trigger`}
                     size="sm"
                     variant="ghost"
                     className="h-8 w-8 p-0 hover:bg-destructive/40 hover:text-destructive-foreground transition-colors opacity-80 hover:opacity-100"
@@ -500,12 +534,17 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
               </DialogHeader>
               <DialogFooter>
                 <Button
+                  key={`${message.id}-delete-cancel`}
                   variant="outline"
                   onClick={() => setIsDeleteDialogOpen(false)}
                 >
                   Cancel
                 </Button>
-                <Button variant="destructive" onClick={handleDelete}>
+                <Button 
+                  key={`${message.id}-delete-confirm`}
+                  variant="destructive" 
+                  onClick={handleDelete}
+                >
                   Delete
                 </Button>
               </DialogFooter>

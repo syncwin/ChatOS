@@ -52,7 +52,7 @@ const ChatItem = ({
   };
 
   const handleCancelEdit = () => {
-    const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' }) as any;
+    const escapeEvent = new KeyboardEvent('keydown', { key: 'Escape' }) as unknown as React.KeyboardEvent<HTMLInputElement>;
     onTitleKeyDown(escapeEvent, chat.id);
   };
 

@@ -27,6 +27,7 @@ const InputArea = forwardRef<HTMLDivElement, InputAreaProps>(({
   isAiResponding = false
 }, ref) => {
   const [validationError, setValidationError] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
@@ -40,6 +41,11 @@ const InputArea = forwardRef<HTMLDivElement, InputAreaProps>(({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent double submissions
+    if (isSubmitting) {
+      return;
+    }
     
     // If AI is responding, handle stop action
     if (isAiResponding && onStop) {
@@ -64,18 +70,23 @@ const InputArea = forwardRef<HTMLDivElement, InputAreaProps>(({
     // Clear any validation errors
     setValidationError('');
     
+    // Set submitting flag
+    setIsSubmitting(true);
+    
     // Proceed with submission
     onSubmit(e);
+    
+    // Reset submitting flag after a short delay
+    setTimeout(() => setIsSubmitting(false), 1000);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      // Create a proper form event
+      // Trigger form submission programmatically to avoid double submission
       const form = e.currentTarget.form;
       if (form) {
-        const submitEvent = new Event('submit', { bubbles: true, cancelable: true }) as any;
-        handleSubmit(submitEvent);
+        form.requestSubmit();
       }
     }
   };

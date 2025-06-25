@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getChats,
   getMessages,
@@ -30,6 +30,9 @@ import {
 } from '@/services/chatService';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
+import { useMessageStateMachine } from './useMessageStateMachine';
+import { logger } from '@/lib/logger';
+import { performanceMonitor } from '@/lib/performance';
 import {
   getGuestData,
   setGuestData,
@@ -45,6 +48,9 @@ export const useChat = () => {
   const queryClient = useQueryClient();
   const { user, isGuest } = useAuth();
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
+  
+  // Initialize message state machine for centralized state management
+  const messageStateMachine = useMessageStateMachine();
 
   // --- Guest State ---
   const [guestChats, setGuestChats] = useState<GuestChat[]>([]);
@@ -93,13 +99,80 @@ export const useChat = () => {
   });
 
   const addMessageMutation = useMutation({
-    mutationFn: addMessage,
+    mutationFn: async (message: NewMessage) => {
+      const startTime = performance.now();
+      logger.messageFlow('Adding message to database', undefined, {
+        chatId: message.chat_id,
+        role: message.role,
+        contentLength: message.content.length
+      });
+      
+      const result = await addMessage(message);
+      
+      performanceMonitor.recordMetric('database_operation', performance.now() - startTime, 'database', {
+        operation: 'add_message',
+        success: true
+      });
+      
+      return result;
+    },
     onSuccess: (newMessage) => {
-      // Don't automatically invalidate messages query to preserve UI state
-      // Manual invalidation should be done where needed
+      logger.messageFlow('Message saved successfully', newMessage.id, {
+        chatId: newMessage.chat_id,
+        role: newMessage.role
+      });
+      
+      // Update message state machine
+      messageStateMachine.setMessageState(newMessage.id, { type: 'completed', content: newMessage.content });
+      
+      // Update messages query cache to show the new message immediately
+      queryClient.setQueryData<Message[]>(['messages', newMessage.chat_id], (oldData: Message[] = []) => {
+        // Check if message already exists to avoid duplicates
+        const messageExists = oldData.some(msg => msg.id === newMessage.id);
+        if (messageExists) {
+          logger.warn('Duplicate message detected in cache', {
+            messageId: newMessage.id,
+            chatId: newMessage.chat_id,
+            existingMessageCount: oldData.length
+          });
+          return oldData;
+        }
+        
+        // Also check for duplicate content from the same user to prevent accidental duplicates
+        const duplicateContent = oldData.find(msg => 
+          msg.role === newMessage.role && 
+          msg.content === newMessage.content && 
+          msg.chat_id === newMessage.chat_id &&
+          Math.abs(new Date(msg.created_at).getTime() - new Date().getTime()) < 5000 // Within 5 seconds
+        );
+        
+        if (duplicateContent) {
+          logger.warn('Duplicate content detected in cache', {
+            messageId: newMessage.id,
+            duplicateMessageId: duplicateContent.id,
+            chatId: newMessage.chat_id,
+            content: newMessage.content.substring(0, 50)
+          });
+          return oldData;
+        }
+        
+        return [...oldData, newMessage];
+      });
       queryClient.invalidateQueries({ queryKey: ['chats', user?.id] });
     },
-    onError: (error: Error) => {
+    onError: (error: Error, variables) => {
+      logger.error('Failed to save message', error, {
+        chatId: variables.chat_id,
+        role: variables.role,
+        contentLength: variables.content.length
+      });
+      
+      performanceMonitor.recordMetric('database_operation', 0, 'database', {
+        operation: 'add_message',
+        success: false,
+        error: error.message
+      });
+      
       toast.error(error.message);
     }
   });

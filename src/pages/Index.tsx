@@ -1,19 +1,37 @@
-import { useQueryClient } from '@tanstack/react-query';
-import { v4 as uuidv4 } from 'uuid';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import Header from "@/components/Header";
 import AppSidebar from "@/components/AppSidebar";
 import ChatView, { ChatViewRef } from "@/components/ChatView";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { useChat } from "@/hooks/useChat";
 import { useAIProvider } from "@/hooks/useAIProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
+import { useChatPersistence } from "@/hooks/useChatPersistence";
+import { useRewrite } from "@/hooks/useRewrite";
 import type { ChatMessage } from "@/services/aiProviderService";
 import type { NewMessage, Message as DbMessage, MessageVariation } from "@/services/chatService";
 import { createMessageVariation, getMessageVariations, setActiveVariation } from "@/services/chatService";
+import { 
+  ensureChatExists,
+  addUserMessage,
+  createAssistantPlaceholder,
+  prepareChatHistory,
+  validateMessageSending,
+  createDeltaHandler,
+  createCompletionHandler,
+  createErrorHandler,
+  type MessageOperationContext
+} from "@/services/messageOperationsService";
+import { MessageQueueService } from "@/services/messageQueueService";
+import { RetryService } from "@/services/retryService";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import { logger, measurePerformance } from "@/lib/logger";
+import { performanceMonitor } from "@/lib/performance";
+import { useQueryClient } from '@tanstack/react-query';
+import { v4 as uuidv4 } from 'uuid';
 
 export type Message = DbMessage & { isStreaming?: boolean };
 
@@ -91,6 +109,45 @@ const Index = () => {
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const isDarkMode = profile?.theme !== 'light'; // Default to dark theme
 
+  // Chat persistence hook
+  const { isHydrated } = useChatPersistence({
+    activeChatId,
+    messages,
+    setActiveChatId,
+    chats
+  });
+
+
+
+  // Create sorted messages for consistent state across components
+  // This ensures proper chronological order and prevents rewrite association issues
+  // by providing the same deduplicated and sorted message array to all components
+  const sortedMessages = useMemo(() => {
+    return messages
+      .filter((msg, index, arr) => arr.findIndex(m => m.id === msg.id) === index) // Remove duplicates
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()); // Sort chronologically
+  }, [messages]);
+
+  // Rewrite functionality hook
+  const {
+    isRewriting,
+    rewriteError,
+    rewritingMessageId,
+    timeoutError,
+    canCancel,
+    handleRewrite,
+    clearRewriteError,
+    cancelRewrite,
+    retryRewrite
+  } = useRewrite({
+    activeChatId,
+    messages: sortedMessages,
+    selectedProvider,
+    selectedModel,
+    isGuest,
+    user
+  });
+
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -98,42 +155,6 @@ const Index = () => {
       document.documentElement.classList.remove('dark');
     }
   }, [isDarkMode]);
-
-  // Enhanced mobile reload handling
-  useEffect(() => {
-    const handleReloadState = () => {
-      const savedChatId = sessionStorage.getItem('activeChatId');
-      const isMobile = window.innerWidth < 768;
-      
-      if (savedChatId && !activeChatId && chats.length > 0) {
-        const chatExists = chats.find(chat => chat.id === savedChatId);
-        if (chatExists) {
-          // Force set active chat on mobile after reload
-          if (isMobile) {
-            setTimeout(() => {
-              setActiveChatId(savedChatId);
-            }, 100);
-          } else {
-            setActiveChatId(savedChatId);
-          }
-        }
-      }
-    };
-
-    handleReloadState();
-  }, [chats, activeChatId, setActiveChatId]);
-
-  // Enhanced sessionStorage persistence
-  useEffect(() => {
-    if (activeChatId) {
-      sessionStorage.setItem('activeChatId', activeChatId);
-      // Also store timestamp for mobile reload detection
-      sessionStorage.setItem('activeChatTimestamp', Date.now().toString());
-    } else {
-      sessionStorage.removeItem('activeChatId');
-      sessionStorage.removeItem('activeChatTimestamp');
-    }
-  }, [activeChatId]);
 
   // Restore active chat ID on component mount
   useEffect(() => {
@@ -167,198 +188,115 @@ const Index = () => {
   };
 
   const sendMessage = async (message: string) => {
-
-    let currentChatId = activeChatId;
-
-    if (!currentChatId) {
-      try {
-        const newChat = await createChatAsync(message);
-        currentChatId = newChat.id;
-      } catch (error) {
-        toast.error("Could not start a new chat. Please try again.");
-        setInput(message);
-        return;
-      }
-    } else if (messages.length === 0) {
-      const title = message.length > 30 ? message.substring(0, 27) + "..." : message;
-      updateChatTitle({ chatId: currentChatId, title: title });
-    }
-
-    if (!currentChatId) return;
-
-    const userMessage: NewMessage = {
-      chat_id: currentChatId,
-      content: message,
-      role: 'user',
-    };
-    addMessageMutation(userMessage);
-
-    const historyForAI: ChatMessage[] = [
-      ...messages.map(m => ({ role: m.role, content: m.content })),
-      { role: 'user', content: message }
-    ];
-
-    const assistantId = uuidv4();
-    const assistantPlaceholder: Message = {
-      id: assistantId,
-      chat_id: currentChatId,
-      content: '',
-      role: 'assistant',
-      created_at: new Date().toISOString(),
-      isStreaming: true,
-      user_id: user?.id || '',
-      model: selectedModel,
-      provider: selectedProvider,
-      usage: null,
-    };
-    
-    // Optimistically add placeholder
-    queryClient.setQueryData<Message[]>(['messages', currentChatId], (oldData: Message[] = []) => [
-      ...oldData,
-      assistantPlaceholder
-    ]);
-
-    let finalContent = "";
-    const controller = new AbortController();
-    setAbortController(controller);
-
     try {
-      await streamMessage(
-        historyForAI,
-        (delta) => { // onDelta
-          finalContent += delta;
-          queryClient.setQueryData<Message[]>(['messages', currentChatId], (oldData: Message[] = []) =>
-            oldData.map(msg => 
-              msg.id === assistantId ? { ...msg, content: finalContent } : msg
-            )
-          );
-        },
-        (usage) => { // onComplete
-          console.log('Creating final assistant message with:', {
-            provider: selectedProvider,
-            model: selectedModel,
-            usage: usage
-          });
-          const finalAssistantMessage: NewMessage = {
-            chat_id: currentChatId!,
-            content: finalContent,
-            role: 'assistant',
-            provider: selectedProvider,
-            model: selectedModel,
-            usage: usage || {
-              prompt_tokens: 0,
-              completion_tokens: 0,
-              total_tokens: 0
-            }
-          };
-          // Replace placeholder with final message from DB
-          addMessageMutation(finalAssistantMessage, {
-            onSuccess: (savedMessage) => {
-              // Update UI with the saved message, replacing the placeholder
-              queryClient.setQueryData<Message[]>(['messages', currentChatId], (oldData: Message[] = []) =>
-                oldData.map(msg => 
-                  msg.id === assistantId ? { ...savedMessage, isStreaming: false } : msg
-                )
-              );
-            }
-          });
-          setAbortController(null);
-        },
-        (error) => { // onError
-          if (error.name === 'AbortError') {
-            // Handle user cancellation - save interrupted message to database
-            const interruptedMessage: NewMessage = {
-              chat_id: currentChatId!,
-              content: finalContent || '', // Save whatever content was generated before interruption
-              role: 'assistant',
-              provider: selectedProvider,
-              model: selectedModel,
-              usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
-            };
-            
-            // Save to database so it can be used as parent for rewrite
-            addMessageMutation(interruptedMessage, {
-              onSuccess: (savedMessage) => {
-                // Update UI with the saved message ID and error state
-                queryClient.setQueryData<Message[]>(['messages', currentChatId], (oldData: Message[] = []) =>
-                  oldData.map(msg => 
-                    msg.id === assistantId 
-                      ? { 
-                          ...savedMessage,
-                          error: 'Generation was stopped by user.',
-                          isStreaming: false 
-                        }
-                      : msg
-                  )
-                );
-              },
-              onError: () => {
-                // Fallback to UI-only update if database save fails
-                queryClient.setQueryData<Message[]>(['messages', currentChatId], (oldData: Message[] = []) =>
-                  oldData.map(msg => 
-                    msg.id === assistantId 
-                      ? { 
-                          ...msg, 
-                          content: finalContent || '', 
-                          error: 'Generation was stopped by user.',
-                          isStreaming: false 
-                        }
-                      : msg
-                  )
-                );
-              }
-            });
-          } else {
-            toast.error(`Error from AI: ${error.message}`);
-            // Save error message to database so it can be used as parent for rewrite
-            const errorMessage: NewMessage = {
-              chat_id: currentChatId!,
-              content: finalContent || '', // Save whatever content was generated before error
-              role: 'assistant',
-              provider: selectedProvider,
-              model: selectedModel,
-              usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
-            };
-            
-            addMessageMutation(errorMessage, {
-              onSuccess: (savedMessage) => {
-                // Update UI with the saved message ID and error state
-                queryClient.setQueryData<Message[]>(['messages', currentChatId], (oldData: Message[] = []) =>
-                  oldData.map(msg => 
-                    msg.id === assistantId 
-                      ? { 
-                          ...savedMessage,
-                          error: `Failed to generate response: ${error.message}`,
-                          isStreaming: false 
-                        }
-                      : msg
-                  )
-                );
-              },
-              onError: () => {
-                // Fallback to UI-only update if database save fails
-                queryClient.setQueryData<Message[]>(['messages', currentChatId], (oldData: Message[] = []) =>
-                  oldData.map(msg => 
-                    msg.id === assistantId 
-                      ? { 
-                          ...msg, 
-                          content: finalContent || '', 
-                          error: `Failed to generate response: ${error.message}`,
-                          isStreaming: false 
-                        }
-                      : msg
-                  )
-                );
-              }
-            });
-          }
-          setAbortController(null);
-        },
-        controller.signal
+      // Get current messages for validation
+      const currentMessages = queryClient.getQueryData<Message[]>(['messages', activeChatId]) || [];
+      
+      // Validate message sending conditions
+      validateMessageSending(
+        message,
+        isAiResponding,
+        activeChatId,
+        selectedProvider,
+        selectedModel,
+        currentMessages
       );
+
+      logger.messageFlow('Message send initiated', '', {
+        messageLength: message.length,
+        activeChatId,
+        provider: selectedProvider,
+        model: selectedModel
+      });
+
+      // Create operation context
+      const context: MessageOperationContext = {
+        queryClient,
+        user,
+        selectedProvider,
+        selectedModel,
+        activeChatId,
+        messages,
+        setActiveChatId,
+        setAbortController,
+        updateChatTitle,
+        addMessageMutation,
+        streamMessage
+      };
+
+      // Ensure chat exists (create new or use existing)
+      const chatId = await ensureChatExists(message, activeChatId, context);
+      
+      // Add user message
+      addUserMessage(message, chatId, context);
+      
+      // Create assistant placeholder
+      const { assistantId, placeholder } = createAssistantPlaceholder(chatId, context);
+      
+      // Prepare chat history for AI
+      const historyForAI = prepareChatHistory(messages, message);
+      
+      // Set up abort controller
+      const controller = new AbortController();
+      setAbortController(controller);
+      
+      // Create handlers for streaming
+      const { onDelta, getFinalContent } = createDeltaHandler(assistantId, chatId, context);
+      const onComplete = createCompletionHandler(assistantId, chatId, context, getFinalContent);
+      const onError = createErrorHandler(assistantId, chatId, context, getFinalContent);
+      
+      logger.apiCall('Starting AI stream', selectedProvider, selectedModel, {
+        messageId: assistantId,
+        chatId,
+        historyLength: historyForAI.length
+      });
+      
+      // Stream AI response with retry logic
+      await RetryService.retryNetworkOperation(async () => {
+        await performanceMonitor.measureAsync(
+          'ai_stream_response',
+          async () => {
+            await streamMessage(
+              historyForAI,
+              onDelta,
+              onComplete,
+              onError,
+              controller.signal
+            );
+          }
+        );
+      });
+      
     } catch (error) {
       setAbortController(null);
-      throw error;
+      
+      if (error instanceof Error) {
+        logger.error('Message sending failed', error, {
+          messageLength: message.length,
+          activeChatId,
+          provider: selectedProvider,
+          model: selectedModel
+        });
+        
+        // Show user-friendly error message
+        if (error.message.includes('AI is currently responding')) {
+          // Don't show toast for this case, it's expected behavior
+          return;
+        }
+        
+        toast.error(error.message);
+        
+        // Restore input if message failed to send
+        if (error.message.includes('Could not start a new chat') || 
+            error.message.includes('Message cannot be empty') ||
+            error.message.includes('Please select a provider')) {
+          setInput(message);
+        }
+      } else {
+        logger.error('Unknown error during message sending', new Error(String(error)));
+        toast.error('An unexpected error occurred. Please try again.');
+        setInput(message);
+      }
     }
   };
   
@@ -468,10 +406,23 @@ const Index = () => {
       };
       
       // Add placeholder
-      queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) => [
-        ...oldData,
-        assistantPlaceholder
-      ]);
+      queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) => {
+        // Ensure we don't create duplicates by filtering out any existing duplicates first
+        const uniqueMessages = oldData.filter((msg, index, arr) => 
+          arr.findIndex(m => m.id === msg.id) === index
+        );
+        
+        // Only add placeholder if it doesn't already exist
+        const placeholderExists = uniqueMessages.some(msg => msg.id === assistantPlaceholder.id);
+        if (placeholderExists) {
+          return uniqueMessages;
+        }
+        
+        return [
+          ...uniqueMessages,
+          assistantPlaceholder
+        ];
+      });
       
       let finalContent = "";
       
@@ -479,11 +430,16 @@ const Index = () => {
         historyForAI,
         (delta) => {
           finalContent += delta;
-          queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) =>
-            oldData.map(msg => 
+          queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) => {
+            // Ensure we don't create duplicates by filtering out any existing duplicates first
+            const uniqueMessages = oldData.filter((msg, index, arr) => 
+              arr.findIndex(m => m.id === msg.id) === index
+            );
+            
+            return uniqueMessages.map(msg => 
               msg.id === assistantId ? { ...msg, content: finalContent } : msg
-            )
-          );
+            );
+          });
         },
         (usage) => {
           const finalAssistantMessage: NewMessage = {
@@ -501,159 +457,48 @@ const Index = () => {
           addMessageMutation(finalAssistantMessage, {
             onSuccess: (savedMessage) => {
               // Update UI with the saved message, replacing the placeholder
-              queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) =>
-                oldData.map(msg => 
+              queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) => {
+                // Ensure we don't create duplicates by filtering out any existing duplicates first
+                const uniqueMessages = oldData.filter((msg, index, arr) => 
+                  arr.findIndex(m => m.id === msg.id) === index
+                );
+                
+                return uniqueMessages.map(msg => 
                   msg.id === assistantId ? { ...savedMessage, isStreaming: false } : msg
-                )
-              );
+                );
+              });
             }
           });
         },
         (error) => {
           toast.error(`Error from AI: ${error.message}`);
-          queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) =>
-            oldData.filter(msg => msg.id !== assistantId)
-          );
-        }
+          queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) => {
+            // Ensure we don't create duplicates by filtering out any existing duplicates first
+            const uniqueMessages = oldData.filter((msg, index, arr) => 
+              arr.findIndex(m => m.id === msg.id) === index
+            );
+            
+            return uniqueMessages.filter(msg => msg.id !== assistantId);
+          });
+        },
+        undefined // signal parameter - no abort controller for rewrite
       );
     }
   };
 
-  // Rewrite functionality handlers
-  const handleRewrite = async (messageId: string) => {
-    const message = messages.find(msg => msg.id === messageId);
-    if (!message || message.role !== 'assistant' || !activeChatId) return;
+  // Duplicate useRewrite hook removed - using the one defined earlier
 
-    // Check if user is in guest mode
-    if (isGuest) {
-      toast.error('Rewrite functionality is not available in guest mode. Please sign in to use this feature.');
-      return;
-    }
-
-    // Check if user is authenticated
-    if (!user) {
-      toast.error('You must be signed in to use the rewrite feature.');
-      return;
-    }
-
-    // Find the conversation history up to this message
-    const messageIndex = messages.findIndex(msg => msg.id === messageId);
-    const historyForAI: ChatMessage[] = messages
-      .slice(0, messageIndex)
-      .map(m => ({ role: m.role, content: m.content }));
-
-    // Add the user message that prompted this assistant response
-    const userMessage = messages[messageIndex - 1];
-    if (userMessage && userMessage.role === 'user') {
-      historyForAI.push({ role: 'user', content: userMessage.content });
-    }
-
-    const assistantId = uuidv4();
-    const assistantPlaceholder: Message = {
-      id: assistantId,
-      chat_id: activeChatId,
-      content: '',
-      role: 'assistant',
-      created_at: new Date().toISOString(),
-      isStreaming: true,
-      user_id: user?.id || '',
-      model: selectedModel,
-      provider: selectedProvider,
-      usage: null,
-    };
-
-    // Add placeholder for the new variation
-    queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) => [
-      ...oldData,
-      assistantPlaceholder
-    ]);
-
-    let finalContent = "";
-
-    await streamMessage(
-      historyForAI,
-      (delta) => {
-        finalContent += delta;
-        queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) =>
-          oldData.map(msg => 
-            msg.id === assistantId ? { ...msg, content: finalContent } : msg
-          )
-        );
-      },
-      async (usage) => {
-        try {
-          // Create the message variation in the database
-          const variationId = await createMessageVariation(
-            messageId,
-            finalContent,
-            selectedModel,
-            selectedProvider,
-            usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
-          );
-
-          if (variationId) {
-            // Load all variations for this message
-            const variations = await getMessageVariations(messageId);
-            setMessageVariations(prev => ({
-              ...prev,
-              [messageId]: variations
-            }));
-
-            // Set the new variation as active
-            const newVariationIndex = variations.length - 1;
-            setCurrentVariationIndex(prev => ({
-              ...prev,
-              [messageId]: newVariationIndex
-            }));
-
-            // Update the message content to show the new variation with provider/model info
-            const newVariation = variations[newVariationIndex];
-            queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) =>
-              oldData.map(msg => 
-                msg.id === messageId ? { 
-                  ...msg, 
-                  content: finalContent,
-                  provider: newVariation?.provider || selectedProvider,
-                  model: newVariation?.model || selectedModel,
-                  usage: newVariation?.usage || usage
-                } : msg
-              ).filter(msg => msg.id !== assistantId) // Remove placeholder
-            );
-
-            toast.success('New variation created successfully!');
-          }
-        } catch (error) {
-          // Remove placeholder on error
-          queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) =>
-            oldData.filter(msg => msg.id !== assistantId)
-          );
-          
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          console.error('Failed to create message variation for message:', {
-            messageId,
-            selectedModel,
-            selectedProvider,
-            contentLength: finalContent?.length,
-            usage,
-            error: errorMessage
-          });
-          
-          toast.error(`Failed to create message variation: ${errorMessage}`);
-        }
-      },
-      (error) => {
-        toast.error(`Error generating rewrite: ${error.message}`);
-        // Remove placeholder on error
-        queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) =>
-          oldData.filter(msg => msg.id !== assistantId)
-        );
-      }
-    );
-  };
-
+  // Variation change handler - this could be moved to the rewrite hook in the future
   const handleVariationChange = async (messageId: string, newIndex: number) => {
     const variations = messageVariations[messageId];
-    if (!variations || newIndex < 0 || newIndex >= variations.length) return;
+    if (!variations || newIndex < 0 || newIndex >= variations.length) {
+      console.warn('handleVariationChange: Invalid variation index or no variations found', {
+        messageId,
+        newIndex,
+        variationsLength: variations?.length || 0
+      });
+      return;
+    }
 
     // Check if user is in guest mode
     if (isGuest) {
@@ -667,41 +512,80 @@ const Index = () => {
       return;
     }
 
-    // Update the active variation in the database
-    const success = await setActiveVariation(messageId, newIndex);
-    if (success) {
-      // Update local state
-      setCurrentVariationIndex(prev => ({
-        ...prev,
-        [messageId]: newIndex
-      }));
+    // Optimistically update local state first for immediate UI feedback
+    setCurrentVariationIndex(prev => ({
+      ...prev,
+      [messageId]: newIndex
+    }));
 
-      // Update the message with all variation data in the UI
-      const selectedVariation = variations[newIndex];
-      queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) =>
-        oldData.map(msg => 
-          msg.id === messageId ? { 
-            ...msg, 
-            content: selectedVariation.content,
-            provider: selectedVariation.provider || msg.provider,
-            model: selectedVariation.model || msg.model,
-            usage: selectedVariation.usage || msg.usage,
-            created_at: selectedVariation.created_at || msg.created_at
-          } : msg
-        )
+    const selectedVariation = variations[newIndex];
+    
+    // Optimistically update the message content in the UI with duplicate prevention
+    queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) => {
+      // Ensure no duplicates exist before updating
+      const uniqueMessages = oldData.filter((msg, index, arr) => 
+        arr.findIndex(m => m.id === msg.id) === index
       );
-    } else {
-      console.error('Failed to switch variation:', {
-        messageId,
-        newIndex,
-        variationsLength: variations.length,
-        hasVariations: !!variations
-      });
-      toast.error('Failed to switch variation. Check console for details.');
+      
+      return uniqueMessages.map(msg => 
+        msg.id === messageId ? { 
+          ...msg, 
+          content: selectedVariation.content,
+          provider: selectedVariation.provider || msg.provider,
+          model: selectedVariation.model || msg.model,
+          usage: selectedVariation.usage || msg.usage,
+          created_at: selectedVariation.created_at || msg.created_at
+        } : msg
+      );
+    });
+
+    // Update the active variation in the database
+    try {
+      const success = await setActiveVariation(messageId, newIndex);
+      if (!success) {
+        // Revert optimistic update on failure
+        const previousIndex = Object.keys(currentVariationIndex).includes(messageId) 
+          ? currentVariationIndex[messageId] 
+          : 0;
+        
+        setCurrentVariationIndex(prev => ({
+          ...prev,
+          [messageId]: previousIndex
+        }));
+        
+        const previousVariation = variations[previousIndex];
+        queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) => {
+          // Ensure no duplicates exist before reverting
+          const uniqueMessages = oldData.filter((msg, index, arr) => 
+            arr.findIndex(m => m.id === msg.id) === index
+          );
+          
+          return uniqueMessages.map(msg => 
+            msg.id === messageId ? { 
+              ...msg, 
+              content: previousVariation.content,
+              provider: previousVariation.provider || msg.provider,
+              model: previousVariation.model || msg.model,
+              usage: previousVariation.usage || msg.usage
+            } : msg
+          );
+        });
+        
+        console.error('Failed to switch variation:', {
+          messageId,
+          newIndex,
+          variationsLength: variations.length,
+          hasVariations: !!variations
+        });
+        toast.error('Failed to switch variation. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error switching variation:', error);
+      toast.error('An error occurred while switching variations.');
     }
   };
 
-  // Load message variations when messages change
+  // Load message variations when messages change - TODO: Move to variations hook
   useEffect(() => {
     const loadVariations = async () => {
       // Prevent repeated calls
@@ -718,7 +602,7 @@ const Index = () => {
       
       isLoadingVariationsRef.current = true;
 
-      const assistantMessages = messages.filter(msg => msg.role === 'assistant');
+      const assistantMessages = messages.filter(msg => msg.role === 'assistant' && msg.id);
       const variationsData: Record<string, MessageVariation[]> = {};
       const indexData: Record<string, number> = {};
       let hasErrors = false;
@@ -741,7 +625,28 @@ const Index = () => {
                 if (variations.length > 0) {
                   variationsData[message.id] = variations;
                   const activeVariation = variations.find(v => v.is_active_variation);
-                  indexData[message.id] = activeVariation ? activeVariation.variation_index : 0;
+                  const activeIndex = activeVariation ? activeVariation.variation_index : 0;
+                  indexData[message.id] = activeIndex;
+                  
+                  // Update message content with active variation to ensure persistence after reload
+                  if (activeVariation && activeVariation.content !== message.content) {
+                    queryClient.setQueryData<Message[]>(['messages', activeChatId], (oldData: Message[] = []) => {
+                      // Ensure we don't create duplicates by filtering out any existing duplicates first
+                      const uniqueMessages = oldData.filter((msg, index, arr) => 
+                        arr.findIndex(m => m.id === msg.id) === index
+                      );
+                      
+                      return uniqueMessages.map(msg => 
+                        msg.id === message.id ? { 
+                          ...msg, 
+                          content: activeVariation.content,
+                          provider: activeVariation.provider || msg.provider,
+                          model: activeVariation.model || msg.model,
+                          usage: activeVariation.usage || msg.usage
+                        } : msg
+                      );
+                    });
+                  }
                 }
               } catch (error) {
                 console.error(`Failed to load variations for message ${message.id}:`, error);
@@ -767,10 +672,10 @@ const Index = () => {
        }
      };
 
-    if (messages.length > 0) {
+    if (messages.length > 0 && isHydrated) {
       loadVariations();
     }
-  }, [messages, isGuest, user]);
+  }, [messages, isGuest, user, isHydrated, activeChatId, queryClient]);
 
   // Helper function to find message pairs (user input + assistant output)
   const findMessagePair = (messages: Message[], targetMessageId: string): string[] => {
@@ -853,7 +758,18 @@ const Index = () => {
   };
 
   return (
-    <>
+    <ErrorBoundary
+      onError={(error, errorInfo) => {
+        logger.error('React Error Boundary caught error in Index component', error, {
+          componentStack: errorInfo.componentStack,
+          activeChatId,
+          messagesCount: messages.length,
+          isAiResponding,
+          selectedProvider,
+          selectedModel
+        });
+      }}
+    >
       <AppSidebar 
         isDarkMode={isDarkMode}
         toggleDarkMode={toggleDarkMode}
@@ -897,7 +813,7 @@ const Index = () => {
                 isLoadingTags={isLoadingTags}
                 onAssignTagToChat={handleAssignTagToChat}
                 onRemoveTagFromChat={handleRemoveTagFromChat}
-                messages={messages}
+                messages={sortedMessages}
                 onCreateFolder={createFolder}
                 onCreateTag={createTag}
                 onOpenSettings={handleOpenSettings}
@@ -905,9 +821,11 @@ const Index = () => {
             </div>
           </header>
 
+
+
           <ChatView
           ref={chatViewRef}
-          messages={messages}
+          messages={sortedMessages}
           isLoading={isLoadingMessages}
           isAiResponding={isAiResponding}
           input={input}
@@ -925,13 +843,21 @@ const Index = () => {
           onCancelEdit={handleCancelEdit}
           onDeleteMessage={handleDeleteMessage}
           onRewrite={handleRewrite}
+          onCancelRewrite={cancelRewrite}
+          onRetryRewrite={retryRewrite}
+          onClearRewriteError={clearRewriteError}
+          isRewriting={isRewriting}
+          rewriteError={rewriteError}
+          rewritingMessageId={rewritingMessageId}
+          timeoutError={timeoutError}
+          canCancel={canCancel}
           messageVariations={messageVariations}
           currentVariationIndex={currentVariationIndex}
           onVariationChange={handleVariationChange}
         />
         </div>
       </SidebarInset>
-    </>
+    </ErrorBoundary>
   );
 };
 

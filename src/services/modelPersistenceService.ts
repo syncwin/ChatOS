@@ -19,7 +19,7 @@ class ModelPersistenceService {
       .from('profiles')
       .upsert({
         id: userId,
-        model_selection: modelSelection as any,
+        model_selection: modelSelection,
         updated_at: new Date().toISOString(),
       });
 
