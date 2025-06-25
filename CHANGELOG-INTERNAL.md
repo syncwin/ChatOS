@@ -28,6 +28,11 @@ This file documents internal changes, fixes, and refactoring steps for the ChatO
   - Removed deno.lock file that was causing incorrect Deno project detection
   - Configured proper build and start commands for production deployment
   - Set NODE_ENV=production for optimal performance
+  - **ENHANCED**: Updated Nixpacks configuration to prevent persistent Deno detection
+    - Changed nixPkgs to use specific "nodejs_18" instead of generic "nodejs"
+    - Separated install and build phases for better control
+    - Added NIXPACKS_NO_CACHE=1 to prevent caching issues
+    - Created .node-version file to explicitly indicate Node.js 18 project
 
 ### Fixed
 - Message state synchronization issues between UI and backend

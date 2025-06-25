@@ -1,17 +1,21 @@
 # Nixpacks configuration for ChatOS
-# This ensures Node.js and npm are available in the build environment
+# Force Nixpacks to use Node.js provider and prevent Deno detection
 
 [providers]
-node = "18"  # Use Node.js 18 (matches your project requirements)
+node = "18"
 
 [phases.setup]
-nixPkgs = ["nodejs", "npm"]
+nixPkgs = ["nodejs_18", "npm"]
+
+[phases.install]
+cmds = ["npm ci"]
 
 [phases.build]
-cmds = ["npm ci", "npm run build"]
+cmds = ["npm run build"]
 
 [phases.start]
 cmd = "npm run preview"
 
 [variables]
 NODE_ENV = "production"
+NIXPACKS_NO_CACHE = "1"
