@@ -48,6 +48,12 @@ This file documents internal changes, fixes, and refactoring steps for the ChatO
     - Removed deprecated `-H` flag from serve command in Dockerfile
     - Updated to use correct syntax: `serve -s dist -l 0.0.0.0:4173`
     - Resolves "Restarting (unhealthy)" status in Coolify deployments
+  - **SECURITY ENHANCEMENT**: Environment Variable Cleanup for Production Security:
+    - Removed hardcoded Supabase credentials from `src/integrations/supabase/client.ts`
+    - Updated `.env` file to remove production secrets and serve as clean template
+    - Ensured `docker-compose.yaml` properly references environment variables without hardcoded values
+    - Production secrets must now be set in Coolify UI Environment Variables section
+    - Follows security best practices by separating development templates from production credentials
   - **CRITICAL FIX**: Fixed serve "--listen endpoint scheme" error:
     - Updated serve command to use proper TCP scheme: `serve -s dist -l tcp://0.0.0.0:4173`
     - Added serve version check in Dockerfile for debugging purposes
