@@ -39,6 +39,11 @@ This file documents internal changes, fixes, and refactoring steps for the ChatO
   - Fixed Docker Compose file extension from .yml to .yaml for Coolify compatibility
   - Removed .nixpacks.toml file as Docker Compose is now the primary deployment method
   - **CRITICAL FIX**: Fixed 'vite: not found' error in Docker build by installing all dependencies (including devDependencies) during build stage, then only production dependencies in final stage
+  - **CRITICAL FIX**: Fixed 404/Unhealthy state after successful Coolify deployment:
+    - Added `preview: { host: '0.0.0.0', port: 4173 }` configuration to `vite.config.ts` for proper network binding
+    - Updated Dockerfile serve command to bind to `0.0.0.0` instead of localhost using `-H` flag
+    - Installed curl in Alpine container for health check functionality
+    - App now properly accessible on Coolify after deployment
 
 ### Fixed
 - Message state synchronization issues between UI and backend

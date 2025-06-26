@@ -20,8 +20,8 @@ RUN npm run build
 # Production stage
 FROM node:18-alpine AS production
 
-# Install serve globally for serving the built app
-RUN npm install -g serve
+# Install serve globally and curl for health checks
+RUN npm install -g serve && apk add --no-cache curl
 
 # Set working directory
 WORKDIR /app
@@ -49,4 +49,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:4173 || exit 1
 
 # Start the application
-CMD ["serve", "-s", "dist", "-l", "4173"]
+CMD ["serve", "-s", "dist", "-l", "4173", "-H", "0.0.0.0"]
