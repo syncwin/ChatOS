@@ -26,26 +26,42 @@ yarn install
 
 ### 2. Environment Configuration
 
-**IMPORTANT**: The application now uses environment variables for security. A `.env.local` file has been created with the required configuration.
+**IMPORTANT**: The application uses environment variables for security and configuration management.
 
-#### Environment Variables Setup
+#### Local Development Setup
 
-1. **Verify `.env.local` exists** in the project root
-2. **Check configuration**:
+1. **Copy the environment template**:
    ```bash
-   # Required Supabase configuration
-   VITE_SUPABASE_URL=https://ejjmwhkjnkxtmzvpqnig.supabase.co
-   VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+   cp .env.example .env
    ```
 
-3. **Optional development settings**:
+2. **Fill in your local/development values** in `.env`:
    ```bash
+   # Required Supabase configuration
+   VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+   
+   # Optional development settings
    VITE_PORT=8080
    VITE_HOST=localhost
    VITE_DEV_MODE=true
    ```
 
-> **Security Note**: Environment variables are now properly configured to prevent hardcoded secrets in the codebase. The `.env.local` file is automatically ignored by git.
+3. **Never commit production secrets** - The `.env` file is automatically ignored by git.
+
+#### Production Deployment (Coolify)
+
+- **Local**: Use `.env` file for development (not committed to git)
+- **Production**: Set environment variables in Coolify UI under "Environment Variables"
+- **Required variables for production**:
+  - `VITE_SUPABASE_URL`
+  - `VITE_SUPABASE_ANON_KEY`
+  - Mark as **Build Variable** in Coolify for Vite builds
+
+> **Security Note**: 
+> - `.env` is ignored by git to prevent accidental commits of secrets
+> - Use `.env.example` as a template for required variables
+> - Production secrets are managed exclusively through Coolify UI
 
 ### 3. Start Development Server
 
