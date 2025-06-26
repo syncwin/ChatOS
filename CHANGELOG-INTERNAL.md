@@ -48,6 +48,10 @@ This file documents internal changes, fixes, and refactoring steps for the ChatO
     - Removed deprecated `-H` flag from serve command in Dockerfile
     - Updated to use correct syntax: `serve -s dist -l 0.0.0.0:4173`
     - Resolves "Restarting (unhealthy)" status in Coolify deployments
+  - **CRITICAL FIX**: Fixed serve "--listen endpoint scheme" error:
+    - Updated serve command to use proper TCP scheme: `serve -s dist -l tcp://0.0.0.0:4173`
+    - Added serve version check in Dockerfile for debugging purposes
+    - Resolves endpoint scheme validation errors in newer serve versions
 
 ### Fixed
 - Message state synchronization issues between UI and backend
