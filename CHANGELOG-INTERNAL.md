@@ -4,6 +4,18 @@ This file documents internal changes, fixes, and refactoring steps for the ChatO
 
 ## [Unreleased]
 
+### CRITICAL FIX: DOCKER COMPOSE COOLIFY DEPLOYMENT CONFIGURATION
+- **ISSUE FIXED**: Resolved blank screen with "Missing required Supabase environment variables" error in Coolify deployments
+- **ROOT CAUSE**: VITE_ environment variables were not available during build time - they were being passed as runtime environment variables instead of build arguments
+- **DOCKERFILE UPDATES**: Added ARG declarations and ENV settings for VITE_ variables during build stage to ensure availability at build time
+- **DOCKER COMPOSE FIX**: Moved VITE_ variables from `environment` to `build.args` section in docker-compose.yaml
+- **DOCUMENTATION UPDATES**: Corrected ENVIRONMENT_VARIABLES.md and DOCKER_COMPOSE_SETUP.md with proper Coolify configuration instructions
+- **TROUBLESHOOTING GUIDE**: Enhanced with specific solutions for common deployment issues and environment variable problems
+- **DEPLOYMENT INSTRUCTIONS**: Clarified that VITE_ variables should be set as regular "Environment Variables" in Coolify UI (not build variables)
+- **REQUIRED VARIABLES**: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are mandatory for application functionality
+- **OPTIONAL VARIABLES**: VITE_SENTRY_DSN, VITE_ANTHROPIC_API_KEY, and OPENAI_API_KEY for enhanced features
+- **TECHNICAL SOLUTION**: Docker Compose now automatically passes environment variables as build arguments during the build process
+
 ### CRITICAL SECURITY: SENSITIVE FILES REMOVED FROM REPOSITORY
 - **REPOSITORY CLEANUP**: Removed `.env` and `.env.production` from Git tracking using `git rm --cached`
 - **HARDCODED SECRETS**: Eliminated all hardcoded Supabase URL and anonymous key fallbacks from service files

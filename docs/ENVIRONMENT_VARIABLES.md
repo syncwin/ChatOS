@@ -76,22 +76,24 @@ In Coolify UI, navigate to your application and set the following environment va
 
 | Variable | Type | Description |
 |----------|------|-------------|
-| `VITE_SUPABASE_URL` | Build Variable | Your Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | Build Variable | Your Supabase anonymous key |
+| `VITE_SUPABASE_URL` | Environment Variable | Your Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Environment Variable | Your Supabase anonymous key |
 
 #### Optional Variables
 
 | Variable | Type | Description |
 |----------|------|-------------|
-| `VITE_ANTHROPIC_API_KEY` | Build Variable | Anthropic API key (if needed) |
-| `VITE_SENTRY_DSN` | Build Variable | Sentry DSN for error reporting |
-| `OPENAI_API_KEY` | Build Variable | OpenAI API key (if needed) |
+| `VITE_ANTHROPIC_API_KEY` | Environment Variable | Anthropic API key (if needed) |
+| `VITE_SENTRY_DSN` | Environment Variable | Sentry DSN for error reporting |
+| `OPENAI_API_KEY` | Environment Variable | OpenAI API key (if needed) |
 
 ### 2. Important Notes
 
-- **Mark as Build Variable**: All `VITE_*` variables must be marked as "Build Variable" in Coolify
+- **Environment Variables Only**: With the updated Docker Compose setup, all variables should be set as regular "Environment Variables" in Coolify (not build variables)
+- **Build-time Integration**: The Docker Compose configuration automatically passes VITE_ variables as build arguments during the build process
 - **No env files in production**: Don't include `.env` files in production builds
 - **Restart after changes**: Stop and start the app in Coolify after variable changes
+- **Required Variables**: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are mandatory for the app to function
 
 ## Docker Compose Configuration
 

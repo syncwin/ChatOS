@@ -42,10 +42,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+        - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+        - VITE_ANTHROPIC_API_KEY=${VITE_ANTHROPIC_API_KEY:-}
+        - VITE_SENTRY_DSN=${VITE_SENTRY_DSN:-}
+        - OPENAI_API_KEY=${OPENAI_API_KEY:-}
     environment:
       - NODE_ENV=production
-      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
-      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
     # No ports section - Coolify manages this
 ```
 
@@ -107,6 +111,18 @@ services:
    - [ ] Select the `frontend` service as the main service
    - [ ] Set port to `4173` (Vite preview default)
 
+5. **Environment Variables:**
+   - [ ] Add required environment variables in Coolify UI (as regular Environment Variables, NOT build variables):
+   - [ ] `VITE_SUPABASE_URL=https://your-project-ref.supabase.co`
+   - [ ] `VITE_SUPABASE_ANON_KEY=your_supabase_anon_key`
+   
+   **Optional variables:**
+   - [ ] `VITE_ANTHROPIC_API_KEY=your_anthropic_key`
+   - [ ] `OPENAI_API_KEY=your_openai_key`
+   - [ ] `VITE_SENTRY_DSN=your_sentry_dsn`
+   
+   **Important**: The Docker Compose setup automatically handles passing VITE_ variables as build arguments during the build process.
+
 ---
 
 ## 6. **Environment Variables in Coolify**
@@ -161,24 +177,41 @@ If using a custom domain:
 
 ### Common Issues:
 
-**Build Fails:**
-- [ ] Check Docker build logs
-- [ ] Verify all files are committed
-- [ ] Ensure `.dockerignore` isn't excluding required files
+1. **Blank Screen with "Missing required Supabase environment variables" Error:**
+   - **Cause**: VITE_ environment variables not available during build time
+   - **Solution**: Ensure you're using the updated Docker Compose configuration with build args
+   - [ ] Verify `docker-compose.yaml` includes `args` section under `build`
+   - [ ] Check that environment variables are set in Coolify UI as regular "Environment Variables" (not build variables)
+   - [ ] Redeploy the application after updating configuration
 
-**Environment Variables:**
-- [ ] Verify all required variables are set
-- [ ] Check variable names match exactly
-- [ ] Ensure Supabase URL and keys are correct
+2. **Build Fails:**
+   - [ ] Check Docker build logs in Coolify
+   - [ ] Verify all files are committed
+   - [ ] Ensure `.dockerignore` isn't excluding required files
+   - [ ] Check environment variables are set correctly in Coolify
+   - [ ] Ensure all required variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) are provided
 
-**Port Issues:**
-- [ ] Confirm port `4173` is configured in Coolify
-- [ ] Check health check is passing
+3. **App doesn't start:**
+   - [ ] Verify health check endpoint responds at `http://localhost:4173`
+   - [ ] Check container logs in Coolify
+   - [ ] Ensure port 4173 is exposed correctly
+   - [ ] Verify the built application exists in `/app/dist`
 
-**Supabase Connection:**
-- [ ] Verify Supabase URL is accessible
-- [ ] Check CORS settings in Supabase
-- [ ] Confirm API keys have correct permissions
+4. **Environment Variables:**
+   - [ ] Verify all required variables are set
+   - [ ] Check variable names match exactly (case-sensitive)
+   - [ ] Ensure Supabase URL and keys are correct
+   - [ ] For VITE_ variables: ensure they're passed as build arguments
+   - [ ] Check browser console for specific error messages
+
+5. **Port Issues:**
+   - [ ] Confirm port `4173` is configured in Coolify
+   - [ ] Check health check is passing
+
+6. **Supabase Connection:**
+   - [ ] Verify Supabase URL is accessible
+   - [ ] Check CORS settings in Supabase
+   - [ ] Confirm API keys have correct permissions
 
 ### Debug Commands:
 
