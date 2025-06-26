@@ -49,4 +49,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:4173 || exit 1
 
 # Start the application
-CMD ["serve", "-s", "dist", "-l", "4173", "-H", "0.0.0.0"]
+CMD ["serve", "-s", "dist", "-l", "0.0.0.0:4173"]

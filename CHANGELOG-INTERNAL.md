@@ -44,6 +44,10 @@ This file documents internal changes, fixes, and refactoring steps for the ChatO
     - Updated Dockerfile serve command to bind to `0.0.0.0` instead of localhost using `-H` flag
     - Installed curl in Alpine container for health check functionality
     - App now properly accessible on Coolify after deployment
+  - **CRITICAL FIX**: Fixed serve command ArgError causing container restarts:
+    - Removed deprecated `-H` flag from serve command in Dockerfile
+    - Updated to use correct syntax: `serve -s dist -l 0.0.0.0:4173`
+    - Resolves "Restarting (unhealthy)" status in Coolify deployments
 
 ### Fixed
 - Message state synchronization issues between UI and backend
