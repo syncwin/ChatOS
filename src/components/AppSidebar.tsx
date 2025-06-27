@@ -144,7 +144,7 @@ const AppSidebar = ({
   };
 
   // UI Components
-  const newChatButton = <Button onClick={onNewChat} size={isCollapsed ? "icon" : "default"} className={cn("gradient-button", !isCollapsed && "w-full")}>
+  const newChatButton = <Button onClick={onNewChat} size={isCollapsed ? "icon" : "default"} className={cn("bg-accent hover:bg-accent/90 text-accent-foreground border-0", !isCollapsed && "w-full")}>
       <Plus className="w-4 h-4" />
       {!isCollapsed && <span>New Chat</span>}
     </Button>;
@@ -174,7 +174,7 @@ const AppSidebar = ({
                 <div className="relative px-2">
                   <label htmlFor="search-chats" className="sr-only">Search chats</label>
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-                  <input id="search-chats" type="text" placeholder="Search chats..." value={searchTerm} onChange={handleSearchChange} className="w-full pl-10 pr-4 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-input border border-border text-foreground placeholder:text-muted-foreground" />
+                  <input id="search-chats" type="text" placeholder="Search chats..." value={searchTerm} onChange={handleSearchChange} className="w-full pl-10 pr-4 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring bg-input text-foreground placeholder:text-muted-foreground" />
                 </div>
               </SidebarGroupContent>
             </SidebarGroup>}

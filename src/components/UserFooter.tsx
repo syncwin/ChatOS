@@ -53,11 +53,11 @@ const UserFooter = ({ isGuest, user, onOpenProfile }: UserFooterProps) => {
     }
     return (
       <div className="space-y-3">
-        <div className="p-3 rounded-md bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800">
-          <div className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
+        <div className="p-3 rounded-md bg-muted/30">
+          <div className="text-sm font-medium text-foreground mb-1">
             Sign in for more features
           </div>
-          <div className="text-xs text-blue-700 dark:text-blue-300 mb-3">
+          <div className="text-xs text-muted-foreground mb-3">
             Save your chats, sync across devices, and access advanced settings
           </div>
           <Button 

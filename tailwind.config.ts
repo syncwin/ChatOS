@@ -62,6 +62,17 @@ export default {
 				"gutter-lg": "2rem", // 32px
 			},
 			colors: {
+				// Brand Color Palette - Enforced Colors Only
+				brand: {
+					base: {
+						dark: '#0d0d0d',
+						light: '#ffffff',
+					},
+					primary: '#3f00ff',
+					secondary: '#FFFF00',
+					accent: '#FF8000',
+				},
+				// Shadcn Design System Colors (using CSS variables)
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',

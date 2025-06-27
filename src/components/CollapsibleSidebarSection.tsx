@@ -37,7 +37,7 @@ const CollapsibleSidebarSection = ({
           e.stopPropagation();
           onTogglePin();
         }} aria-label={isPinned ? "Unpin section" : "Pin section"}>
-            {isPinned ? <Pin className="w-3 h-3 text-blue-500" /> : <PinOff className="w-3 h-3" />}
+            {isPinned ? <Pin className="w-3 h-3 text-accent" /> : <PinOff className="w-3 h-3" />}
           </Button>
         </div>
       </div>

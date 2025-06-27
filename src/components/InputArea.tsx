@@ -100,7 +100,7 @@ const InputArea = forwardRef<HTMLDivElement, InputAreaProps>(({
       return {
         container: 'py-2', // Only vertical padding, horizontal handled by parent
         form: 'flex gap-2 items-end w-full',
-        inputWrapper: 'flex-1 flex items-center p-2 bg-input border border-input focus-within:ring-2 focus-within:ring-primary transition-all rounded min-w-0 w-full',
+        inputWrapper: 'flex-1 flex items-center p-2 bg-input focus-within:ring-2 focus-within:ring-primary transition-all rounded min-w-0 w-full',
         textarea: 'flex-1 w-full resize-none p-2 bg-transparent text-sm focus:outline-none rounded-none min-w-0 overflow-hidden',
         button: 'h-9 w-9 rounded-md transition-all flex-shrink-0 ml-2',
         icon: 'w-4 h-4'
@@ -109,7 +109,7 @@ const InputArea = forwardRef<HTMLDivElement, InputAreaProps>(({
       return {
         container: 'py-3', // Only vertical padding, horizontal handled by parent
         form: 'flex gap-3 items-end w-full',
-        inputWrapper: 'flex-1 flex items-center p-2.5 bg-input border border-input focus-within:ring-2 focus-within:ring-primary transition-all rounded min-w-0 w-full',
+        inputWrapper: 'flex-1 flex items-center p-2.5 bg-input focus-within:ring-2 focus-within:ring-primary transition-all rounded min-w-0 w-full',
         textarea: 'flex-1 w-full resize-none p-2.5 bg-transparent text-base focus:outline-none rounded-none min-w-0 overflow-hidden',
         button: 'h-10 w-10 rounded-md transition-all flex-shrink-0 ml-2',
         icon: 'w-4 h-4'
@@ -118,7 +118,7 @@ const InputArea = forwardRef<HTMLDivElement, InputAreaProps>(({
       return {
         container: 'py-2 sm:py-4', // Only vertical padding, horizontal handled by parent
         form: 'flex gap-2 sm:gap-4 items-end w-full',
-        inputWrapper: 'flex-1 flex items-center p-1 sm:p-2 bg-input border border-input focus-within:ring-2 focus-within:ring-primary transition-all rounded min-w-0 w-full',
+        inputWrapper: 'flex-1 flex items-center p-1 sm:p-2 bg-input focus-within:ring-2 focus-within:ring-primary transition-all rounded min-w-0 w-full',
         textarea: 'flex-1 w-full resize-none p-2 bg-transparent text-sm sm:text-base focus:outline-none rounded-none min-w-0 overflow-hidden',
         button: 'h-8 w-8 sm:h-9 sm:w-9 rounded-md transition-all flex-shrink-0 ml-1 sm:ml-2',
         icon: 'w-3 h-3 sm:w-4 sm:h-4'
@@ -161,13 +161,13 @@ const InputArea = forwardRef<HTMLDivElement, InputAreaProps>(({
             {isAiResponding ? (
               <Square className={classes.icon} />
             ) : (
-              <Send className={`${classes.icon} text-primary-foreground dark:text-foreground`} />
+              <Send className={classes.icon} />
             )}
           </Button>
         </div>
       </form>
       {validationError && (
-        <p id="input-error" className="text-xs mt-2 text-center text-red-500" role="alert">
+        <p id="input-error" className="text-xs mt-2 text-center text-destructive" role="alert">
           {validationError}
         </p>
       )}

@@ -77,11 +77,11 @@ const ChatItem = ({
           />
         </div>
       ) : isCollapsed ? (
-        chat.is_pinned ? <Pin className="w-4 h-4 text-amber-500" /> : <MessageSquare className="w-4 h-4" />
+        chat.is_pinned ? <Pin className="w-4 h-4 text-accent" /> : <MessageSquare className="w-4 h-4" />
       ) : (
         <div>
           <div className="flex items-start">
-            {chat.is_pinned && <Pin className="w-3 h-3 mr-2 mt-1 flex-shrink-0 text-amber-500" />}
+            {chat.is_pinned && <Pin className="w-3 h-3 mr-2 mt-1 flex-shrink-0 text-accent" />}
             <div className="flex-1 min-w-0">
               <div className="truncate text-sm font-medium">{chat.title}</div>
               <div className="text-xs text-muted-foreground group-data-[active=true]/item:text-primary-foreground/70">{chat.date}</div>

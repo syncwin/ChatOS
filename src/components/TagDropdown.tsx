@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Tag as TagType } from "@/services/chatService";
 
 interface TagDropdownProps {
@@ -78,12 +79,12 @@ const TagDropdown = ({
             <Button
               variant="ghost"
               size="icon"
-              className="header-icon-hover h-8 w-8 relative"
+              className="h-8 w-8 relative hover:opacity-80 transition-opacity duration-200"
               disabled={!activeChat || isLoading}
             >
               <Tag className="w-4 h-4" />
               {hasAssignedTags && (
-                <div className="selection-indicator-with-number">
+                <div className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full flex items-center justify-center min-w-[8px] min-h-[8px]">
                   {chatTags.length > 1 && (
                     <span className="text-[0.5rem] font-medium text-primary-foreground leading-none">
                       {chatTags.length}
@@ -168,7 +169,8 @@ const TagDropdown = ({
           
           <Separator />
           
-          <div className="space-y-1 max-h-40 overflow-y-auto">
+          <ScrollArea className="max-h-40">
+            <div className="space-y-1">
             {filteredTags.length === 0 ? (
               <div className="text-sm text-muted-foreground text-center py-2">
                 No tags found
@@ -196,7 +198,8 @@ const TagDropdown = ({
                 );
               })
             )}
-          </div>
+            </div>
+          </ScrollArea>
         </div>
       </PopoverContent>
     </Popover>

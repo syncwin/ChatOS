@@ -85,7 +85,7 @@ const ProviderIconSelector = ({
           <Button
             variant="ghost"
             size="icon"
-            className="header-icon-hover h-8 w-8"
+            className="h-8 w-8 hover:opacity-80 transition-opacity duration-200"
             disabled
           >
             <Bot className="w-4 h-4" />
@@ -120,11 +120,11 @@ const ProviderIconSelector = ({
             <Button
               variant="ghost"
               size="icon"
-              className="header-icon-hover h-8 w-8 relative"
+              className="h-8 w-8 relative hover:opacity-80 transition-opacity duration-200"
             >
               <SelectedIcon className="w-4 h-4" />
               {selectedProvider && selectedModel && (
-                <div className="selection-indicator" />
+                <div className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" />
               )}
             </Button>
           </PopoverTrigger>

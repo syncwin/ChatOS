@@ -365,7 +365,7 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
                   </div>
                 </div>
                 {currentData.usage && (
-                  <div className="border-t pt-2">
+                  <div className="bg-muted/20 pt-2 mt-2 rounded">
                     <p className="text-xs font-medium mb-2">Token Usage</p>
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       <div className="bg-muted/50 rounded px-2 py-1">
@@ -422,7 +422,7 @@ const ChatActionIcons: React.FC<ChatActionIconsProps> = ({
           {message.role === 'assistant' && !message.isStreaming && message.content && (
             <ActionIcon
               key={`${message.id}-copy-action`}
-              icon={copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+              icon={copied ? <Check className="w-4 h-4 text-accent" /> : <Copy className="w-4 h-4" />}
               tooltip={copied ? "Copied!" : "Copy"}
               onClick={onCopy}
             />

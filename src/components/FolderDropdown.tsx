@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import type { Folder as FolderType, Chat } from "@/services/chatService";
 
 interface FolderDropdownProps {
@@ -73,12 +74,12 @@ const FolderDropdown = ({
             <Button
               variant="ghost"
               size="icon"
-              className="header-icon-hover h-8 w-8 relative"
+              className="h-8 w-8 relative hover:opacity-80 transition-opacity duration-200"
               disabled={!activeChat || isLoading}
             >
               <Folder className="w-4 h-4" />
               {hasAssignedFolder && (
-                <div className="selection-indicator" />
+                <div className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" />
               )}
             </Button>
           </PopoverTrigger>
@@ -153,7 +154,8 @@ const FolderDropdown = ({
           
           <Separator />
           
-          <div className="space-y-1 max-h-40 overflow-y-auto">
+          <ScrollArea className="max-h-40">
+            <div className="space-y-1">
             <Button
               variant="ghost"
               className="w-full justify-start h-8 text-sm"
@@ -182,7 +184,8 @@ const FolderDropdown = ({
                 );
               })
             )}
-          </div>
+            </div>
+          </ScrollArea>
         </div>
       </PopoverContent>
     </Popover>

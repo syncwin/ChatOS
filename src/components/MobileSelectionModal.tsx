@@ -4,6 +4,7 @@ import { Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import ProviderIconSelector from './ProviderIconSelector';
 import FolderDropdown from './FolderDropdown';
 import TagDropdown from './TagDropdown';
@@ -69,13 +70,14 @@ const MobileSelectionModal = ({
         </Button>
       </DialogTrigger>
       <DialogContent className="w-[95vw] max-w-md mx-auto p-0 gap-0 max-h-[90vh] overflow-hidden">
-        <DialogHeader className="p-3 xs:p-4 pb-2 border-b flex-shrink-0">
+        <DialogHeader className="p-3 xs:p-4 pb-2 bg-muted/20 flex-shrink-0">
           <DialogTitle className="text-base xs:text-lg font-semibold">
             Chat Settings
           </DialogTitle>
         </DialogHeader>
         
-        <div className="p-3 xs:p-4 space-y-4 xs:space-y-6 overflow-y-auto flex-1">
+        <ScrollArea className="flex-1">
+          <div className="p-3 xs:p-4 space-y-4 xs:space-y-6">
           {/* AI Provider & Model Section */}
           <div className="space-y-2 xs:space-y-3">
             <div className="flex items-center gap-1 xs:gap-2">
@@ -95,7 +97,8 @@ const MobileSelectionModal = ({
                 modelError={modelError}
               />
             </div>
-          </div>
+          </div> 
+        </div>
 
           <Separator className="my-3 xs:my-4" />
 
@@ -136,7 +139,7 @@ const MobileSelectionModal = ({
               />
             </div>
           </div>
-        </div>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

@@ -3,860 +3,136 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer utilities {
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border-width: 0;
-  }
-}
-
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
-
+/* Brand Color Palette & Style Guide Implementation */
 @layer base {
+  /* Light Mode (Default) - Base: #ffffff */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 0 0% 100%; /* Base: #ffffff */
+    --foreground: 0 0% 5%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 0 0% 5%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 0 0% 5%;
 
-    --primary: 252 100% 50%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 252 100% 50%; /* Primary: #3f00ff */
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 60 100% 50%;
+    --secondary: 60 100% 50%; /* Secondary: #FFFF00 */
     --secondary-foreground: 0 0% 5%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 24 100% 50%;
+    --accent: 24 100% 50%; /* Accent: #FF8000 */
     --accent-foreground: 0 0% 5%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 252 100% 50%;
 
     --radius: 0.5rem;
-    
-    /* Selection indicator variables */
-    --selection-indicator-size: 0.625rem; /* 2.5px */
-    --selection-indicator-position: -0.125rem; /* -0.5px */
 
-    /* Light mode sidebar uses distinct shade of primary */
-    --sidebar-background: 250 0% 95%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 255 0% 25%;
+    /* Light mode sidebar */
+    --sidebar-background: 0 0% 98%; /* Slightly darker than base */
+    --sidebar-foreground: 0 0% 10%;
+    --sidebar-primary: 252 100% 50%; /* Primary: #3f00ff */
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 92%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 88%;
-    --sidebar-ring: 255 0% 25%;
+    --sidebar-accent: 0 0% 94%;
+    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-border: 0 0% 85%;
+    --sidebar-ring: 252 100% 50%;
   }
 
+  /* Dark Mode - Base: #0d0d0d */
   .dark {
-    --background: 0 0% 5%;
-    --foreground: 210 40% 98%;
+    --background: 0 0% 5.1%; /* Base: #0d0d0d */
+    --foreground: 0 0% 98%;
 
-    --card: 0 0% 8%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 5.1%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 8%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 5.1%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 252 100% 50%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 252 100% 50%; /* Primary: #3f00ff */
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 60 100% 50%;
+    --secondary: 60 100% 50%; /* Secondary: #FFFF00 */
     --secondary-foreground: 0 0% 5%;
 
-    --muted: 0 0% 10%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 24 100% 50%;
+    --accent: 24 100% 50%; /* Accent: #FF8000 */
     --accent-foreground: 0 0% 5%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
-    --ring: 255 0% 25%;
-    
-    --sidebar-background: 0 0% 3%;
-    --sidebar-foreground: 0 0% 85%;
-    --sidebar-primary: 255 0% 25%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 6%;
-    --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 0 0% 12%;
-    --sidebar-ring: 255 0% 25%;
-  }
-}
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 252 100% 50%;
 
-@layer base {
+    /* Dark mode sidebar */
+    --sidebar-background: 0 0% 8%; /* Slightly lighter than base */
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 252 100% 50%; /* Primary: #3f00ff */
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 90%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 252 100% 50%;
+  }
+
   * {
     @apply border-border;
-    box-sizing: border-box;
-  }
-
-  html, body, #root {
-    height: 100vh;
-    height: 100dvh; /* Use dynamic viewport height for mobile */
-    width: 100vw;
-    overflow: hidden;
   }
 
   body {
     @apply bg-background text-foreground;
-    overflow-x: hidden;
   }
 
-  /* Chat area specific styling */
-  .chat-container {
-    height: 100vh;
-    height: 100dvh; /* Use dynamic viewport height for mobile */
-    width: 100vw;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Ensure chat bubbles are contained and responsive */
-  .chat-message {
-    max-width: 90%;
-    word-wrap: break-word;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-    hyphens: auto;
-    width: 100%;
-  }
-
-  .chat-bubble {
-    max-width: 100%;
-    word-wrap: break-word;
-    overflow-wrap: anywhere;
-    hyphens: auto;
-  }
-
-  /* Mobile-first responsive chat bubbles with consistent gutters */
-  @media (max-width: 374px) {
-    .chat-message {
-      max-width: 95%;
-      font-size: 0.75rem;
-    }
-    
-    .chat-bubble {
-      max-width: 100%;
-      padding: 0.5rem;
-    }
-    
-    /* Standard 16px minimum gutters for extra small screens */
-    .container {
-      padding-left: 1rem; /* 16px minimum gutter */
-      padding-right: 1rem; /* 16px minimum gutter */
-    }
-    
-    /* Header gutters */
-    header {
-      padding-left: 1rem;
-      padding-right: 1rem;
-    }
-    
-    /* Footer gutters */
-    footer {
-      padding-left: 1rem;
-      padding-right: 1rem;
-    }
-    
-    /* Main content gutters */
-    main {
-      padding-left: 1rem;
-      padding-right: 1rem;
-    }
-    
-    button, .button {
-      min-height: 40px;
-      min-width: 40px;
-    }
-    
-    .header-controls {
-      gap: 0.125rem;
-    }
-    
-    .header-main {
-      padding: 0 1rem; /* Consistent with container gutters */
-    }
-  }
-
-  @media (min-width: 375px) and (max-width: 639px) {
-    .chat-message {
-      max-width: 92%;
-      font-size: 0.825rem;
-    }
-    
-    .chat-bubble {
-      max-width: 100%;
-      padding: 0.625rem;
-    }
-    
-    /* Standard 16px minimum gutters for mobile screens */
-    .container {
-      padding-left: 1rem; /* 16px minimum gutter */
-      padding-right: 1rem; /* 16px minimum gutter */
-    }
-    
-    /* Header gutters */
-    header {
-      padding-left: 1rem;
-      padding-right: 1rem;
-    }
-    
-    /* Footer gutters */
-    footer {
-      padding-left: 1rem;
-      padding-right: 1rem;
-    }
-    
-    /* Main content gutters */
-    main {
-      padding-left: 1rem;
-      padding-right: 1rem;
-    }
-    
-    button, .button {
-      min-height: 42px;
-      min-width: 42px;
-    }
-    
-    .header-controls {
-      gap: 0.25rem;
-    }
-    
-    .header-main {
-      padding: 0 1rem; /* Consistent with container gutters */
-    }
-  }
-
-  @media (min-width: 640px) and (max-width: 767px) {
-    .chat-message {
-      max-width: 85%;
-      font-size: 0.9rem;
-    }
-    
-    .chat-bubble {
-      max-width: 100%;
-      padding: 0.75rem 1rem;
-    }
-    
-    /* Enhanced gutters for small tablets - 20px */
-    .container {
-      padding-left: 1.25rem; /* 20px gutters */
-      padding-right: 1.25rem; /* 20px gutters */
-    }
-    
-    /* Header gutters */
-    header {
-      padding-left: 1.25rem;
-      padding-right: 1.25rem;
-    }
-    
-    /* Footer gutters */
-    footer {
-      padding-left: 1.25rem;
-      padding-right: 1.25rem;
-    }
-    
-    /* Main content gutters */
-    main {
-      padding-left: 1.25rem;
-      padding-right: 1.25rem;
-    }
-    
-    button, .button {
-      min-height: 40px;
-      min-width: 40px;
-    }
-    
-    .header-controls {
-      padding: 0.75rem;
-      gap: 0.75rem;
-    }
-    
-    .header-main {
-      padding: 0.75rem 1.25rem; /* Consistent with container gutters */
-    }
-
-    /* Tablet-specific sidebar adjustments */
-    .sidebar {
-      transition: transform 0.2s ease-in-out;
-    }
-
-    .input-area {
-      padding: 1rem;
-    }
-  }
-
-  @media (min-width: 768px) and (max-width: 1023px) {
-    .chat-message {
-      max-width: 80%;
-      font-size: 0.95rem;
-    }
-
-    .chat-bubble {
-      max-width: 100%;
-      padding: 1rem 1.25rem;
-    }
-
-    /* Enhanced gutters for tablets - 24px */
-    .container {
-      padding-left: 1.5rem; /* 24px gutters */
-      padding-right: 1.5rem; /* 24px gutters */
-    }
-    
-    /* Header gutters */
-    header {
-      padding-left: 1.5rem;
-      padding-right: 1.5rem;
-    }
-    
-    /* Footer gutters */
-    footer {
-      padding-left: 1.5rem;
-      padding-right: 1.5rem;
-    }
-    
-    /* Main content gutters */
-    main {
-      padding-left: 1.5rem;
-      padding-right: 1.5rem;
-    }
-
-    .header-controls {
-      gap: 1rem;
-      padding: 1rem;
-    }
-
-    .header-main {
-      padding: 1rem 1.5rem; /* Consistent with container gutters */
-    }
-
-    /* Tablet sidebar optimization */
-    .sidebar {
-      width: 280px;
-    }
-
-    .sidebar[data-variant="floating"] {
-      width: 300px;
-    }
-
-    /* Better touch targets for tablet */
-    button,
-    .button {
-      min-height: 42px;
-      min-width: 42px;
-    }
-
-    /* Tablet input area */
-    .input-area {
-      padding: 1.25rem;
-    }
-
-
-
-    /* Tablet-specific modal adjustments */
-    .modal-content {
-      max-width: 90%;
-      margin: 2rem auto;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .chat-message {
-      max-width: 75%;
-    }
-    
-    .chat-bubble {
-      max-width: 100%;
-    }
-    
-    /* Enhanced gutters for desktop - 24px */
-    .container {
-      padding-left: 1.5rem; /* 24px gutters */
-      padding-right: 1.5rem; /* 24px gutters */
-    }
-    
-    /* Header gutters */
-    header {
-      padding-left: 1.5rem;
-      padding-right: 1.5rem;
-    }
-    
-    /* Footer gutters */
-    footer {
-      padding-left: 1.5rem;
-      padding-right: 1.5rem;
-    }
-    
-    /* Main content gutters */
-    main {
-      padding-left: 1.5rem;
-      padding-right: 1.5rem;
-    }
-  }
-
-  /* Global gutter utilities for consistent spacing */
-  .gutter-xs {
-    padding-left: 1rem; /* 16px */
-    padding-right: 1rem; /* 16px */
-  }
-  
-  .gutter-sm {
-    padding-left: 1.25rem; /* 20px */
-    padding-right: 1.25rem; /* 20px */
-  }
-  
-  .gutter-md {
-    padding-left: 1.5rem; /* 24px */
-    padding-right: 1.5rem; /* 24px */
-  }
-  
-  .gutter-lg {
-    padding-left: 2rem; /* 32px */
-    padding-right: 2rem; /* 32px */
-  }
-  
-  /* Responsive gutter utilities - Optimized for mobile */
-  .gutter-responsive {
-    padding-left: 0.75rem; /* 12px on mobile for better space utilization */
-    padding-right: 0.75rem; /* 12px on mobile for better space utilization */
-  }
-  
-  @media (min-width: 475px) {
-    .gutter-responsive {
-      padding-left: 1rem; /* 16px on larger mobile */
-      padding-right: 1rem; /* 16px on larger mobile */
-    }
-  }
-  
-  @media (min-width: 640px) {
-    .gutter-responsive {
-      padding-left: 1.25rem; /* 20px on small tablets */
-      padding-right: 1.25rem; /* 20px on small tablets */
-    }
-  }
-  
-  @media (min-width: 768px) {
-    .gutter-responsive {
-      padding-left: 1.5rem; /* 24px on tablets and desktop */
-      padding-right: 1.5rem; /* 24px on tablets and desktop */
-    }
-  }
-
-  /* Prevent horizontal overflow */
-  * {
-    box-sizing: border-box;
-  }
-
-  /* Ensure all text content wraps properly */
-  code, pre, .code-block {
-    word-wrap: break-word;
-    overflow-wrap: anywhere;
-    white-space: pre-wrap;
-    max-width: 100%;
-  }
-  
-  /* Ensure no content touches screen edges */
-  .no-edge-touch {
-    min-width: 0;
-    max-width: 100%;
-  }
-  
-  /* Safe area padding for mobile devices */
-  .safe-area-padding {
-    padding-left: max(1rem, env(safe-area-inset-left));
-    padding-right: max(1rem, env(safe-area-inset-right));
-  }
-   
-   /* Selection indicator consistency */
-   .selection-indicator {
-     position: absolute;
-     top: -4px;
-     right: -4px;
-     background-color: hsl(var(--primary));
-     color: hsl(var(--primary-foreground));
-     border-radius: 50%;
-     display: flex;
-     align-items: center;
-     justify-content: center;
-     z-index: 10;
-     font-weight: bold;
-     line-height: 1;
-   }
-   
-   /* Selection indicator base styles */
-  .selection-indicator {
-    position: absolute;
-    top: var(--selection-indicator-position);
-    right: var(--selection-indicator-position);
-    width: var(--selection-indicator-size);
-    height: var(--selection-indicator-size);
-    background-color: hsl(var(--secondary));
-    border-radius: 50%;
-    z-index: 10;
-  }
-  
-  .selection-indicator-with-number {
-    position: absolute;
-    top: var(--selection-indicator-position);
-    right: var(--selection-indicator-position);
-    min-width: var(--selection-indicator-size);
-    height: var(--selection-indicator-size);
-    background-color: hsl(var(--secondary));
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-    padding: 0 0.125rem;
-    color: var(--primary);
-    font-weight: 600;
-  }
-
-  /* Gradient button styling for New Chat */
-  .gradient-button {
-    background: linear-gradient(135deg, #3f00ff 0%, #ff8000 100%);
-    color: white;
-    border: none;
-  }
-
-  .gradient-button:hover {
-    background: linear-gradient(135deg, rgba(63, 0, 255, 0.9) 0%, rgba(255, 128, 0, 0.9) 100%);
-  }
-
-  /* Accent color for specific elements */
-  .accent-color {
-    color: hsl(var(--accent));
-  }
-
-  .accent-bg {
-    background-color: hsl(var(--accent));
-  }
-
-  /* Sleek, slim scrollbars for all scrollable areas */
+  /* Standardized Scrollbar Design - Consistent with Chat Interface */
   * {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+    scrollbar-color: hsl(var(--muted)) transparent;
   }
 
   *::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
-  }
-
-  @media (min-width: 640px) {
-    *::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
+    width: 8px;
+    height: 8px;
   }
 
   *::-webkit-scrollbar-track {
     background: transparent;
-    border-radius: 3px;
   }
 
   *::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.3);
-    border-radius: 3px;
-    transition: background-color 0.2s ease;
+    background-color: hsl(var(--muted));
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
   }
 
   *::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.5);
+    background-color: hsl(var(--muted-foreground) / 0.5);
   }
 
   *::-webkit-scrollbar-corner {
     background: transparent;
   }
 
-  /* Enhanced scrollbars for dark mode */
-  .dark *::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.4);
+  /* Chat-specific scrollbar styling for enhanced consistency */
+  .chat-scroll::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--primary) / 0.3);
   }
 
-  .dark *::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.6);
-  }
-
-  /* Header icon hover states with consistent background styling */
-  .header-icon-hover {
-    transition: all 0.2s ease;
-    padding: 0.375rem;
-    border-radius: 0.375rem;
-    background-color: hsl(var(--muted) / 0.2);
-    color: hsl(var(--muted-foreground));
-  }
-
-  .header-icon-hover:hover {
-    background-color: hsl(var(--muted) / 0.4);
-    color: hsl(var(--foreground));
-  }
-
-  .dark .header-icon-hover {
-    background-color: hsl(var(--muted) / 0.3);
-    color: hsl(var(--muted-foreground));
-  }
-
-  .dark .header-icon-hover:hover {
-    background-color: hsl(var(--muted) / 0.5);
-    color: hsl(var(--foreground));
-  }
-}
-
-/* Extra small screens (up to 374px) - Improved touch targets and scaling */
-@media (max-width: 374px) {
-  .chat-message {
-    font-size: 0.8rem;
-    max-width: 95%;
-  }
-
-  .chat-bubble {
-    padding: 0.5rem 0.75rem;
-  }
-
-  button,
-  .button {
-    min-height: 48px;
-    min-width: 48px;
-    font-size: 0.875rem;
-  }
-
-  .container {
-    padding-left: 0.25rem;
-    padding-right: 0.25rem;
-  }
-
-  .header-controls {
-    gap: 0.25rem;
-  }
-
-  .header-main {
-    padding: 0.5rem 1rem;
-  }
-
-  /* Ensure minimum touch target size */
-  .sidebar-trigger {
-    min-height: 1.75rem;
-  }
-
-  /* Improved touch targets for mobile */
-  .sidebar-trigger,
-  .mobile-menu-button {
-    min-height: 48px;
-    min-width: 48px;
-  }
-
-  /* Better spacing for mobile chat */
-  .chat-container {
-    padding: 0.5rem;
-  }
-
-  .input-area {
-    padding: 0.75rem;
-  }
-
-  /* Improved modal sizing for very small screens */
-  .modal-content {
-    max-width: 95%;
-    margin: 1rem auto;
-  }
-
-  /* Improved switch scaling for very small screens */
-  .scale-90 {
-    transform: scale(0.9);
-  }
-  
-  /* Better touch targets for mobile */
-  .xs\:min-h-\[44px\] {
-    min-height: 44px;
-  }
-  
-  .xs\:min-w-\[44px\] {
-    min-width: 44px;
-  }
-  .xs\:block {
-    display: block;
-  }
-  
-  .xs\:hidden {
-    display: none;
-  }
-  
-  .xs\:text-xs {
-    font-size: 0.75rem;
-  }
-  
-  .xs\:text-sm {
-    font-size: 0.825rem;
-  }
-  
-  .xs\:p-1 {
-    padding: 0.25rem;
-  }
-  
-  .xs\:p-2 {
-    padding: 0.5rem;
-  }
-  
-  .xs\:px-2 {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-  
-  .xs\:py-2 {
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
-  }
-  
-  .xs\:gap-1 {
-    gap: 0.25rem;
-  }
-  
-  .xs\:gap-2 {
-    gap: 0.5rem;
-  }
-  
-  .xs\:space-y-3 > :not([hidden]) ~ :not([hidden]) {
-    margin-top: 0.75rem;
-  }
-  
-  .xs\:w-4 {
-    width: 1rem;
-  }
-  
-  .xs\:h-4 {
-    height: 1rem;
-  }
-  
-  .xs\:w-5 {
-    width: 1.25rem;
-  }
-  
-  .xs\:h-5 {
-    height: 1.25rem;
-  }
-  
-  .xs\:w-6 {
-    width: 1.5rem;
-  }
-  
-  .xs\:h-6 {
-    height: 1.5rem;
-  }
-  
-  .xs\:w-7 {
-    width: 1.75rem;
-  }
-  
-  .xs\:h-7 {
-    height: 1.75rem;
-  }
-  
-  .xs\:w-9 {
-    width: 2.25rem;
-  }
-  
-  .xs\:data-\[state\=checked\]\:translate-x-4:data-[state=checked] {
-    transform: translateX(1rem);
-  }
-}
-
-/* Mobile-specific improvements for screens up to 640px */
-@media (max-width: 640px) {
-  /* Ensure proper scaling for switch component */
-  .scale-90 {
-    transform: scale(0.9);
-  }
-  
-  /* Better touch targets */
-  .mobile-touch-target {
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
-  button,
-  .button {
-    min-height: 44px;
-    min-width: 44px;
-  }
-
-  .header-controls {
-    padding: 0.5rem;
-    gap: 0.5rem;
-  }
-
-  /* Improved header spacing on mobile */
-  .header-main {
-    padding: 0.5rem 0.75rem;
-  }
-  
-  /* Better ChatOS icon visibility */
-  .mobile-logo {
-    min-width: 1.75rem;
-    min-height: 1.75rem;
-  }
-
-  /* Improved touch targets for mobile */
-  .sidebar-trigger,
-  .mobile-menu-button {
-    min-height: 48px;
-    min-width: 48px;
-  }
-
-  /* Better spacing for mobile chat */
-  .chat-container {
-    padding: 0.5rem;
-  }
-
-  .input-area {
-    padding: 0.75rem;
-  }
-  
-  /* Chat bubble improvements for mobile */
-  .chat-bubble {
-    word-wrap: break-word;
-    overflow-wrap: anywhere;
-    hyphens: auto;
-    min-width: 0;
-    max-width: 100%;
-  }
-  
-  /* Ensure code blocks don't overflow on mobile */
-  .chat-bubble pre {
-    overflow-x: auto;
-    max-width: 100%;
-    white-space: pre-wrap;
-    word-break: break-all;
-  }
-  
-  /* Better table responsiveness on mobile */
-  .chat-bubble table {
-    font-size: 0.75rem;
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
+  .chat-scroll::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--primary) / 0.5);
   }
 }

@@ -49,13 +49,13 @@ const SettingsDialog = ({ isOpen, onOpenChange, isDarkMode, toggleDarkMode, onOp
                   </span>
                 </Label>
                 <div className="flex items-center gap-2">
-                  <Sun className={`h-5 w-5 ${!isDarkMode ? 'text-amber-500' : 'text-muted-foreground'}`} />
+                  <Sun className={`h-5 w-5 ${!isDarkMode ? 'text-accent' : 'text-muted-foreground'}`} />
                   <Switch
                     id="dark-mode"
                     checked={isDarkMode}
                     onCheckedChange={toggleDarkMode}
                   />
-                  <Moon className={`h-5 w-5 ${isDarkMode ? 'text-blue-400' : 'text-muted-foreground'}`} />
+                  <Moon className={`h-5 w-5 ${isDarkMode ? 'text-accent' : 'text-muted-foreground'}`} />
                 </div>
               </div>
 

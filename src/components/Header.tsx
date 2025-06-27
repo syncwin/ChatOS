@@ -242,7 +242,7 @@ const Header = ({
         
         // Create improved PDF content with proper ChatOS branding
         let pdfContent = `
-          <header style="margin-bottom: 40px; padding-bottom: 30px; border-bottom: 3px solid #3f00ff;">
+          <header style="margin-bottom: 40px; padding-bottom: 30px; background: linear-gradient(to bottom, transparent 0%, #f8f9fa 100%);">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
               <div style="display: flex; align-items: center;">
                 <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #3f00ff 0%, #8b5cf6 50%, #ff8000 100%); border-radius: 12px; margin-right: 20px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px; box-shadow: 0 4px 12px rgba(63, 0, 255, 0.3);">C</div>
@@ -266,7 +266,7 @@ const Header = ({
           if (conversationPairs.length > 1) {
             pdfContent += `
               <section style="margin-bottom: 40px;">
-                <h2 style="color: #3f00ff; font-size: 18px; font-weight: 600; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 1px solid #e2e8f0;">Message Pair ${index + 1}</h2>
+                <h2 style="color: #3f00ff; font-size: 18px; font-weight: 600; margin-bottom: 20px; padding-bottom: 8px; background: linear-gradient(to bottom, transparent 0%, #f8f9fa 100%);">Message Pair ${index + 1}</h2>
             `;
           } else {
             pdfContent += `<section style="margin-bottom: 40px;">`;
@@ -276,7 +276,7 @@ const Header = ({
           if (pair.user) {
             const userHtmlContent = markdownToHtml(decodeHtmlEntities(pair.user.content));
             pdfContent += `
-              <article style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px solid #0ea5e9; border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1);">
+              <article style="background: #f8f9fa; border-radius: 16px; padding: 24px; margin-bottom: 20px;">
                 <header style="display: flex; align-items: center; margin-bottom: 16px;">
                   <span style="background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: white; padding: 6px 16px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-right: 12px; box-shadow: 0 2px 4px rgba(14, 165, 233, 0.3);">👤 Question</span>
                   <span style="color: #0369a1; font-weight: 600; font-size: 14px;">${userName}</span>
@@ -292,7 +292,7 @@ const Header = ({
           if (pair.assistant) {
             const assistantHtmlContent = markdownToHtml(decodeHtmlEntities(pair.assistant.content));
             pdfContent += `
-              <article style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border: 2px solid #64748b; border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(100, 116, 139, 0.1);">
+              <article style="background: #f1f5f9; border-radius: 16px; padding: 24px; margin-bottom: 20px;">
                 <header style="display: flex; align-items: center; margin-bottom: 16px;">
                   <span style="background: linear-gradient(135deg, #64748b 0%, #475569 100%); color: white; padding: 6px 16px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-right: 12px; box-shadow: 0 2px 4px rgba(100, 116, 139, 0.3);">🤖 Answer</span>
                   <span style="color: #475569; font-weight: 600; font-size: 14px;">ChatOS</span>
@@ -305,7 +305,7 @@ const Header = ({
             // Add model information if available
             if (pair.assistant.provider || pair.assistant.model) {
               pdfContent += `
-                <footer style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b;">
+                <footer style="margin-top: 16px; padding-top: 16px; background: linear-gradient(to bottom, transparent 0%, #e2e8f0 100%); font-size: 12px; color: #64748b;">
                   <div style="display: flex; gap: 20px;">
                     ${pair.assistant.provider ? `<span><strong>Provider:</strong> ${pair.assistant.provider}</span>` : ''}
                     ${pair.assistant.model ? `<span><strong>Model:</strong> ${pair.assistant.model}</span>` : ''}
@@ -321,14 +321,14 @@ const Header = ({
           
           // Add separator between pairs
           if (index < conversationPairs.length - 1) {
-            pdfContent += `<hr style="border: none; border-top: 2px solid #e2e8f0; margin: 40px 0;">`;
+            pdfContent += `<hr style="border: none; background: linear-gradient(to right, transparent 0%, #e2e8f0 50%, transparent 100%); height: 1px; margin: 40px 0;">`;
           }
         });
         
         pdfContent += `
           </main>
           
-          <footer style="margin-top: 50px; padding-top: 30px; border-top: 3px solid #3f00ff; text-align: center; color: #64748b; font-size: 12px;">
+          <footer style="margin-top: 50px; padding-top: 30px; background: linear-gradient(to bottom, transparent 0%, #f8f9fa 100%); text-align: center; color: #64748b; font-size: 12px;">
             <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
               <div style="width: 24px; height: 24px; background: linear-gradient(135deg, #3f00ff 0%, #8b5cf6 50%, #ff8000 100%); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">C</div>
               <span style="font-weight: 600;">Generated by ChatOS</span>
@@ -391,14 +391,14 @@ const Header = ({
   };
 
   return (
-    <div className="header-main flex items-center w-full gap-1 xs:gap-2 sm:gap-4">
+    <div className="flex items-center w-full gap-1 xs:gap-2 sm:gap-4 px-3 sm:px-4 md:px-6">
       {/* Mobile Logo - only show on mobile */}
       <div className="flex items-center gap-1 xs:gap-2 md:hidden flex-shrink-0">
-        <ChatOsIcon className="header-icon-hover mobile-logo w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 text-primary" />
+        <ChatOsIcon className="mobile-logo w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 text-primary hover:opacity-80 transition-opacity duration-200" />
       </div>
       
       {/* Main controls - conditional based on screen size */}
-      <div className="header-controls flex items-center justify-center gap-0.5 xs:gap-1 sm:gap-2 flex-1 min-w-0">
+      <div className="flex items-center justify-center gap-0.5 xs:gap-1 sm:gap-2 flex-1 min-w-0 py-2 sm:py-3">
         {isMobile ? (
           /* Mobile: Empty center space */
           <div className="flex-1"></div>
@@ -489,7 +489,7 @@ const Header = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="header-icon-hover h-8 w-8 relative"
+                    className="h-8 w-8 relative hover:opacity-80 transition-opacity duration-200"
                   >
                     <Download className="w-4 h-4" />
                   </Button>
@@ -512,13 +512,13 @@ const Header = ({
 
         {/* Theme toggle with improved spacing and consistent styling */}
         <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 px-1.5 xs:px-2 py-1 xs:py-1.5 rounded-md bg-muted/20 hover:bg-muted/40 transition-all duration-200">
-          <Sun className={`w-3.5 h-3.5 xs:w-4 xs:h-4 transition-colors duration-200 ${!isDarkMode ? "text-primary" : "text-muted-foreground hover:text-foreground"}`} />
+          <Sun className={`w-3.5 h-3.5 xs:w-4 xs:h-4 transition-colors duration-200 ${!isDarkMode ? "text-accent" : "text-muted-foreground hover:text-foreground"}`} />
           <Switch 
             checked={isDarkMode} 
             onCheckedChange={handleThemeToggle}
             className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-input scale-90 xs:scale-100" 
           />
-          <Moon className={`w-3.5 h-3.5 xs:w-4 xs:h-4 transition-colors duration-200 ${isDarkMode ? "text-primary" : "text-muted-foreground hover:text-foreground"}`} />
+          <Moon className={`w-3.5 h-3.5 xs:w-4 xs:h-4 transition-colors duration-200 ${isDarkMode ? "text-accent" : "text-muted-foreground hover:text-foreground"}`} />
         </div>
       </div>
     </div>

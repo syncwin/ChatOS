@@ -155,18 +155,18 @@ const ChatMessage = ({
           </AvatarFallback>
         </Avatar>
       )}
-      <div className={`chat-bubble p-2 sm:p-3 lg:p-4 rounded-lg shadow-md relative group break-words overflow-wrap-anywhere min-w-0 ${
+      <div className={`p-2 sm:p-3 lg:p-4 rounded-lg shadow-md relative group break-words overflow-wrap-anywhere min-w-0 word-wrap hyphens-auto ${
           message.role === "user"
             ? "max-w-[80%] sm:max-w-[75%] md:max-w-[70%] bg-muted text-foreground"
             : message.error
-            ? "max-w-[85%] sm:max-w-[80%] md:max-w-[75%] bg-destructive/10 border border-destructive/20"
-            : "max-w-[85%] sm:max-w-[80%] md:max-w-[75%] bg-card border"
+            ? "max-w-[85%] sm:max-w-[80%] md:max-w-[75%] bg-destructive/10"
+            : "max-w-[85%] sm:max-w-[80%] md:max-w-[75%] bg-muted/30"
         }`}
       >
         <div className="text-xs sm:text-sm lg:text-base leading-relaxed">
           {isEditing && message.role === "user" ? (
             <div className="space-y-2 sm:space-y-3" role="region" aria-label="Edit message">
-              <div className="flex items-center p-1 sm:p-2 bg-input border border-input focus-within:ring-2 focus-within:ring-primary transition-all rounded min-w-0">
+              <div className="flex items-center p-1 sm:p-2 bg-input focus-within:ring-2 focus-within:ring-primary transition-all rounded min-w-0">
                 <TextareaAutosize
                   value={editingContent}
                   onChange={(e) => setEditingContent?.(e.target.value)}
@@ -251,7 +251,7 @@ const ChatMessage = ({
                     ol: ({ children }) => <ol className="list-decimal list-inside mb-1 sm:mb-2 space-y-0.5 sm:space-y-1 pl-2 sm:pl-4">{children}</ol>,
                     li: ({ children }) => <li className="ml-1 sm:ml-2">{children}</li>,
                     blockquote: ({ children }) => (
-                      <blockquote className="border-l-2 sm:border-l-4 border-muted-foreground pl-2 sm:pl-4 italic my-1 sm:my-2">
+                      <blockquote className="bg-muted/20 pl-2 sm:pl-4 py-1 sm:py-2 rounded-r italic my-1 sm:my-2">
                         {children}
                       </blockquote>
                     ),
@@ -264,18 +264,18 @@ const ChatMessage = ({
                     ),
                     table: ({ children }) => (
                       <div className="overflow-x-auto my-1 sm:my-2 max-w-full">
-                        <table className="min-w-full border border-border rounded-lg text-xs sm:text-sm">
+                        <table className="min-w-full bg-muted/20 rounded-lg text-xs sm:text-sm">
                           {children}
                         </table>
                       </div>
                     ),
                     th: ({ children }) => (
-                      <th className="border border-border px-1 sm:px-2 lg:px-3 py-1 sm:py-2 bg-muted font-medium text-left text-xs sm:text-sm">
+                      <th className="px-1 sm:px-2 lg:px-3 py-1 sm:py-2 bg-muted/40 font-medium text-left text-xs sm:text-sm">
                         {children}
                       </th>
                     ),
                     td: ({ children }) => (
-                      <td className="border border-border px-1 sm:px-2 lg:px-3 py-1 sm:py-2 text-xs sm:text-sm">
+                      <td className="px-1 sm:px-2 lg:px-3 py-1 sm:py-2 bg-background/50 text-xs sm:text-sm">
                         {children}
                       </td>
                     ),

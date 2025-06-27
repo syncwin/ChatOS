@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, ReactNode, ErrorInfo } from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { logger } from '../lib/logger';
 
@@ -86,26 +86,26 @@ class ErrorBoundary extends Component<Props, State> {
 
       // Default error UI
       return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-            <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 dark:bg-red-900/20 rounded-full mb-4">
-              <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-card rounded-lg shadow-lg p-6">
+            <div className="flex items-center justify-center w-12 h-12 mx-auto bg-destructive/10 rounded-full mb-4">
+              <AlertTriangle className="w-6 h-6 text-destructive" />
             </div>
             
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white text-center mb-2">
+            <h1 className="text-xl font-semibold text-foreground text-center mb-2">
               Something went wrong
             </h1>
             
-            <p className="text-gray-600 dark:text-gray-400 text-center mb-6">
+            <p className="text-muted-foreground text-center mb-6">
               We encountered an unexpected error. This has been logged and we'll look into it.
             </p>
 
             {process.env.NODE_ENV === 'development' && this.state.error && (
-              <details className="mb-6 p-3 bg-gray-100 dark:bg-gray-700 rounded text-sm">
-                <summary className="cursor-pointer font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <details className="mb-6 p-3 bg-muted rounded text-sm">
+                <summary className="cursor-pointer font-medium text-muted-foreground mb-2">
                   Error Details (Development)
                 </summary>
-                <div className="text-red-600 dark:text-red-400 font-mono text-xs whitespace-pre-wrap break-all">
+                <div className="text-destructive font-mono text-xs whitespace-pre-wrap break-all">
                   {this.state.error.message}
                   {this.state.error.stack && (
                     <>
@@ -125,7 +125,7 @@ class ErrorBoundary extends Component<Props, State> {
               {this.state.retryCount < this.maxRetries && (
                 <button
                   onClick={this.handleRetry}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors"
                 >
                   <RefreshCw className="w-4 h-4" />
                   Try Again ({this.maxRetries - this.state.retryCount} left)
@@ -134,14 +134,14 @@ class ErrorBoundary extends Component<Props, State> {
               
               <button
                 onClick={this.handleReset}
-                className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                className="flex-1 px-4 py-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-lg transition-colors"
               >
                 Reset
               </button>
               
               <button
                 onClick={this.handleGoHome}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-accent hover:bg-accent/90 text-accent-foreground rounded-lg transition-colors"
               >
                 <Home className="w-4 h-4" />
                 Home
@@ -149,7 +149,7 @@ class ErrorBoundary extends Component<Props, State> {
             </div>
 
             {this.state.retryCount >= this.maxRetries && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-4">
+              <p className="text-sm text-muted-foreground text-center mt-4">
                 Maximum retry attempts reached. Please refresh the page or contact support.
               </p>
             )}
