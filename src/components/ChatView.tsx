@@ -115,7 +115,7 @@ const ChatView = forwardRef<ChatViewRef, ChatViewProps>(({
       {/* Chat Content Area */}
       <main className="flex-1 flex flex-col min-h-0 w-full overflow-hidden">
         {showWelcomeScreen ? (
-          <div className="flex-1 flex w-full max-w-4xl mx-auto px-1 xs:px-2 sm:px-4 overflow-hidden">
+          <div className="flex-1 flex w-full max-w-4xl mx-auto gutter-responsive overflow-hidden">
             <WelcomeScreen 
               suggestedQuestions={suggestedQuestions}
               onQuestionSelect={onQuestionSelect}
@@ -123,7 +123,7 @@ const ChatView = forwardRef<ChatViewRef, ChatViewProps>(({
           </div>
         ) : (
           <ScrollArea className="flex-1 w-full">
-            <div className="w-full max-w-4xl mx-auto py-1 xs:py-2 sm:py-4 px-1 xs:px-2 sm:px-4">
+            <div className="w-full max-w-4xl mx-auto py-1 xs:py-2 sm:py-4 gutter-responsive">
               <div className="space-y-2 xs:space-y-3 sm:space-y-4 lg:space-y-6 w-full">
 
                 {(() => {
@@ -238,7 +238,7 @@ const ChatView = forwardRef<ChatViewRef, ChatViewProps>(({
 
       {/* Sticky Footer Input Area */}
       <footer className="flex-shrink-0 sticky bottom-0 bg-background/90 backdrop-blur-sm border-t border-border/50">
-        <div className="w-full max-w-4xl mx-auto px-1 xs:px-2 sm:px-4">
+        <div className="w-full max-w-4xl mx-auto gutter-responsive">
           <InputArea 
             ref={inputAreaRef}
             input={input}

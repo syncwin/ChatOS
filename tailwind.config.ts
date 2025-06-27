@@ -15,14 +15,52 @@ export default {
 		container: {
 			center: true,
 			padding: {
-				DEFAULT: "1rem",
-				sm: "2rem",
+				DEFAULT: "1rem", // 16px minimum gutter for mobile
+				xs: "1rem", // 16px for extra small screens
+				sm: "1.25rem", // 20px for small tablets
+				md: "1.5rem", // 24px for tablets
+				lg: "1.5rem", // 24px for desktop
+				xl: "1.5rem", // 24px for large desktop
+				"2xl": "2rem", // 32px for extra large screens
 			},
 			screens: {
-				"2xl": "1400px",
-			},
+			xs: "375px",
+			sm: "640px",
+			md: "768px",
+			lg: "1024px",
+			xl: "1280px",
+			"2xl": "1536px",
+			// Device-specific breakpoints
+			mobile: { max: "639px" },
+			tablet: { min: "640px", max: "1023px" },
+			"tablet-only": { min: "768px", max: "1023px" },
+			desktop: { min: "1024px" },
+		},
 		},
 		extend: {
+			screens: {
+				xs: "475px",
+				sm: "640px",
+				md: "768px",
+				lg: "1024px",
+				xl: "1280px",
+				"2xl": "1400px",
+				// Device-specific breakpoints
+				mobile: { max: "639px" },
+				tablet: { min: "640px", max: "1023px" },
+				"tablet-only": { min: "768px", max: "1023px" },
+				desktop: { min: "1024px" },
+				// Gutter-specific breakpoints
+				"gutter-sm": "640px", // Switch to 20px gutters
+				"gutter-md": "768px", // Switch to 24px gutters
+			},
+			spacing: {
+				// Custom gutter spacing values
+				"gutter-xs": "1rem", // 16px
+				"gutter-sm": "1.25rem", // 20px
+				"gutter-md": "1.5rem", // 24px
+				"gutter-lg": "2rem", // 32px
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',

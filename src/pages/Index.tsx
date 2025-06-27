@@ -790,7 +790,7 @@ const Index = () => {
       <SidebarInset>
         <div className="h-screen flex flex-col w-full overflow-hidden bg-background text-foreground rounded-lg">
           <header className="flex-shrink-0 sticky top-0 bg-background/95 backdrop-blur-sm border-b border-border/50 z-10 rounded-t-lg">
-          <div className="w-full max-w-4xl mx-auto flex items-center gap-1 xs:gap-2 px-1 xs:px-2 sm:px-4 py-1 xs:py-2 sm:py-4">
+          <div className="w-full max-w-4xl mx-auto flex items-center gap-1 xs:gap-2 gutter-responsive py-1 xs:py-2 sm:py-4">
               <SidebarTrigger className="text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md p-1.5 transition-colors flex-shrink-0" aria-label="Toggle sidebar" />
               <Header
                 isDarkMode={isDarkMode}

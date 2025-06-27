@@ -5,6 +5,7 @@ import TextareaAutosize from 'react-textarea-autosize';
 import { useState, useEffect, forwardRef } from 'react';
 import { messageContentSchema, validateInput, RateLimiter } from '@/lib/validation';
 import { toast } from 'sonner';
+import { useDeviceType, useIsTablet } from '@/hooks/use-mobile';
 
 interface InputAreaProps {
   input: string;
@@ -28,6 +29,8 @@ const InputArea = forwardRef<HTMLDivElement, InputAreaProps>(({
 }, ref) => {
   const [validationError, setValidationError] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const deviceType = useDeviceType();
+  const isTablet = useIsTablet();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
@@ -91,10 +94,44 @@ const InputArea = forwardRef<HTMLDivElement, InputAreaProps>(({
     }
   };
 
+  // Responsive sizing based on device type (no horizontal padding - handled by parent gutter-responsive)
+  const getResponsiveClasses = () => {
+    if (deviceType === 'mobile') {
+      return {
+        container: 'py-2', // Only vertical padding, horizontal handled by parent
+        form: 'flex gap-2 items-end w-full',
+        inputWrapper: 'flex-1 flex items-center p-2 bg-input border border-input focus-within:ring-2 focus-within:ring-primary transition-all rounded min-w-0 w-full',
+        textarea: 'flex-1 w-full resize-none p-2 bg-transparent text-sm focus:outline-none rounded-none min-w-0 overflow-hidden',
+        button: 'h-9 w-9 rounded-md transition-all flex-shrink-0 ml-2',
+        icon: 'w-4 h-4'
+      };
+    } else if (deviceType === 'tablet') {
+      return {
+        container: 'py-3', // Only vertical padding, horizontal handled by parent
+        form: 'flex gap-3 items-end w-full',
+        inputWrapper: 'flex-1 flex items-center p-2.5 bg-input border border-input focus-within:ring-2 focus-within:ring-primary transition-all rounded min-w-0 w-full',
+        textarea: 'flex-1 w-full resize-none p-2.5 bg-transparent text-base focus:outline-none rounded-none min-w-0 overflow-hidden',
+        button: 'h-10 w-10 rounded-md transition-all flex-shrink-0 ml-2',
+        icon: 'w-4 h-4'
+      };
+    } else {
+      return {
+        container: 'py-2 sm:py-4', // Only vertical padding, horizontal handled by parent
+        form: 'flex gap-2 sm:gap-4 items-end w-full',
+        inputWrapper: 'flex-1 flex items-center p-1 sm:p-2 bg-input border border-input focus-within:ring-2 focus-within:ring-primary transition-all rounded min-w-0 w-full',
+        textarea: 'flex-1 w-full resize-none p-2 bg-transparent text-sm sm:text-base focus:outline-none rounded-none min-w-0 overflow-hidden',
+        button: 'h-8 w-8 sm:h-9 sm:w-9 rounded-md transition-all flex-shrink-0 ml-1 sm:ml-2',
+        icon: 'w-3 h-3 sm:w-4 sm:h-4'
+      };
+    }
+  };
+
+  const classes = getResponsiveClasses();
+
   return (
-    <div ref={ref} className="py-2 sm:py-4 w-full">
-      <form onSubmit={handleSubmit} className="flex gap-2 sm:gap-4 items-end w-full">
-        <div className="flex-1 flex items-center p-1 sm:p-2 bg-input border border-input focus-within:ring-2 focus-within:ring-primary transition-all rounded min-w-0 w-full">
+    <div ref={ref} className={`${classes.container} w-full input-area`}>
+      <form onSubmit={handleSubmit} className={classes.form}>
+        <div className={classes.inputWrapper}>
           <label htmlFor="chat-input" className="sr-only">Type your message</label>
           <TextareaAutosize 
             id="chat-input" 
@@ -103,16 +140,16 @@ const InputArea = forwardRef<HTMLDivElement, InputAreaProps>(({
             onKeyDown={handleKeyDown} 
             placeholder="Ask me anything..." 
             disabled={isLoading} 
-            maxRows={5} 
+            maxRows={deviceType === 'mobile' ? 4 : 5} 
             minRows={1} 
-            className="flex-1 w-full resize-none p-2 bg-transparent text-sm sm:text-base focus:outline-none rounded-none min-w-0 overflow-hidden" 
+            className={classes.textarea} 
             aria-describedby={validationError ? "input-error" : undefined}
           />
           <Button 
             type="submit" 
             size="icon" 
             disabled={isAiResponding ? false : (!input.trim() || isLoading || !!validationError)} 
-            className={`h-8 w-8 sm:h-9 sm:w-9 rounded-md transition-all flex-shrink-0 ml-1 sm:ml-2 ${
+            className={`${classes.button} ${
               isAiResponding 
                 ? 'bg-destructive hover:bg-destructive/90 text-destructive-foreground' 
                 : input.trim() && !isLoading && !validationError 
@@ -122,9 +159,9 @@ const InputArea = forwardRef<HTMLDivElement, InputAreaProps>(({
             aria-label={isAiResponding ? "Stop generation" : "Send message"}
           >
             {isAiResponding ? (
-              <Square className="w-3 h-3 sm:w-4 sm:h-4" />
+              <Square className={classes.icon} />
             ) : (
-              <Send className="w-3 h-3 sm:w-4 sm:h-4 text-primary-foreground dark:text-foreground" />
+              <Send className={`${classes.icon} text-primary-foreground dark:text-foreground`} />
             )}
           </Button>
         </div>

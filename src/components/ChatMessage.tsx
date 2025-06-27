@@ -155,12 +155,12 @@ const ChatMessage = ({
           </AvatarFallback>
         </Avatar>
       )}
-      <div className={`chat-bubble p-2 sm:p-3 lg:p-4 rounded-lg shadow-md relative group break-words overflow-wrap-anywhere ${
+      <div className={`chat-bubble p-2 sm:p-3 lg:p-4 rounded-lg shadow-md relative group break-words overflow-wrap-anywhere min-w-0 ${
           message.role === "user"
-            ? "max-w-[85%] bg-muted text-foreground"
+            ? "max-w-[80%] sm:max-w-[75%] md:max-w-[70%] bg-muted text-foreground"
             : message.error
-            ? "max-w-[90%] bg-destructive/10 border border-destructive/20"
-            : "max-w-[90%] bg-card border"
+            ? "max-w-[85%] sm:max-w-[80%] md:max-w-[75%] bg-destructive/10 border border-destructive/20"
+            : "max-w-[85%] sm:max-w-[80%] md:max-w-[75%] bg-card border"
         }`}
       >
         <div className="text-xs sm:text-sm lg:text-base leading-relaxed">

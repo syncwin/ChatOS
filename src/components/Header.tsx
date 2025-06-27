@@ -14,7 +14,7 @@ import FolderDropdown from "./FolderDropdown";
 import TagDropdown from "./TagDropdown";
 import ProviderIconSelector from "./ProviderIconSelector";
 import MobileSelectionModal from "./MobileSelectionModal";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile, useDeviceType, useIsTablet } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/useProfile";
 import type { Folder, Chat, Tag } from "@/services/chatService";
@@ -90,6 +90,8 @@ const Header = ({
   messages
 }: HeaderProps) => {
   const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
+  const deviceType = useDeviceType();
   const { toast } = useToast();
   const { profile } = useProfile();
 
@@ -389,7 +391,7 @@ const Header = ({
   };
 
   return (
-    <div className="header-main flex items-center w-full gap-1 xs:gap-2 sm:gap-4 px-1 xs:px-2 sm:px-0">
+    <div className="header-main flex items-center w-full gap-1 xs:gap-2 sm:gap-4">
       {/* Mobile Logo - only show on mobile */}
       <div className="flex items-center gap-1 xs:gap-2 md:hidden flex-shrink-0">
         <ChatOsIcon className="header-icon-hover mobile-logo w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 text-primary" />
@@ -401,8 +403,12 @@ const Header = ({
           /* Mobile: Empty center space */
           <div className="flex-1"></div>
         ) : (
-          /* Desktop: Individual selectors with responsive layout */
-          <div className="flex items-center justify-center gap-1 xs:gap-2 sm:gap-3 md:gap-4 flex-wrap">
+          /* Desktop & Tablet: Individual selectors with responsive layout */
+          <div className={`flex items-center justify-center flex-wrap ${
+            isTablet 
+              ? 'gap-2 sm:gap-3' 
+              : 'gap-1 xs:gap-2 sm:gap-3 md:gap-4'
+          }`}>
             <div className="flex-shrink-0">
               <ProviderIconSelector
                 availableProviders={availableProviders}
@@ -443,7 +449,11 @@ const Header = ({
       </div>
       
       {/* Right side controls */}
-      <div className="flex items-center gap-2 xs:gap-3 sm:gap-4 flex-shrink-0">
+      <div className={`flex items-center flex-shrink-0 ${
+        isTablet 
+          ? 'gap-3' 
+          : 'gap-2 xs:gap-3 sm:gap-4'
+      }`}>
         {/* Mobile modal - positioned on the right */}
         {isMobile && (
           <MobileSelectionModal
