@@ -2,8 +2,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+import { AUTH_REDIRECTS } from '@/lib/auth-config';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -90,7 +91,7 @@ const ProfileForm = ({ profile, onSuccess }: ProfileFormProps) => {
         const { error: emailError } = await supabase.auth.updateUser(
           { email: data.email },
           {
-            emailRedirectTo: `${window.location.origin}/confirm-email`
+            emailRedirectTo: AUTH_REDIRECTS.EMAIL_CONFIRMATION()
           }
         );
         

@@ -12,6 +12,7 @@ import { SignUpForm } from '@/components/auth/SignUpForm';
 import { ForgotPasswordForm } from '@/components/auth/ForgotPasswordForm';
 import type { AuthFormValues, ForgotPasswordFormValues } from '@/lib/schemas/auth';
 import ChatOsIcon from '@/components/icons/ChatOsIcon';
+import { AUTH_REDIRECTS } from '@/lib/auth-config';
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ const Auth = () => {
       email: values.email,
       password: values.password,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo: AUTH_REDIRECTS.EMAIL_CONFIRMATION(),
       },
     });
     if (error) {
@@ -61,7 +62,7 @@ const Auth = () => {
   const handlePasswordReset = async (values: ForgotPasswordFormValues) => {
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
-      redirectTo: `${window.location.origin}/update-password`,
+      redirectTo: AUTH_REDIRECTS.PASSWORD_RESET(),
     });
     if (error) {
       toast.error(error.message);

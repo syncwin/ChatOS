@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client'
 import * as Sentry from '@sentry/react';
 import App from './App.tsx';
+import { validateAuthConfig } from './lib/auth-config';
 
 Sentry.init({
   dsn: import.meta.env.VITE_SENTRY_DSN,
@@ -13,6 +14,9 @@ Sentry.init({
   replaysSessionSampleRate: 0.1, // This sets the sample rate at 10%.
   replaysOnErrorSampleRate: 1.0, // If you're not already sampling the entire session, change the sample rate to 100% when sampling sessions where errors occur.  
 });
+
+// Validate authentication configuration
+validateAuthConfig();
 import './index.css'
 
 createRoot(document.getElementById("root")!).render(
